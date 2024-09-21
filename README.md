@@ -1,8 +1,54 @@
 # Major FYP
 
-## Objectives
+## What do we need to do now?
 
-Requires immediate clarification.
+* Make the project goal and rationale clearer, specific up to the application and details.
+* Preliminary analysis on multi-class classification on the ASL dataset, and possibly contrastive learning model on the ASL dataset. Refer to the section [Datasets](#datasets) for more information.
+
+### What will we deliver
+
+* An interface (web or python) for capturing live video from user
+* Keypoint extraction (which is easy)
+* Connect to the model which we will be developing later, make sure that all models share the same format so that it is easy to integrate the modules later.
+* Stage 1: Predicts the STATIC gesture (multi-class)
+* Stage 2: Predicts the STATIC gesture (contrastive & cosine similarity)
+    * Investigation on if it is possible to generalize a bit on unseen gestures.
+    * Problem: requires larger dataset compared to the ASL (which should not be sufficient in theory).
+    * Need to find larger dataset (TODO).
+* Change anything here if you find it bad.
+
+### Checks
+
+* We also need to confirm what devices do we need / are available.
+* Personally Sam have two devices, one with RTX 4070 (laptop), one with RTX 3060Ti (desktop), possibly able to use the RTX 4070 + 4060 in the internship company with constraints.
+* Kaggle available: T4 / P100 (30 hr / week, timeout 12 hr)
+
+## Project Goal
+
+The project goal is to develop a hand gesture recognition system.
+
+Secondary goals if primary goal is achieved:
+* Enable custom gesture addition without retraining the network.
+* Match and annotate gestures from videos. 
+
+## Significance of the Project (Rationale)
+
+While most common gesture recognition models focuses on a fixed set of gestures, this project aims to improve the flexibility and usability of gesture recognition systems, with the following sub-goals:
+* Address the need of custom gestures.
+* Automate the annotation process for unannotated videos and allow developers to efficiently annotate certain gestures into the database.
+
+Real Scenario of Application:
+
+* Quick adaptation of the system to the controls of games, screen control (zooming, etc), sign language (gloss extraction based on similar gestures), etc with minimal re-training / finetuning if possible.
+* Phase II (possibly) - Generative system for AR [Worldbox].
+
+## Proposed Solutions
+
+(just follow the pdf document)
+
+## Proposed Timelines
+
+
 
 ## Requirements of the report
 
@@ -17,13 +63,20 @@ The difficulty of this project - which turned out to be too ambitious - includes
        * Dataset: [face dataset](https://www.kaggle.com/datasets/stoicstatic/face-recognition-dataset/)
        * Reference Implementation: [tensorflow: siamese network](https://www.kaggle.com/code/tatianakushniruk/face-recognition-with-siamese-network/notebook)
        * Progress: Execution successful on both Kaggle notebooks and local. Code will be updated later.
+       * ![alt text](image-1.png)
+       * Trained without learning rate decay, so the performance is not as good (the face dataset consists of 1680 people and around 8-9 samples each)
 2. Time Series
    * Involves sequential data - dynamic gesture sequences. This can be complicated for starters, so we may first focus on static gestures.
 3. Graph
    * It may be a viable and feasible option to utilize the **keypoints** captured from the gestures instead of the images/videos to train a classification / contrastive model. 
    * This way, we can perform more augmentations easily like offsetting the keypoints slightly, rotating the entire palm slightly, etc.. This is not possible on the raw image/video data.
    * Progress: Spatio-Temporal Graph Convolutional Neural Netowrk - (STGCN) with multi-class classification (during internship).
-       * Preliminary analysis showed that it achieved around 90%+ accuracy trained just for a short amount of time.
+       * Preliminary analysis showed that it achieved around 90%+ accuracy trained just for a short amount of time **on a 20-class classification problem** for sign language.
+       * Trained based on cropped and speed-adjusted gesture keypoint sequences.
+       * ![alt text](image.png)
+       * Mostly rely on my compnay senior's advise, so will need to reformulate and refactor the entire project in order to maintain a consistent style.
+       * Need to solve: the accuracy instability issue.
+       * The augmentations are not sufficient.
 4. Adaptive Learning "on the fly"
    * This can basically be solved with contrastive learning.
 5. Generalizing with unseen data with minimal retraining.
@@ -79,3 +132,8 @@ Goals: Extract extra information - like **distance**, **direction**, **object in
 ## Checkpoints
 
 * Before 23 Sept: Multiclass on ASL, Constrastive on ASL.
+
+## Plan
+
+* Term 1: Gesture Recognition
+* Term 2: (If Term 1 goes smoothly) Sign Langauge?
