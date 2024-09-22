@@ -81,6 +81,7 @@ The difficulty of this project - which turned out to be too ambitious - includes
          * T-SNE result on 15 distinct faces:
              * ![](/readme-src/output-tsne.png)
              * The clusters are clearly visible, indicating that they might still be easily separable.</details>
+         * **Directions**: the original source did NOT generate new triplets for every iteration. This causes the triplets (specific anchor-positive-negative triplets) to be reused instead of fully utilizing the available images.
 2. Time Series
    * Involves sequential data - dynamic gesture sequences. This can be complicated for starters, so we may first focus on static gestures.
 3. Graph
