@@ -15,6 +15,7 @@
     * Investigation on if it is possible to generalize a bit on unseen gestures.
     * Problem: requires larger dataset compared to the ASL (which should not be sufficient in theory).
     * Need to find larger dataset (TODO).
+* Comparing benchmarks
 * Change anything here if you find it bad.
 
 ### Checks
@@ -62,9 +63,24 @@ The difficulty of this project - which turned out to be too ambitious - includes
    * Current progress: Siamese Network + Triplet Loss
        * Dataset: [face dataset](https://www.kaggle.com/datasets/stoicstatic/face-recognition-dataset/)
        * Reference Implementation: [tensorflow: siamese network](https://www.kaggle.com/code/tatianakushniruk/face-recognition-with-siamese-network/notebook)
-       * Progress: Execution successful on both Kaggle notebooks and local. Code will be updated later.
-       * ![alt text](image-1.png)
-       * Trained without learning rate decay, so the performance is not as good (the face dataset consists of 1680 people and around 8-9 samples each)
+       * Progress: Execution successful on both Kaggle notebooks and local. Code will be updated later.<details>
+         * ![alt text](/readme-src/image-1.png)
+             * Trained without learning rate decay, so the performance is not as good (the face dataset consists of 1680 people and around 8-9 samples each)
+         * ![alt text](/readme-src/image-2.png)
+             * Trained with learning rate decay, extended patience, result is still not very satisfactory.
+             * The similarity matrix (max cosine similarity): 
+             * ![](/readme-src/output-confusion-max.png)
+             * Min cosine similarity:
+             * ![](/readme-src/output-confusion-min.png)
+             * Direct comparison of the maximum inter-class cosine similarities and minimum intra-class cosine similarities:
+             * ![](/readme-src/output-confusion-comparison.png)
+             * We can observe that the current set does not work very well, as the diagonal values are NOT always the highest value within the group - that is, during recognition, SOME faces would still get misclassified.
+             * But from the mean:
+             * ![](/readme-src/output-confusion-mean.png)
+             * we can see that in general most faces should get classfied correctly (further analsysis required).
+         * T-SNE result on 15 distinct faces:
+             * ![](/readme-src/output-tsne.png)
+             * The clusters are clearly visible, indicating that they might still be easily separable.</details>
 2. Time Series
    * Involves sequential data - dynamic gesture sequences. This can be complicated for starters, so we may first focus on static gestures.
 3. Graph
@@ -73,7 +89,7 @@ The difficulty of this project - which turned out to be too ambitious - includes
    * Progress: Spatio-Temporal Graph Convolutional Neural Netowrk - (STGCN) with multi-class classification (during internship).
        * Preliminary analysis showed that it achieved around 90%+ accuracy trained just for a short amount of time **on a 20-class classification problem** for sign language.
        * Trained based on cropped and speed-adjusted gesture keypoint sequences.
-       * ![alt text](image.png)
+       * ![alt text](/readme-src/image.png)
        * Mostly rely on my compnay senior's advise, so will need to reformulate and refactor the entire project in order to maintain a consistent style.
        * Need to solve: the accuracy instability issue.
        * The augmentations are not sufficient.

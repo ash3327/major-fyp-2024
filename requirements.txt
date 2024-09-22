@@ -1,0 +1,29 @@
+# virtualenv -p python3.10 venv
+# Requires: Python 3.10, CUDA 11.8, CUDNN 8
+
+# standard math & plot libs
+numpy==1.26.4
+matplotlib
+
+# visualization
+tqdm
+
+# pytorch version 2.4.1+cu118
+--extra-index-url https://download.pytorch.org/whl/cu118
+torch
+torchvision
+torchaudio
+
+# tensorflow
+tensorflow==2.10
+opencv-python
+scikit-learn
+
+# kaggle
+kaggle
+seaborn 
+
+# plot model
+pydot_ng==2.0.0
+pydot
+graphviz
