@@ -1,9 +1,24 @@
 # Major FYP
+### Useful Links
+
+[![Planning Document](https://img.shields.io/badge/Planning%20Document-blue?style=for-the-badge)](https://1drv.ms/w/s!Ago9nLnz9h82gosJqjlnjoOBK9SS-Q?e=YuU6Wy)
+[![MIRO Board](https://img.shields.io/badge/MIRO%20Board-orange?style=for-the-badge)](https://miro.com/welcomeonboard/TVd0ejI4NzhYTHZJOTQ1NDhKSWtPUlFyUWZnaU9oYk15MzAxcnNCbUtNT1NRaTVQZENFUk5sSEJaVEJMZktGNXwzNDU4NzY0NTIxODcyMjM4MDQwfDI=?share_link_id=807166828631)
+
+* PLEASE UPDATE YOUR PROGRESS IN THE PLANNING DOCUMENT.
+* You can attach links to useful papers in the end of the planning document and please add comments properly so that everyone knows why the paper may be useful.
 
 ## What do we need to do now?
 
 * Make the project goal and rationale clearer, specific up to the application and details.
 * Preliminary analysis on multi-class classification on the ASL dataset, and possibly contrastive learning model on the ASL dataset. Refer to the section [Datasets](#datasets) for more information.
+
+### Progress
+
+* Triplet loss - Implement and study the effects of BATCH HARD NEGATIVES.
+* Extraction of skeleton for hands, detecting multiple hands.
+* YOLO-v8 for classification? (Benchmark)
+
+* Searching for datasets: https://universe.roboflow.com/search?q=hand%2520gesture
 
 ### What will we deliver
 
@@ -42,6 +57,20 @@ Real Scenario of Application:
 
 * Quick adaptation of the system to the controls of games, screen control (zooming, etc), sign language (gloss extraction based on similar gestures), etc with minimal re-training / finetuning if possible.
 * Phase II (possibly) - Generative system for AR [Worldbox].
+
+## Background
+
+* Long-term motion characteristics [https://link.springer.com/article/10.1007/s13042-023-01987-3]
+* Procedures to do:
+    * Efficiency
+    * Back tracking (attention / etc)
+    * Review of methods
+    * New method
+      * Capturing based on skeleton (MediaPipe)
+      * Combined channel method based on TwoStreamSLT
+      * ? Distillation methods (just reducing size of model)
+      * ? Boosting efficiency of networks
+      * It is okay to fail to exceed their benchmark (afterall we are undergrads)
 
 ## Proposed Solutions
 
@@ -105,11 +134,15 @@ The difficulty of this project - which turned out to be too ambitious - includes
     * This is not our first priority. 
     * This is a problem in the semi-supervised learning, and shares a lot of common characteristics with problems within contrastive learning.
 
+Reference: video (temporal contrastive learning): https://arxiv.org/pdf/2101.07974
+
+Contrastive good? https://arxiv.org/pdf/2011.13377 (tradeoffs) https://arxiv.org/pdf/2112.05340
+
 ## Datasets
 
 ### Static Datasets
 
-* ASL alphabets [[go](https://www.kaggle.com/datasets/grassknoted/asl-alphabet)] [[also this](https://www.kaggle.com/datasets/lexset/synthetic-asl-alphabet)]
+* ASL alphabets [[go](https://www.kaggle.com/datasets/lexset/synthetic-asl-alphabet)]
 
 Goal: Comparison of performance of multiclass classification and contrastive learning.
 
