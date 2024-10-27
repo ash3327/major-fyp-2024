@@ -5,6 +5,13 @@
 numpy==1.26.4
 matplotlib
 
+# standard AI/ML libraries
+opencv-python
+scikit-learn
+
+# loading yaml
+pyyaml
+
 # visualization
 tqdm
 
@@ -14,10 +21,11 @@ torch
 torchvision
 torchaudio
 
-# tensorflow
+    # efficientnet
+    efficientnet-pytorch
+
+# tensorflow (Compatible on Windows)
 tensorflow==2.10
-opencv-python
-scikit-learn
 
 # kaggle
 kaggle

@@ -1,0 +1,16 @@
+
+using_kaggle: False # default: disallow kaggle
+input_folder: 'kaggle/input'
+use_dataset: 'asl-dataset'
+
+# Allow kaggle
+kaggle_override:
+  input_folder: 'kaggle/input'
+
+data:
+  asl-dataset: 
+    path: 'synthetic-asl-alphabet'
+    train: 'Train_Alphabet'
+    test: 'Test_Alphabet'
+
+
