@@ -12,3 +12,4 @@ kaggle/
 images/
 *.zip
 *.h5
+*.pth

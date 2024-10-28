@@ -38,5 +38,15 @@ class SimpleClassifier(nn.Module):
         )
         self.model._fc = self.classifier
 
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+
     def forward(self, x):
-        return self.model(x)
+        features = self.model.extract_features(x) # [B, 2560, 16, 16]
+        
+        pooled_features = self.avg_pool(features)  # [B, 2560, 1, 1]
+        pooled_features = pooled_features.view(pooled_features.size(0), -1) # [B, 2560]
+
+        last_layer_input = self.classifier[:-1](pooled_features)
+        output = self.classifier[-1](last_layer_input)
+
+        return output, last_layer_input

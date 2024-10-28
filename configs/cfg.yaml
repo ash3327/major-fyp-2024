@@ -13,4 +13,7 @@ data:
     train: 'Train_Alphabet'
     test: 'Test_Alphabet'
 
+output:
+  path: 'models/output'
+
 

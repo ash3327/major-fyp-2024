@@ -16,9 +16,6 @@ class ASLDataLoader:
     def __init__(self, cfgs:dict):
         self.using_kaggle = cfgs['using_kaggle']
 
-        if self.using_kaggle and 'kaggle_override' in cfgs:
-            cfgs.update(cfgs['kaggle_override'])
-
         self.use_dataset = cfgs['use_dataset']
 
         if self.use_dataset not in cfgs['data']:
@@ -29,7 +26,7 @@ class ASLDataLoader:
         self.input_folder = os.path.normpath(os.path.join(base_path, cfgs['input_folder'], data_cfgs['path']))
         self.train_data_path = os.path.join(self.input_folder, data_cfgs['train'])
         self.test_data_path = os.path.join(self.input_folder, data_cfgs['test'])
-
+        
         self.dataset = None
         self.dataloader = None
 

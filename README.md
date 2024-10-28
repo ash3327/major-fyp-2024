@@ -7,6 +7,48 @@
 * PLEASE UPDATE YOUR PROGRESS IN THE PLANNING DOCUMENT.
 * You can attach links to useful papers in the end of the planning document and please add comments properly so that everyone knows why the paper may be useful.
 
+## Guides
+
+### Environment Setup
+
+```bash
+# Requires: Python 3.10, CUDA 11.8, CUDNN 8 if on Windows
+# Because tensorflow 2.10 (last supported GPU version without extra plugins) relies on Python 3.10.
+virtualenv -p python3.10 venv
+
+    # Windows
+    .\venv\Scripts\activate 
+
+    # Linux
+    source venv/bin/activate
+
+# Dependencies
+pip install -r requirements.txt
+```
+
+### References
+* Contrastive Learning: 
+  * [Source Publication](https://www.researchgate.net/publication/347038642_Fisher_Discriminant_Triplet_and_Contrastive_Losses_for_Training_Siamese_Networks) 
+  * [tensorflow: siamese network](https://www.kaggle.com/code/tatianakushniruk/face-recognition-with-siamese-network/notebook)
+* Dataset:
+  * [ASL Dataset by LEXSET@Kaggle](https://www.kaggle.com/datasets/lexset/synthetic-asl-alphabet)
+  
+### Dataset and Tests
+We would first attempt to load the ASL dataset.
+
+In Kaggle, add the following dataset:
+https://www.kaggle.com/datasets/lexset/synthetic-asl-alphabet/data
+
+If you are using VS Code, execute in the command line
+```bash
+kaggle datasets download -d lexset/synthetic-asl-alphabet
+mkdir "kaggle/input/synthetic-asl-alphabet"
+tar -xf synthetic-asl-alphabet.zip -C kaggle/input/synthetic-asl-alphabet
+```
+Search for installation guides for the kaggle command if it is not working.
+
+Then, execute `tests/3_modularization_test/modularization_test.ipynb`.
+
 ## What do we need to do now?
 
 * Make the project goal and rationale clearer, specific up to the application and details.
