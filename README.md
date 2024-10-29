@@ -32,22 +32,70 @@ pip install -r requirements.txt
   * [tensorflow: siamese network](https://www.kaggle.com/code/tatianakushniruk/face-recognition-with-siamese-network/notebook)
 * Dataset:
   * [ASL Dataset by LEXSET@Kaggle](https://www.kaggle.com/datasets/lexset/synthetic-asl-alphabet)
-  
-### Dataset and Tests
-We would first attempt to load the ASL dataset.
 
-In Kaggle, add the following dataset:
-https://www.kaggle.com/datasets/lexset/synthetic-asl-alphabet/data
+### Checkpoints:
 
-If you are using VS Code, execute in the command line
-```bash
-kaggle datasets download -d lexset/synthetic-asl-alphabet
-mkdir "kaggle/input/synthetic-asl-alphabet"
-tar -xf synthetic-asl-alphabet.zip -C kaggle/input/synthetic-asl-alphabet
-```
-Search for installation guides for the kaggle command if it is not working.
+Download these and put under `saved_models`.
+Use curl to fetch the file.
 
-Then, execute `tests/3_modularization_test/modularization_test.ipynb`.
+* EfficientNet+CELoss, 30 epochs: https://drive.google.com/drive/folders/128DE8fLQqMX3iL1_0a2KuMJtmAAFq4vs
+
+### Datasets:
+
+Put the datasets under `kaggle/input`.
+Use curl to download the datasets.
+Execute the code AT THE ROOT OF THIS PROJECT.
+
+1. Synthetic-asl-dataset ([Source](https://www.kaggle.com/datasets/lexset/synthetic-asl-alphabet/data)):
+    ```bash
+    kaggle datasets download -d lexset/synthetic-asl-alphabet
+    mkdir "kaggle/input/synthetic-asl-alphabet"
+    tar -xf synthetic-asl-alphabet.zip -C kaggle/input/synthetic-asl-alphabet
+    ```
+    Search for installation guides for the kaggle command if it is not working.
+
+2. Roboflow-asl-alphabet-1 ([Source](https://universe.roboflow.com/nmims-oawfg/sign-language-detectiom/dataset/1#)):
+    ```bash
+    # Windows
+    curl -L "https://universe.roboflow.com/ds/CvkJnT8Is8?key=Gjdz88bXsh" > roboflow.zip
+    mkdir "kaggle/input/roboflow-asl-alphabet-1"
+    tar -xf roboflow.zip -C kaggle/input/roboflow-asl-alphabet-1
+    del roboflow.zip
+
+    # Linux
+    rm roboflow.zip # after executing above commands.
+
+    # License of usage: The API key is restricted to usage within the project.
+    ```
+    * Problem of this dataset: After close inspection, this dataset contains too much repeating images with slightly different augmentations. This dataset is basically unusable for training for this reason.
+
+3. Future 
+
+### Tests
+
+Under `tests` folder.
+
+* Clone of other's work for preliminary tests:
+    * Clones of "Face Recognition with Siamese Network" ([Source](https://www.kaggle.com/code/tatianakushniruk/face-recognition-with-siamese-network/notebook))
+        * Face Dataset test (local execution): `tests/1_siamese_face`
+        * Migration to asl dataset [1]: `tests/2_asl`
+* EfficientNet+CELoss:
+    * Training test: `tests/3_modularization_test/modularization_test.ipynb`
+    * Inference test: `tests/3_modularization_test/modularization_test_inference.ipynb`
+
+### File Architecture
+
+Every essential libraries are under `lib` directory.
+
+* `data` loads from datasets.
+* `models` specifies the architectures of the classifier.
+* `trainers` stores the training script.
+* `verifiers` stores the tools to evaluate the performance of the library.
+* `config_loader`, `data_loader`, `model_loader` etc: the names are self-explanatory.
+
+### To-Do
+
+
 
 ## What do we need to do now?
 

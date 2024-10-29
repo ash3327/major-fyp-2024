@@ -8,10 +8,14 @@ kaggle_override:
   input_folder: 'kaggle/input'
 
 data:
-  asl-dataset: 
+  asl-dataset: # D1
     path: 'synthetic-asl-alphabet'
     train: 'Train_Alphabet'
     test: 'Test_Alphabet'
+  roboflow-asl-dataset-1: # D2
+    path: 'roboflow-asl-alphabet-1'
+    train: 'train'
+    test: 'test'
 
 output:
   path: 'models/output'

@@ -74,3 +74,5 @@ def plot_similarity_matrix(all_embeddings, all_labels):
         plt.ylabel('Class A')
         plt.tight_layout()
         plt.show()
+
+    return cosine_sim_matrix
