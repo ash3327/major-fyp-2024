@@ -4,9 +4,10 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-def train_one_epoch(model, dataloader, criterion, optimizer, device='cuda', epoch:int=0):
+def train_one_epoch(model, dataloader, criterion, optimizer, num_epochs:int, device='cuda', epoch:int=0):
     model.train()
     running_loss = 0.0
+    running_corrects = 0
     
     # Iterate over the dataloader
     for inputs, _, labels in tqdm(dataloader, desc=f"Epoch {epoch + 1}"):
@@ -19,6 +20,9 @@ def train_one_epoch(model, dataloader, criterion, optimizer, device='cuda', epoc
         loss.backward()  # Backward pass
         optimizer.step()  # Optimization step
         
+        # Calculate the number of correct predictions
+        _, preds = torch.max(outputs, 1)  # Get the predicted class
+        running_corrects += torch.sum(preds == labels.data)  # Update correct predictions
         running_loss += loss.item() * inputs.size(0)  # Accumulate loss
 
     epoch_loss = running_loss / len(dataloader.dataset)  # Average loss for the epoch
