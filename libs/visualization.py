@@ -62,3 +62,28 @@ def visualize_dataloader_images(data_loader):
         plt.tight_layout()
         plt.show()
         break  # Only show the first batch
+
+
+def visualize_dataloader_triplets(data_loader):
+    for (_anchors, _positives, _negatives), (_labels, _neg_labels) in data_loader:
+        # Plot images
+        fig, axs = plt.subplots(3, 3, figsize=(15, 15))
+        axs = axs.flatten()
+        for i, (_anchor, _pos, _neg, _lab, _neg_lab) in \
+            enumerate(zip(_anchors, _positives, _negatives, _labels, _neg_labels)):
+            if i >= 3:
+                break
+            _anchor = _anchor.cpu().numpy().transpose((1,2,0))
+            _pos = _pos.cpu().numpy().transpose((1,2,0))
+            _neg = _neg.cpu().numpy().transpose((1,2,0))
+
+            axs[i*3].imshow(_anchor)
+            axs[i*3+1].imshow(_pos)
+            axs[i*3+2].imshow(_neg)
+            axs[i*3].set_title(f'ID: {_lab}', fontsize=20)
+            axs[i*3+2].set_title(f'ID: {_neg_lab}', fontsize=20)
+            axs[i*3].axis('off')
+
+        plt.tight_layout()
+        plt.show()
+        break

@@ -7,7 +7,7 @@ from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
 from typing import Literal
 
-from .data import ImageDataset
+from .data import ImageDataset, TripletDataset
 
 back = lambda x: os.path.dirname(x)
 base_path = back(back(os.getcwd()))
@@ -46,14 +46,15 @@ class ASLDataLoader:
             case "contrastive":
                 raise Exception(f"Mode '{mode}' not implemented yet.")
             case "triplets":
-                raise Exception(f"Mode '{mode}' not implemented yet.")
+                self.dataset = TripletDataset(folder_path, transform=transform)
+                return self.dataset
             case _:
                 raise Exception(f"Mode '{mode}' not found.")
         
     def get_dataloader(self, train:bool=True, batch_size=32, shuffle=True, transform=None, mode: Literal["standard", "triplets", "contrastive"] = "standard"):
         if transform is None:
             transform = transforms.Compose([transforms.ToTensor()])
-        dataset = self.get_dataset(train, transform)
+        dataset = self.get_dataset(train, transform, mode=mode)
         self.dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
         return self.dataloader
     
