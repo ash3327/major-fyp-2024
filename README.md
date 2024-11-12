@@ -8,7 +8,7 @@
 * PLEASE UPDATE YOUR PROGRESS IN THE PLANNING DOCUMENT.
 * You can attach links to useful papers in the end of the planning document and please add comments properly so that everyone knows why the paper may be useful.
 
-> ![IMPORTANT]
+> [!IMPORTANT]
 > What we will be doing TODAY:
 > * Tidy up the specs and think about what augmentations and models to use first.
 > * Previously:
@@ -42,36 +42,31 @@ virtualenv -p python3.10 venv
 pip install -r requirements.txt
 ```
 
-### References
-* Contrastive Learning: 
-  * [Source Publication](https://www.researchgate.net/publication/347038642_Fisher_Discriminant_Triplet_and_Contrastive_Losses_for_Training_Siamese_Networks) 
-  * [tensorflow: siamese network](https://www.kaggle.com/code/tatianakushniruk/face-recognition-with-siamese-network/notebook)
-* Dataset:
-  * [ASL Dataset by LEXSET@Kaggle](https://www.kaggle.com/datasets/lexset/synthetic-asl-alphabet)
+### Checkpoints
 
-### Checkpoints:
+To download the checkpoints, use `curl` and place them under the `saved_models` directory. The following models are available:
 
-Download these and put under `saved_models`.
-Use curl to fetch the file.
+* **EfficientNet+CELoss (30 epochs)**: [https://drive.google.com/drive/folders/128DE8fLQqMX3iL1_0a2KuMJtmAAFq4vs](https://drive.google.com/drive/folders/128DE8fLQqMX3iL1_0a2KuMJtmAAFq4vs)
+* **EfficientNet+TripletLoss (Raw, 40 epochs)**: [https://drive.google.com/drive/folders/1Z9SMVnhLKA8j9L7I9SKLBeRl-damb9FE](https://drive.google.com/drive/folders/1Z9SMVnhLKA8j9L7I9SKLBeRl-damb9FE)
 
-* EfficientNet+CELoss, 30 epochs: https://drive.google.com/drive/folders/128DE8fLQqMX3iL1_0a2KuMJtmAAFq4vs
-* EfficientNet+TripletLoss (Raw), 40 epochs: https://drive.google.com/drive/folders/1Z9SMVnhLKA8j9L7I9SKLBeRl-damb9FE
-
-### Datasets:
+### Datasets
 
 Put the datasets under `kaggle/input`.
 Use curl to download the datasets.
 Execute the code AT THE ROOT OF THIS PROJECT.
 
-1. Synthetic-asl-dataset ([Source](https://www.kaggle.com/datasets/lexset/synthetic-asl-alphabet/data)):
+* **Synthetic-asl-dataset** 
+    [![Source](https://img.shields.io/badge/Source-Kaggle-blue)](https://www.kaggle.com/datasets/lexset/synthetic-asl-alphabet/data)<details>
     ```bash
     kaggle datasets download -d lexset/synthetic-asl-alphabet
     mkdir "kaggle/input/synthetic-asl-alphabet"
     tar -xf synthetic-asl-alphabet.zip -C kaggle/input/synthetic-asl-alphabet
     ```
     Search for installation guides for the kaggle command if it is not working.
+    </details>
 
-2. Roboflow-asl-alphabet-1 ([Source](https://universe.roboflow.com/nmims-oawfg/sign-language-detectiom/dataset/1#)):
+* **Roboflow-asl-alphabet-1**
+    [![Source](https://img.shields.io/badge/Source-Kaggle-blue)](https://universe.roboflow.com/nmims-oawfg/sign-language-detectiom/dataset/1#)<details>
     ```bash
     # Windows
     curl -L "https://universe.roboflow.com/ds/CvkJnT8Is8?key=Gjdz88bXsh" > roboflow.zip
@@ -85,23 +80,26 @@ Execute the code AT THE ROOT OF THIS PROJECT.
     # License of usage: The API key is restricted to usage within the project.
     ```
     * Problem of this dataset: After close inspection, this dataset contains too much repeating images with slightly different augmentations. This dataset is basically unusable for training for this reason.
+    </details>
 
-3. Future 
+* **Future...**
 
-### Tests
+### Tests Conducted
+Under the `tests` folder, you'll find the following experiments:
 
-Under `tests` folder.
-
-* Clone of other's work for preliminary tests:
-    * Clones of "Face Recognition with Siamese Network" ([Source](https://www.kaggle.com/code/tatianakushniruk/face-recognition-with-siamese-network/notebook))
-        * Face Dataset test (local execution): `tests/1_siamese_face`
-        * Migration to asl dataset [1]: `tests/2_asl`
-* EfficientNet+CELoss:
-    * Training test: `tests/3_modularization_test/cross_entropy_loss/modularization_train_ce.ipynb`
-    * Inference test: `tests/3_modularization_test/cross_entropy_loss/modularization_test_inference.ipynb`
-* EfficientNet+TripletLoss (Raw):
-    * Training test: `tests/3_modularization_test/triplet_loss_raw/modularization_train_triplet.ipynb`
-    * Inference test: `tests/3_modularization_test/triplet_loss_raw/cross_entropy_loss/modularization_test_inference_triplet.ipynb`
+* **Preliminary Tests**: Clones of "Face Recognition with Siamese Network" [![Source](https://img.shields.io/badge/Source-Kaggle-blue)](https://www.kaggle.com/code/tatianakushniruk/face-recognition-with-siamese-network/notebook)
+    * **Face Dataset Test (Local Execution)**: [![Face Dataset Test](https://img.shields.io/badge/Face%20Dataset%20Test-Local%20Execution-green)](/tests/1_siamese_face/face-recognition-with-siamese-network.ipynb)
+        * **Location**: `tests/1_siamese_face/`
+    * **Migration to ASL Dataset**: [![Migration to ASL Dataset](https://img.shields.io/badge/Migration%20to%20ASL%20Dataset-Test-green)](/tests/2_asl/)
+        * **Location**: `tests/2_asl/`
+* **EfficientNet+CELoss Tests**:
+    * **Location**: `tests/3_modularization_test/cross_entropy_loss/`
+    * **Training Test**: [![Training Test](https://img.shields.io/badge/Training%20Test-EfficientNet%2BCELoss-green)](/tests/3_modularization_test/cross_entropy_loss/modularization_train_ce.ipynb)
+    * **Inference Test**: [![Inference Test](https://img.shields.io/badge/Inference%20Test-EfficientNet%2BCELoss-green)](/tests/3_modularization_test/cross_entropy_loss/modularization_test_inference.ipynb)
+* **EfficientNet+TripletLoss (Raw) Tests**:
+    * **Location**: `tests/3_modularization_test/triplet_loss_raw/`
+    * **Training Test**: [![Training Test](https://img.shields.io/badge/Training%20Test-EfficientNet%2BTripletLoss%20(Raw)-green)](/tests/3_modularization_test/triplet_loss_raw/modularization_train_triplet.ipynb)
+    * **Inference Test**: [![Inference Test](https://img.shields.io/badge/Inference%20Test-EfficientNet%2BTripletLoss%20(Raw)-green)](/tests/3_modularization_test/triplet_loss_raw/modularization_test_inference_triplet.ipynb)
 
 ### File Architecture
 
@@ -113,10 +111,6 @@ Every essential libraries are under `lib` directory.
 * `verifiers` stores the tools to evaluate the performance of the library.
 * `config_loader`, `data_loader`, `model_loader` etc: the names are self-explanatory.
 
-### To-Do
-
-
-
 ## What do we need to do now?
 
 * Make the project goal and rationale clearer, specific up to the application and details.
@@ -127,8 +121,7 @@ Every essential libraries are under `lib` directory.
 * Triplet loss - Implement and study the effects of BATCH HARD NEGATIVES.
 * Extraction of skeleton for hands, detecting multiple hands.
 * YOLO-v8 for classification? (Benchmark)
-
-* Searching for datasets: https://universe.roboflow.com/search?q=hand%2520gesture
+* Search for datasets
 
 ### What will we deliver
 
@@ -182,14 +175,6 @@ Real Scenario of Application:
       * ? Boosting efficiency of networks
       * It is okay to fail to exceed their benchmark (afterall we are undergrads)
 
-## Proposed Solutions
-
-(just follow the pdf document)
-
-## Proposed Timelines
-
-
-
 ## Requirements of the report
 
 A report of 1 to 2 pages stating the Project Goal; Significance of the project (what, who and why); Problem  statement; Proposed solutions (deliverables); and Proposed timelines.This is the initial plan of the project. Changes to the initial plan is acceptable in the later stages whenever necessary.
@@ -226,13 +211,15 @@ The difficulty of this project - which turned out to be too ambitious - includes
 3. Graph
    * It may be a viable and feasible option to utilize the **keypoints** captured from the gestures instead of the images/videos to train a classification / contrastive model. 
    * This way, we can perform more augmentations easily like offsetting the keypoints slightly, rotating the entire palm slightly, etc.. This is not possible on the raw image/video data.
-   * Progress: Spatio-Temporal Graph Convolutional Neural Netowrk - (STGCN) with multi-class classification (during internship).
-       * Preliminary analysis showed that it achieved around 90%+ accuracy trained just for a short amount of time **on a 20-class classification problem** for sign language.
-       * Trained based on cropped and speed-adjusted gesture keypoint sequences.
-       * ![alt text](/readme-src/image.png)
-       * Mostly rely on my compnay senior's advise, so will need to reformulate and refactor the entire project in order to maintain a consistent style.
-       * Need to solve: the accuracy instability issue.
-       * The augmentations are not sufficient.
+    * STGCN Progress<details>
+        * Progress: Spatio-Temporal Graph Convolutional Neural Netowrk - (STGCN) with multi-class classification (during internship).
+        * Preliminary analysis showed that it achieved around 90%+ accuracy trained just for a short amount of time **on a 20-class classification problem** for sign language.
+        * Trained based on cropped and speed-adjusted gesture keypoint sequences.
+        * ![alt text](/readme-src/image.png)
+        * Mostly rely on my compnay senior's advise, so will need to reformulate and refactor the entire project in order to maintain a consistent style.</details>
+        * Need to solve: the accuracy instability issue.
+        * The augmentations are not sufficient.
+
 4. Adaptive Learning "on the fly"
    * This can basically be solved with contrastive learning.
 5. Generalizing with unseen data with minimal retraining.
@@ -292,6 +279,13 @@ Goals: Extract extra information - like **distance**, **direction**, **object in
 ## Checkpoints
 
 * Before 23 Sept: Multiclass on ASL, Constrastive on ASL.
+
+## Our Progress
+| **Category** | **CE** | **Triplet** |
+| --- | --- | --- |
+| **Dataset** | ![](/readme-src/data-ce.png) | ![](/readme-src/dataset-triplet.png) |
+| **Loss** | ![](/readme-src/loss-ce.png) | ![](/readme-src/losses-triplet.png) |
+| **TSNE** | ![](/readme-src/tsne-ce.png) <br> (more focused) | ![](/readme-src/tsne-triplet.png) <br> (may potentially capture more information about similarity of the gestures) |
 
 ## Plan
 
