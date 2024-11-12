@@ -71,6 +71,7 @@ Traditionally Gesture Recognition:
 #### Image Channel Approach
 **Supervised Approach.**
 Given labelled image $(I_k,c_k)$, 
+
 $$
 I, c \xrightarrow{E(\space\cdot\space)} h \xrightarrow{P(\space\cdot\space)} \hat{c} \xleftrightarrow{\text{CELoss}} c
 $$
