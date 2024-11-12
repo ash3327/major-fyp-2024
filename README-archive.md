@@ -1,22 +1,16 @@
 # Major FYP
 
-> Major FYP > Description Doc
-
 ### Useful Links
-[![GitHub](https://img.shields.io/badge/Description%20doc-grey?style=for-the-badge)](/README.md)
-[![](https://img.shields.io/badge/SETUP%20GUIDE-yellow?style=for-the-badge)](/README-dev.md)
-[![Reference Papers](https://img.shields.io/badge/Reference%20Papers-green?style=for-the-badge)](/README-references.md)
-[![Planning Document](https://img.shields.io/badge/🔗%20Planning%20Document-blue?style=for-the-badge)](https://1drv.ms/w/s!Ago9nLnz9h82gosJqjlnjoOBK9SS-Q?e=YuU6Wy)
-[![Midterm Report (Updating)](https://img.shields.io/badge/🔗%20Midterm%20Report-orange?style=for-the-badge)](/Major_FYP_Planning_Report%20(updating).pdf)
+
+[![Planning Document](https://img.shields.io/badge/Planning%20Document-blue?style=for-the-badge)](https://1drv.ms/w/s!Ago9nLnz9h82gosJqjlnjoOBK9SS-Q?e=YuU6Wy)
+[![Midterm Report (Updating)](https://img.shields.io/badge/Midterm%20Report-orange?style=for-the-badge)](/Major_FYP_Planning_Report%20(updating).pdf)
+<!-- [![MIRO Board](https://img.shields.io/badge/MIRO%20Board-orange?style=for-the-badge)](https://miro.com/welcomeonboard/TVd0ejI4NzhYTHZJOTQ1NDhKSWtPUlFyUWZnaU9oYk15MzAxcnNCbUtNT1NRaTVQZENFUk5sSEJaVEJMZktGNXwzNDU4NzY0NTIxODcyMjM4MDQwfDI=?share_link_id=807166828631) -->
 
 ### Notes
 * PLEASE UPDATE YOUR PROGRESS IN THE PLANNING DOCUMENT.
 * You can attach links to useful papers in the end of the planning document and please add comments properly so that everyone knows why the paper may be useful.
-* Please refer to the setup guide (see the panel of buttons on top of this README) to setup the project.
-* The materials I've referred to: refer to the midterm report.
 
 ### To-Do
-
 > [!IMPORTANT]
 > What we will be doing TODAY:
 > * Tidy up the specs and think about what augmentations and models to use first.
@@ -32,12 +26,107 @@
 >   * Analysis on the latent space graph
 >   * Papers (refer to the pdf submitted)
 
+## Guides
+
+### Environment Setup
+
+```bash
+# Requires: Python 3.10, CUDA 11.8, CUDNN 8 if on Windows
+# Because tensorflow 2.10 (last supported GPU version without extra plugins) relies on Python 3.10.
+virtualenv -p python3.10 venv
+
+    # Windows
+    .\venv\Scripts\activate 
+
+    # Linux
+    source venv/bin/activate
+
+# Dependencies
+pip install -r requirements.txt
+```
+
+### Checkpoints
+
+To download the checkpoints, use `curl` and place them under the `saved_models` directory. The following models are available:
+
+* **EfficientNet+CELoss (30 epochs)**: [https://drive.google.com/drive/folders/128DE8fLQqMX3iL1_0a2KuMJtmAAFq4vs](https://drive.google.com/drive/folders/128DE8fLQqMX3iL1_0a2KuMJtmAAFq4vs)
+* **EfficientNet+TripletLoss (Raw, 40 epochs)**: [https://drive.google.com/drive/folders/1Z9SMVnhLKA8j9L7I9SKLBeRl-damb9FE](https://drive.google.com/drive/folders/1Z9SMVnhLKA8j9L7I9SKLBeRl-damb9FE)
+
+### Datasets
+
+Put the datasets under `kaggle/input`.
+Use curl to download the datasets.
+Execute the code AT THE ROOT OF THIS PROJECT.
+
+* **Synthetic-asl-dataset** 
+    [![Source](https://img.shields.io/badge/Source-Kaggle-blue)](https://www.kaggle.com/datasets/lexset/synthetic-asl-alphabet/data)<details>
+    ```bash
+    kaggle datasets download -d lexset/synthetic-asl-alphabet
+    mkdir "kaggle/input/synthetic-asl-alphabet"
+    tar -xf synthetic-asl-alphabet.zip -C kaggle/input/synthetic-asl-alphabet
+    ```
+    Search for installation guides for the kaggle command if it is not working.
+    </details>
+
+* **Roboflow-asl-alphabet-1**
+    [![Source](https://img.shields.io/badge/Source-Kaggle-blue)](https://universe.roboflow.com/nmims-oawfg/sign-language-detectiom/dataset/1#)<details>
+    ```bash
+    # Windows
+    curl -L "https://universe.roboflow.com/ds/CvkJnT8Is8?key=Gjdz88bXsh" > roboflow.zip
+    mkdir "kaggle/input/roboflow-asl-alphabet-1"
+    tar -xf roboflow.zip -C kaggle/input/roboflow-asl-alphabet-1
+    del roboflow.zip
+
+    # Linux
+    rm roboflow.zip # after executing above commands.
+
+    # License of usage: The API key is restricted to usage within the project.
+    ```
+    * Problem of this dataset: After close inspection, this dataset contains too much repeating images with slightly different augmentations. This dataset is basically unusable for training for this reason.
+    </details>
+
+* **Future...**
+
+### Tests Conducted
+Under the `tests` folder, you'll find the following experiments:
+
+* **Preliminary Tests**: Clones of "Face Recognition with Siamese Network" [![Source](https://img.shields.io/badge/Source-Kaggle-blue)](https://www.kaggle.com/code/tatianakushniruk/face-recognition-with-siamese-network/notebook)
+    * **Face Dataset Test (Local Execution)**: [![Face Dataset Test](https://img.shields.io/badge/Face%20Dataset%20Test-Local%20Execution-green)](/tests/1_siamese_face/face-recognition-with-siamese-network.ipynb)
+        * **Location**: `tests/1_siamese_face/`
+    * **Migration to ASL Dataset**: [![Migration to ASL Dataset](https://img.shields.io/badge/Migration%20to%20ASL%20Dataset-Test-green)](/tests/2_asl/)
+        * **Location**: `tests/2_asl/`
+* **EfficientNet+CELoss Tests**:
+    * **Location**: `tests/3_modularization_test/cross_entropy_loss/`
+    * **Training Test**: [![Training Test](https://img.shields.io/badge/Training%20Test-EfficientNet%2BCELoss-green)](/tests/3_modularization_test/cross_entropy_loss/modularization_train_ce.ipynb)
+    * **Inference Test**: [![Inference Test](https://img.shields.io/badge/Inference%20Test-EfficientNet%2BCELoss-green)](/tests/3_modularization_test/cross_entropy_loss/modularization_test_inference.ipynb)
+* **EfficientNet+TripletLoss (Raw) Tests**:
+    * **Location**: `tests/3_modularization_test/triplet_loss_raw/`
+    * **Training Test**: [![Training Test](https://img.shields.io/badge/Training%20Test-EfficientNet%2BTripletLoss%20(Raw)-green)](/tests/3_modularization_test/triplet_loss_raw/modularization_train_triplet.ipynb)
+    * **Inference Test**: [![Inference Test](https://img.shields.io/badge/Inference%20Test-EfficientNet%2BTripletLoss%20(Raw)-green)](/tests/3_modularization_test/triplet_loss_raw/modularization_test_inference_triplet.ipynb)
+
+### File Architecture
+
+Every essential libraries are under `lib` directory.
+
+* `data` loads from datasets.
+* `models` specifies the architectures of the classifier.
+* `trainers` stores the training script.
+* `verifiers` stores the tools to evaluate the performance of the library.
+* `config_loader`, `data_loader`, `model_loader` etc: the names are self-explanatory.
+
 ## What do we need to do now?
 
 * Make the project goal and rationale clearer, specific up to the application and details.
 * Preliminary analysis on multi-class classification on the ASL dataset, and possibly contrastive learning model on the ASL dataset. Refer to the section [Datasets](#datasets) for more information.
 
-## What will we deliver
+### Progress
+
+* Triplet loss - Implement and study the effects of BATCH HARD NEGATIVES.
+* Extraction of skeleton for hands, detecting multiple hands.
+* YOLO-v8 for classification? (Benchmark)
+* Search for datasets
+
+### What will we deliver
 
 * An interface (web or python) for capturing live video from user
 * Keypoint extraction (which is easy)
@@ -50,61 +139,48 @@
 * Comparing benchmarks
 * Change anything here if you find it bad.
 
-## Progress
-
-* Triplet loss - Implement and study the effects of BATCH HARD NEGATIVES.
-* Extraction of skeleton for hands, detecting multiple hands.
-* Search for datasets
-
-| **Category** | **CE** | **Triplet** |
-| --- | --- | --- |
-| **Dataset** | ![](/readme-src/data-ce.png) | ![](/readme-src/dataset-triplet.png) |
-| **Loss** | ![](/readme-src/loss-ce.png) | ![](/readme-src/losses-triplet.png) |
-| **TSNE** | ![](/readme-src/tsne-ce.png) <br> (more focused) | ![](/readme-src/tsne-triplet.png) <br> (may potentially capture more information about similarity of the gestures) |
-
-## Methodology
-
-### Architecture
-
-Traditionally Gesture Recognition:
-
-#### Image Channel Approach
-**Supervised Approach.**
-Given labelled image $(I_k,c_k)$, 
-$$
-I, c \xrightarrow{E(\space\cdot\space)} h \xrightarrow{P(\space\cdot\space)} \hat{c} \xleftrightarrow{\text{CELoss}} c
-$$
-
-where, $h$ is the latent representation of the input image $I$, encoded by passing through the EfficientNetB7 encoder $E$, which is then projected using a MLP classifier head $P$. The classification result $\hat{c}$ is then evaluated on Multi-class Cross-Entropy Loss with the true label $c$.
-
-*Problems.* The problems of this approach is that in many cases, it can be costly to obtain high quality labels. That's why we are often motivated to take the contrastive approach to try to make best uses of the unlabelled data too.
-
-**Contrastive Approach.** 
-
-*Triplet Loss.* 
-The goal is to minimize the distance between an anchor and a positive sample while maximizing the distance between the anchor and a negative sample. This is achieved by optimizing the following equation:
-
-$$L = \sum_{i=1}^N \max(d(a_i, p_i) - d(a_i, n_i) + \alpha, 0)$$
-
-where $a_i$ is the anchor, $p_i$ is the positive sample, $n_i$ is the negative sample, $d$ is a distance metric, $\alpha$ is a margin, and $N$ is the number of triplets.
-
-*Siamese Network.*
-Given pairs or triplets $I_1,I_2,...,I_k$, evaluate the projected latents with a shared encoder and projection model $E$ and $P$, i.e. $h_k=E(I_k), z_k=P(z_k)$.
-
-*SimCLR.*
-The approach uses InfoNCE loss alongside augmentations...
-
-
-### Augmentations
-* augments: angle (within 20 degrees difference)
-* keypoints extraction
-
-## Project Requirements
-### Hardware
+### Checks
 
 * We also need to confirm what devices do we need / are available.
 * Personally Sam have two devices, one with RTX 4070 (laptop), one with RTX 3060Ti (desktop), possibly able to use the RTX 4070 + 4060 in the internship company with constraints.
 * Kaggle available: T4 / P100 (30 hr / week, timeout 12 hr)
+
+## Project Goal
+
+The project goal is to develop a hand gesture recognition system.
+
+Secondary goals if primary goal is achieved:
+* Enable custom gesture addition without retraining the network.
+* Match and annotate gestures from videos. 
+
+## Significance of the Project (Rationale)
+
+While most common gesture recognition models focuses on a fixed set of gestures, this project aims to improve the flexibility and usability of gesture recognition systems, with the following sub-goals:
+* Address the need of custom gestures.
+* Automate the annotation process for unannotated videos and allow developers to efficiently annotate certain gestures into the database.
+
+Real Scenario of Application:
+
+* Quick adaptation of the system to the controls of games, screen control (zooming, etc), sign language (gloss extraction based on similar gestures), etc with minimal re-training / finetuning if possible.
+* Phase II (possibly) - Generative system for AR [Worldbox].
+
+## Background
+
+* Long-term motion characteristics [https://link.springer.com/article/10.1007/s13042-023-01987-3]
+* Procedures to do:
+    * Efficiency
+    * Back tracking (attention / etc)
+    * Review of methods
+    * New method
+      * Capturing based on skeleton (MediaPipe)
+      * Combined channel method based on TwoStreamSLT
+      * ? Distillation methods (just reducing size of model)
+      * ? Boosting efficiency of networks
+      * It is okay to fail to exceed their benchmark (afterall we are undergrads)
+
+## Requirements of the report
+
+A report of 1 to 2 pages stating the Project Goal; Significance of the project (what, who and why); Problem  statement; Proposed solutions (deliverables); and Proposed timelines.This is the initial plan of the project. Changes to the initial plan is acceptable in the later stages whenever necessary.
 
 ## Difficulties
 
@@ -198,16 +274,23 @@ Goals: Sign language interpretation without the need to pretrain every gloss.
 
 Goals: Extract extra information - like **distance**, **direction**, **object in contact**, etc. from the gesture.
 
-## In the Future...
+## Techniques
 
-* Long-term motion characteristics [https://link.springer.com/article/10.1007/s13042-023-01987-3]
-* Procedures to do:
-    * Efficiency
-    * Back tracking (attention / etc)
-    * Review of methods
-    * New method
-      * Capturing based on skeleton (MediaPipe)
-      * Combined channel method based on TwoStreamSLT
-      * ? Distillation methods (just reducing size of model)
-      * ? Boosting efficiency of networks
-      * It is okay to fail to exceed their benchmark (afterall we are undergrads)
+* augments: angle (within 20 degrees difference)
+* keypoints extraction
+
+## Checkpoints
+
+* Before 23 Sept: Multiclass on ASL, Constrastive on ASL.
+
+## Our Progress
+| **Category** | **CE** | **Triplet** |
+| --- | --- | --- |
+| **Dataset** | ![](/readme-src/data-ce.png) | ![](/readme-src/dataset-triplet.png) |
+| **Loss** | ![](/readme-src/loss-ce.png) | ![](/readme-src/losses-triplet.png) |
+| **TSNE** | ![](/readme-src/tsne-ce.png) <br> (more focused) | ![](/readme-src/tsne-triplet.png) <br> (may potentially capture more information about similarity of the gestures) |
+
+## Plan
+
+* Term 1: Gesture Recognition
+* Term 2: (If Term 1 goes smoothly) Sign Langauge?
