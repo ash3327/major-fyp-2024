@@ -2,10 +2,26 @@
 ### Useful Links
 
 [![Planning Document](https://img.shields.io/badge/Planning%20Document-blue?style=for-the-badge)](https://1drv.ms/w/s!Ago9nLnz9h82gosJqjlnjoOBK9SS-Q?e=YuU6Wy)
-[![MIRO Board](https://img.shields.io/badge/MIRO%20Board-orange?style=for-the-badge)](https://miro.com/welcomeonboard/TVd0ejI4NzhYTHZJOTQ1NDhKSWtPUlFyUWZnaU9oYk15MzAxcnNCbUtNT1NRaTVQZENFUk5sSEJaVEJMZktGNXwzNDU4NzY0NTIxODcyMjM4MDQwfDI=?share_link_id=807166828631)
+[![Midterm Report (Updating)](https://img.shields.io/badge/Midterm%20Report-orange?style=for-the-badge)](/Major_FYP_Planning_Report%20(updating).pdf)
+<!-- [![MIRO Board](https://img.shields.io/badge/MIRO%20Board-orange?style=for-the-badge)](https://miro.com/welcomeonboard/TVd0ejI4NzhYTHZJOTQ1NDhKSWtPUlFyUWZnaU9oYk15MzAxcnNCbUtNT1NRaTVQZENFUk5sSEJaVEJMZktGNXwzNDU4NzY0NTIxODcyMjM4MDQwfDI=?share_link_id=807166828631) -->
 
 * PLEASE UPDATE YOUR PROGRESS IN THE PLANNING DOCUMENT.
 * You can attach links to useful papers in the end of the planning document and please add comments properly so that everyone knows why the paper may be useful.
+
+> ![IMPORTANT]
+> What we will be doing TODAY:
+> * Tidy up the specs and think about what augmentations and models to use first.
+> * Previously:
+>   * Simple EfficientNet+CELoss and EfficientNet+TripletLoss for simple evaluation
+> * Next:
+>   * Tidy up specs
+>   * Augmentations to use
+>       * Image-trained (ie image augmentations)
+>       * Gesture-trained (ie keypoint extraction)
+>   * Writing script for keypoint extraction via mediapipe
+>   * Evaluation metrics
+>   * Analysis on the latent space graph
+>   * Papers (refer to the pdf submitted)
 
 ## Guides
 
@@ -39,6 +55,7 @@ Download these and put under `saved_models`.
 Use curl to fetch the file.
 
 * EfficientNet+CELoss, 30 epochs: https://drive.google.com/drive/folders/128DE8fLQqMX3iL1_0a2KuMJtmAAFq4vs
+* EfficientNet+TripletLoss (Raw), 40 epochs: https://drive.google.com/drive/folders/1Z9SMVnhLKA8j9L7I9SKLBeRl-damb9FE
 
 ### Datasets:
 
@@ -80,8 +97,11 @@ Under `tests` folder.
         * Face Dataset test (local execution): `tests/1_siamese_face`
         * Migration to asl dataset [1]: `tests/2_asl`
 * EfficientNet+CELoss:
-    * Training test: `tests/3_modularization_test/modularization_test.ipynb`
-    * Inference test: `tests/3_modularization_test/modularization_test_inference.ipynb`
+    * Training test: `tests/3_modularization_test/cross_entropy_loss/modularization_train_ce.ipynb`
+    * Inference test: `tests/3_modularization_test/cross_entropy_loss/modularization_test_inference.ipynb`
+* EfficientNet+TripletLoss (Raw):
+    * Training test: `tests/3_modularization_test/triplet_loss_raw/modularization_train_triplet.ipynb`
+    * Inference test: `tests/3_modularization_test/triplet_loss_raw/cross_entropy_loss/modularization_test_inference_triplet.ipynb`
 
 ### File Architecture
 

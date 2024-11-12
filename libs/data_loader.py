@@ -10,7 +10,7 @@ from typing import Literal
 from .data import ImageDataset, TripletDataset
 
 back = lambda x: os.path.dirname(x)
-base_path = back(back(os.getcwd()))
+base_path = back(back(os.path.normpath(__file__)))
 
 class ASLDataLoader:
     def __init__(self, cfgs:dict):
