@@ -7,7 +7,7 @@ from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
 from typing import Literal
 
-from .data import ImageDataset, TripletDataset
+from .data import ImageDataset, TripletDataset, ImageKptDataset
 
 back = lambda x: os.path.dirname(x)
 base_path = back(back(os.path.normpath(__file__)))
@@ -34,14 +34,17 @@ class ASLDataLoader:
         for attr, value in self.__dict__.items():
             print(f"{attr}: {value}")
 
-    def get_dataset(self, train:bool=True, transform=None, mode: Literal["standard", "triplets", "contrastive"] = "standard"):
+    def get_dataset(self, train:bool=True, transform=None, mode: Literal["standard", "triplets", "contrastive"] = "standard", has_keypoints: bool=False):
         if transform is None:
             transform = transforms.Compose([transforms.ToTensor()])
         folder_path = self.train_data_path if train else self.test_data_path
         
         match mode:
             case "standard":
-                self.dataset = ImageDataset(folder_path, transform=transform)
+                if has_keypoints:
+                    self.dataset = ImageKptDataset(folder_path, transform=transform)
+                else:
+                    self.dataset = ImageDataset(folder_path, transform=transform)
                 return self.dataset
             case "contrastive":
                 raise Exception(f"Mode '{mode}' not implemented yet.")
@@ -51,10 +54,10 @@ class ASLDataLoader:
             case _:
                 raise Exception(f"Mode '{mode}' not found.")
         
-    def get_dataloader(self, train:bool=True, batch_size=32, shuffle=True, transform=None, mode: Literal["standard", "triplets", "contrastive"] = "standard"):
+    def get_dataloader(self, train:bool=True, batch_size=32, shuffle=True, transform=None, mode: Literal["standard", "triplets", "contrastive"] = "standard", has_keypoints: bool=False):
         if transform is None:
             transform = transforms.Compose([transforms.ToTensor()])
-        dataset = self.get_dataset(train, transform, mode=mode)
+        dataset = self.get_dataset(train, transform, mode=mode, has_keypoints=has_keypoints)
         self.dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
         return self.dataloader
     

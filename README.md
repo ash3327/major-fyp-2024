@@ -32,6 +32,9 @@
 >   * Analysis on the latent space graph
 >   * Papers (refer to the pdf submitted)
 
+> [!NOTE]
+> Mediapipe problem: Cannot detect hands with high stability?
+
 ## What do we need to do now?
 
 * Make the project goal and rationale clearer, specific up to the application and details.
@@ -94,6 +97,14 @@ Given pairs or triplets $I_1,I_2,...,I_k$, evaluate the projected latents with a
 
 *SimCLR.*
 The approach uses InfoNCE loss alongside augmentations...
+
+#### Incoporating Keypoint Channel
+
+Two types of methods:
+* Image-based: Use keypoint channel only to highlight specific features, not using the keypoints directly as a graph
+    * Example: TwoStreamNetwork (2022), e2eET (2024)
+* Graph-based: Use the keypoints as graphs to train an GNN
+    * Example: STGCN-GR (2023) (which does NOT use the keypoints, but instead uses the muscle signals to construct a network)
 
 
 ### Augmentations

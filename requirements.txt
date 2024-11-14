@@ -35,3 +35,10 @@ seaborn
 pydot_ng==2.0.0
 pydot
 graphviz
+
+# mediapipe
+### FIXING PROTOBUF PROBLEM: wget https://raw.githubusercontent.com/protocolbuffers/protobuf/main/python/google/protobuf/internal/builder.py -O venv/Lib/site-packages/google/protobuf/internal/builder.py
+#==0.10.11
+#==0.10.14
+# try to use POWERSHELL to install if you are using windows. if you are not, good luck debugging.
+mediapipe==0.10.9
