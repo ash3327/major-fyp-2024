@@ -61,8 +61,10 @@
 
 | **Category** | **CE** | **Triplet** |
 | --- | --- | --- |
-| **Dataset** | ![](/readme-src/data-ce.png) | ![](/readme-src/dataset-triplet.png) |
+| **Dataset** | ![](/readme-src/data-ce.png)<br>libs.data.ImageDataset | ![](/readme-src/dataset-triplet.png)<br>libs.data.TripletDataset |
+| **Number of Epochs Trained** | 30 | 40 |
 | **Loss** | ![](/readme-src/loss-ce.png) | ![](/readme-src/losses-triplet.png) |
+| **Test Accuracy** | 0.9889 | 0.8419 (cosine similarity) |
 | **TSNE** | ![](/readme-src/tsne-ce.png) <br> (more focused) | ![](/readme-src/tsne-triplet.png) <br> (may potentially capture more information about similarity of the gestures) |
 
 ## Methodology
