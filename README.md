@@ -66,6 +66,28 @@
 | **Loss** | ![](/readme-src/loss-ce.png) | ![](/readme-src/losses-triplet.png) |
 | **Test Accuracy** | 0.9889 | 0.8419 (cosine similarity) |
 | **TSNE** | ![](/readme-src/tsne-ce.png) <br> (more focused) | ![](/readme-src/tsne-triplet.png) <br> (may potentially capture more information about similarity of the gestures) |
+| **Maximally Confused Classes** | GH; MN; RU; ST; VW | GH; MN; RU; ST; VW |
+
+<details>
+<summary>Easily Confused Classes</summary>
+
+| G | H |
+|---|---|
+| ![alt text](readme-src/00bb7b60-ba39-47be-b92c-f5f954bf7a15.rgb_0000.png) | ![alt text](readme-src/2cd47dda-bc0e-4d1e-ba90-f0a78f2cf3ec.rgb_0000.png) |
+| M | N |
+| ![alt text](readme-src/0a2f0d48-3726-4d70-80fb-2d80073da26d.rgb_0000.png) | ![alt text](readme-src/1e094c57-91ed-4eea-a2a8-fb82f3377998.rgb_0000.png) |
+| R | U |
+| ![alt text](readme-src/7dcf3d24-f09b-4f2f-a734-dea1e02a57d4.rgb_0000.png) | ![alt text](readme-src/9b8bf6d9-e786-4215-916e-7fc9e7152d8e.rgb_0000.png) |
+| S | T |
+| ![alt text](readme-src/0b9575c8-3e57-4212-b7fd-7251edd72e98.rgb_0000.png) | ![alt text](readme-src/2ec7ba20-9be8-4488-a361-45fb357249ea.rgb_0000.png) |
+| V | W |
+| ![alt text](readme-src/3f8b9033-478b-4b10-b8f8-49016646087c.rgb_0000.png) | ![alt text](readme-src/0a395fe4-45c0-44d6-915d-76838680dc6d.rgb_0000.png) |
+
+</details>
+
+* However, evidently, by training for only 30-40 epochs, the accuracy for triplet loss is significantly lower.
+* Going to test on the InfoNCE loss like SimCLR.
+* Going to see if using keypoint extraction helps.
 
 ## Methodology
 
