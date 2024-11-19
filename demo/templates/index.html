@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hand Gesture Classification</title>
+    <script>
+        // Function to fetch and update the gesture classification result
+        function fetchPrediction() {
+            fetch('/prediction')
+                .then(response => response.json())
+                .then(data => {
+                    const predictionBox = document.getElementById('prediction');
+                    predictionBox.textContent = `Current Prediction: ${data.prediction}`;
+                })
+                .catch(error => console.error('Error fetching prediction:', error));
+        }
+
+        // Periodically update the prediction every 500ms
+        setInterval(fetchPrediction, 500);
+    </script>
+    <style>
+        /* Styling to ensure the video stream maintains its aspect ratio */
+        img {
+            max-width: 100%;
+            height: auto; /* Preserve aspect ratio */
+            display: block;
+            margin: 0 auto;
+        }
+        #prediction {
+            font-size: 24px;
+            color: green;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">Hand Gesture Classification</h1>
+    <div>
+        <h3 style="text-align: center;">Live Video Feed</h3>
+        <img src="{{ url_for('video_feed') }}" width="800">
+    </div>
+    <div id="prediction">
+        Current Prediction: No Gesture Detected
+    </div>
+</body>
+</html>
