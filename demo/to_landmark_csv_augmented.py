@@ -59,7 +59,7 @@ def augment_landmarks(landmarks, num_rotations=10, num_scalings=5):
 mp_hands = mp.solutions.hands
 
 # Define the main directory containing subfolders
-main_dir = "Train_Alphabet"
+main_dir = "../kaggle/input/synthetic-asl-alphabet/Train_Alphabet"
 landmarks_data = []
 labels_data = []
 

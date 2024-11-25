@@ -20,26 +20,69 @@
         setInterval(fetchPrediction, 500);
     </script>
     <style>
-        /* Styling to ensure the video stream maintains its aspect ratio */
-        img {
-            max-width: 100%;
-            height: auto; /* Preserve aspect ratio */
-            display: block;
+        body {
+            max-width: 70%;
             margin: 0 auto;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .main-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .video-container {
+            flex: 2;  /* Takes up more space */
+        }
+        .reference-container {
+            flex: 1;  /* Takes up less space */
+            display: flex;
+            flex-direction: column;
+        }
+        .reference-image {
+            width: 100%;
+            border-radius: 8px;
+        }
+        .video-feed {
+            width: 100%;
+            border-radius: 8px;
         }
         #prediction {
             font-size: 24px;
-            color: green;
+            color: #2ecc71;
             text-align: center;
-            margin-top: 20px;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        h1, h3 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        .section-title {
+            margin-bottom: 10px;
+            color: #34495e;
         }
     </style>
 </head>
 <body>
-    <h1 style="text-align: center;">Hand Gesture Classification</h1>
-    <div>
-        <h3 style="text-align: center;">Live Video Feed</h3>
-        <img src="{{ url_for('video_feed') }}" width="800">
+    <h1>Hand Gesture Classification</h1>
+    <div class="main-container">
+        <div class="video-container">
+            <h3>Live Video Feed</h3>
+            <img class="video-feed" src="{{ url_for('video_feed') }}">
+        </div>
+        <div class="reference-container">
+            <div>
+                <h3 class="section-title">Reference Signs - Synthetic</h3>
+                <img class="reference-image" src="{{ url_for('static', filename='image.png') }}" alt="Reference hand signs">
+            </div>
+            <div>
+                <h3 class="section-title">Reference Signs - Real</h3>
+                <img class="reference-image" src="{{ url_for('static', filename='image-1.png') }}" alt="Reference hand signs">
+            </div>
+        </div>
     </div>
     <div id="prediction">
         Current Prediction: No Gesture Detected
