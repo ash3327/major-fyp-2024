@@ -22,7 +22,10 @@ def extract_features(model, dataloader, device='cuda'):
 
     return np.concatenate(features_list), np.concatenate(labels_list)
 
-def plot_tsne(features, labels_id):       
+def plot_tsne(features, labels_id, labels=None):
+    if labels is None:
+        labels = [f"Class {label}" for label in labels_id]
+
     # Perform t-SNE
     tsne = TSNE(n_components=2, random_state=42)
     features_2d = tsne.fit_transform(features)
@@ -30,12 +33,30 @@ def plot_tsne(features, labels_id):
     # Plotting the results
     plt.figure(figsize=(10, 8))
     scatter = plt.scatter(features_2d[:, 0], features_2d[:, 1], c=labels_id, cmap='viridis', alpha=0.5)
+    
+    # Calculate and plot class centers with labels
+    unique_labels = np.unique(labels_id)
+    for label in unique_labels:
+        # Get points for this class
+        mask = labels_id == label
+        label_name = labels[np.where(labels_id == label)[0][0]]
+        class_points = features_2d[mask]
+        
+        # Calculate center
+        center = np.mean(class_points, axis=0)
+        
+        # Add text label slightly above center
+        plt.text(center[0], center[1], f'{label_name}', 
+                horizontalalignment='center',
+                verticalalignment='bottom',
+                fontweight='bold')
+
     plt.colorbar(scatter)
     plt.title('t-SNE of Last Layer Input Features')
     plt.xlabel('t-SNE Component 1')
     plt.ylabel('t-SNE Component 2')
     plt.show()
-
+    
 def plot_similarity_matrix(all_embeddings, all_labels):
     # Extract unique class labels
     unique_labels = np.unique(all_labels)

@@ -70,6 +70,22 @@
 | **TSNE** | ![](/readme-src/tsne-ce.png) <br> (more focused) | ![](/readme-src/tsne-triplet.png) <br> (may potentially capture more information about similarity of the gestures) |
 | **Maximally Confused Classes** | GH; MN; RU; ST; VW | GH; MN; RU; ST; VW |
 
+(tests/3_modularization_test/triplet_loss_raw/modularization_test_inference_triplet_fast.ipynb)
+| | |
+|--|--|
+| ![alt text](/readme-src/image-122.png) |![](/demo/static/image.png) |
+* We can see that the latent space is closer to the perceptual similarity (trained only by 60 epochs!)
+* Next: Improve separation while maintaining continuity of the space.
+  * Use Tensorboard/whatever to monitor the evolution of the latent space?
+  * Training with dynamic dataset to learn "similar" poses.
+* Goals: Identify "key" poses from videos...?
+
+(demo/ce_augmented_test.ipynb)
+| | |
+|--|--|
+| ![alt text](/readme-src/image-17.png) |![](/demo/static/image.png) | 
+* 3-layer MLP on Mediapipe results, trained for 20 epochs, achieved test accuracy of 0.9945 (claimed).
+
 <details>
 <summary>Easily Confused Classes</summary>
 

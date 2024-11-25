@@ -42,28 +42,6 @@ def rotate_landmarks(landmarks, axis, angle):
     rotated_landmarks = np.dot(landmarks, rotation_matrix.T)
     return rotated_landmarks
 
-# Function to augment data
-def augment_landmarks(landmarks, num_rotations=10, num_scalings=5):
-    augmented_data = []
-    # Subtract the landmark 0 coordinate (origin adjustment)
-    origin = landmarks[0]
-    relative_landmarks = landmarks - origin
-
-    # Generate rotations
-    for axis in ['xy', 'xz', 'yz']:
-        for _ in range(num_rotations):
-            angle = np.random.uniform(-5, 5)  # Random angle in degrees
-            rotated_landmarks = rotate_landmarks(relative_landmarks, axis, angle)
-            augmented_data.append(rotated_landmarks)
-
-    # Generate scalings
-    for _ in range(num_scalings):
-        scale_factor = np.random.uniform(0.8, 1.2)  # Random scale factor
-        scaled_landmarks = relative_landmarks * scale_factor
-        augmented_data.append(scaled_landmarks)
-
-    return augmented_data
-
 # Initialize MediaPipe Hands with GPU optimization
 with mp_hands.Hands(
     static_image_mode=True,
@@ -108,13 +86,8 @@ with mp_hands.Hands(
                                 landmarks.append([landmark.x, landmark.y, landmark.z])
                             landmarks = np.array(landmarks)
 
-                            # Augment the data
-                            augmented_landmarks = augment_landmarks(landmarks)
-
-                            # Append the original and augmented data
-                            for augmented in augmented_landmarks:
-                                landmarks_data.append(augmented[1:].flatten())  # Exclude landmark 0
-                                labels_data.append(label)
+                            landmarks_data.append(landmarks[1:].flatten())  # Exclude landmark 0
+                            labels_data.append(label)
                     
                     pbar.update(1)
     
@@ -127,5 +100,5 @@ data['label'] = labels_data
 
 print(f"Saving {len(data)} samples to CSV...")
 # Save the data to CSV for use in the Siamese model training
-data.to_csv("augmented_hand_landmarks.csv", index=False)
+data.to_csv("basic_hand_landmarks.csv", index=False)
 print("Done!")
