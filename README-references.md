@@ -79,3 +79,9 @@
 ### ASL Datasets
 - How2Sign (2020) [https://how2sign.github.io/#download]
     - Paper: [https://arxiv.org/abs/2008.08143]
+
+## Other Papers
+
+- Text to Gesture
+  - Hand1000 (2024)[https://arxiv.org/pdf/2408.15461]
+  - HanDiffuser (2024) [https://arxiv.org/pdf/2403.01693]
