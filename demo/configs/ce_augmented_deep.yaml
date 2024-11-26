@@ -1,2 +1,2 @@
-model: embedding_model_aug_contrastive.h5
+model: embedding_model_aug_deep.h5
 class_means: class_means_aug.json
