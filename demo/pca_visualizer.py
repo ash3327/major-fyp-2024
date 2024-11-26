@@ -12,13 +12,34 @@ class PCAVisualizer:
         self.mean_embeddings = np.array([mean for mean in self.class_means.values()])
         self.labels = list(self.class_means.keys())
         
-        # Fit PCA on mean embeddings
+        # Initialize PCA with more components than needed to handle new classes
         self.pca = PCA(n_components=2)
         self.pca.fit(self.mean_embeddings)
         
         # Transform mean embeddings
         self.transformed_means = self.pca.transform(self.mean_embeddings)
         
+        # Store custom classes
+        self.custom_classes = {}
+        self.custom_transformed = None
+    
+    def add_class(self, class_name, embedding):
+        """Add a new class with its embedding"""
+        self.custom_classes[class_name] = embedding
+        
+        # Update PCA with all embeddings (original + custom)
+        all_embeddings = np.vstack([
+            self.mean_embeddings,
+            np.array([emb for emb in self.custom_classes.values()])
+        ])
+        
+        # Refit PCA and transform all points
+        self.pca.fit(all_embeddings)
+        self.transformed_means = self.pca.transform(self.mean_embeddings)
+        self.custom_transformed = self.pca.transform(
+            np.array([emb for emb in self.custom_classes.values()])
+        )
+    
     def transform_embedding(self, embedding):
         """Transform a new embedding using the fitted PCA"""
         if embedding.ndim == 1:
@@ -34,6 +55,14 @@ class PCAVisualizer:
                 'labels': self.labels
             }
         }
+        
+        # Add custom classes if they exist
+        if self.custom_transformed is not None:
+            data['custom_means'] = {
+                'x': self.custom_transformed[:, 0].tolist(),
+                'y': self.custom_transformed[:, 1].tolist(),
+                'labels': list(self.custom_classes.keys())
+            }
         
         if current_embedding is not None:
             transformed_current = self.transform_embedding(current_embedding)
