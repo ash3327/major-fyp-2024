@@ -11,5 +11,5 @@ __pycache__
 kaggle/
 images/
 *.zip
-*.h5
+*.weights.h5
 *.pth
