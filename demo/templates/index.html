@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hand Gesture Classification</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script>
         // Function to fetch and update the gesture classification result
         function fetchPrediction() {
@@ -16,12 +17,61 @@
                 .catch(error => console.error('Error fetching prediction:', error));
         }
 
-        // Periodically update the prediction every 500ms
+        // Function to update PCA plot
+        function updatePCAPlot() {
+            fetch('/pca_data')
+                .then(response => response.json())
+                .then(data => {
+                    const meanTrace = {
+                        x: data.means.x,
+                        y: data.means.y,
+                        text: data.means.labels,
+                        mode: 'markers+text',
+                        type: 'scatter',
+                        marker: {
+                            size: 10,
+                            color: 'blue'
+                        },
+                        textposition: 'top center',
+                        name: 'Class Means'
+                    };
+
+                    const traces = [meanTrace];
+
+                    if (data.current) {
+                        const currentTrace = {
+                            x: [data.current.x],
+                            y: [data.current.y],
+                            mode: 'markers',
+                            type: 'scatter',
+                            marker: {
+                                size: 12,
+                                color: 'red',
+                                symbol: 'star'
+                            },
+                            name: 'Current Gesture'
+                        };
+                        traces.push(currentTrace);
+                    }
+
+                    const layout = {
+                        title: 'PCA Visualization',
+                        xaxis: { title: 'First Principal Component' },
+                        yaxis: { title: 'Second Principal Component' }
+                    };
+
+                    Plotly.newPlot('pca-plot', traces, layout);
+                })
+                .catch(error => console.error('Error fetching PCA data:', error));
+        }
+
+        // Periodically update the prediction and PCA plot
         setInterval(fetchPrediction, 500);
+        setInterval(updatePCAPlot, 500);
     </script>
     <style>
         body {
-            max-width: 70%;
+            max-width: 90%;
             margin: 0 auto;
             padding: 20px;
             font-family: Arial, sans-serif;
@@ -31,11 +81,20 @@
             gap: 20px;
             margin-top: 20px;
         }
+        .left-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .right-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
         .video-container {
-            flex: 2;  /* Takes up more space */
+            margin-bottom: 20px;
         }
         .reference-container {
-            flex: 1;  /* Takes up less space */
             display: flex;
             flex-direction: column;
         }
@@ -64,28 +123,38 @@
             margin-bottom: 10px;
             color: #34495e;
         }
+        #pca-plot {
+            width: 100%;
+            height: 500px;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
     <h1>Hand Gesture Classification</h1>
     <div class="main-container">
-        <div class="video-container">
-            <h3>Live Video Feed</h3>
-            <img class="video-feed" src="{{ url_for('video_feed') }}">
-        </div>
-        <div class="reference-container">
-            <div>
-                <h3 class="section-title">Reference Signs - Synthetic</h3>
-                <img class="reference-image" src="{{ url_for('static', filename='image.png') }}" alt="Reference hand signs">
+        <div class="left-container">
+            <div class="video-container">
+                <h3>Live Video Feed</h3>
+                <img class="video-feed" src="{{ url_for('video_feed') }}">
             </div>
-            <div>
-                <h3 class="section-title">Reference Signs - Real</h3>
-                <img class="reference-image" src="{{ url_for('static', filename='image-1.png') }}" alt="Reference hand signs">
+            <div id="prediction">
+                Current Prediction: No Gesture Detected
             </div>
         </div>
-    </div>
-    <div id="prediction">
-        Current Prediction: No Gesture Detected
+        <div class="right-container">
+            <div id="pca-plot"></div>
+            <div class="reference-container">
+                <div>
+                    <h3 class="section-title">Reference Signs - Synthetic</h3>
+                    <img class="reference-image" src="{{ url_for('static', filename='image.png') }}" alt="Reference hand signs">
+                </div>
+                <div>
+                    <h3 class="section-title">Reference Signs - Real</h3>
+                    <img class="reference-image" src="{{ url_for('static', filename='image-1.png') }}" alt="Reference hand signs">
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>
