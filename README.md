@@ -83,7 +83,7 @@
 (demo/ce_augmented_test.ipynb)
 | | |
 |--|--|
-| ![alt text](/readme-src/image-17.png) |![](/demo/static/image.png) | 
+| ![alt text](/readme-src/image-17.png) | ![alt text](image-1.png) | 
 * 3-layer MLP on Mediapipe results, trained for 20 epochs, achieved test accuracy of 0.9945 (claimed).
 
 <details>

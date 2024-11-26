@@ -1,0 +1,2 @@
+model: embedding_model.h5
+class_means: class_means.json

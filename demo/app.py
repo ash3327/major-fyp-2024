@@ -1,7 +1,7 @@
 from flask import Flask, render_template, Response, jsonify
 import cv2
 import threading
-from gesture_recognition import process_frame
+from gesture_recognition import HandGestureRecognizer
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -9,6 +9,9 @@ app = Flask(__name__)
 # Global variables for prediction
 current_prediction = "No Gesture Detected"
 lock = threading.Lock()  # Lock for thread-safe prediction updates
+
+# model = HandGestureRecognizer('configs/old_model.yaml')
+model = HandGestureRecognizer('configs/ce_augmented_deep.yaml')
 
 # Video capture function
 def gen_frames():
@@ -23,7 +26,7 @@ def gen_frames():
         frame = cv2.flip(frame, 1)
 
         # Process the frame for gesture recognition
-        classification_result = process_frame(frame)
+        classification_result = model.process_frame(frame)
 
         # Update the prediction result
         with lock:
