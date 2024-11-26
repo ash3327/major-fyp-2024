@@ -30,3 +30,4 @@
 ## Inference
 
 * `python ce_augmented_test.ipynb` to visualize.
+* **Only ce_augmented_test_deep.ipynb works.**

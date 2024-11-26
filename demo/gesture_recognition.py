@@ -19,7 +19,7 @@ class HandGestureRecognizer:
         self.mp_hands = mp.solutions.hands
         self.hands = self.mp_hands.Hands(static_image_mode=False, max_num_hands=1, min_detection_confidence=0.5)
 
-    def classify_hand_landmarks(self, landmarks, threshold=0.5):
+    def classify_hand_landmarks(self, landmarks, threshold=0.5, return_landmarks=True):
         """
         Classify hand gesture based on adjusted landmarks.
         """
@@ -36,9 +36,9 @@ class HandGestureRecognizer:
         labels = list(self.class_means.keys())
         closest_labels = [labels[i] if d < threshold else "No Class" for i, d in zip(closest_indices, closest_distances)]
         
-        return closest_labels[0] if len(closest_labels) == 1 else closest_labels
+        return (closest_labels[0] if len(closest_labels) == 1 else closest_labels), embeddings
 
-    def process_frame(self, frame, threshold=0.5):
+    def process_frame(self, frame, threshold=0.5, return_landmarks=False):
         """
         Process a video frame, detect hand landmarks, adjust coordinates, 
         and classify the hand gesture.
@@ -66,7 +66,10 @@ class HandGestureRecognizer:
                 flattened_landmarks = adjusted_landmarks.flatten()
 
                 # Classify the gesture
-                return self.classify_hand_landmarks(flattened_landmarks)
-
+                classification_result, pred_embedding = self.classify_hand_landmarks(flattened_landmarks, return_landmarks=True)
+                if return_landmarks:
+                    return classification_result, pred_embedding
+                return classification_result
+        
         # If no hand is detected
         return "No Gesture Detected"
