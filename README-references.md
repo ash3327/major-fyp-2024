@@ -69,6 +69,7 @@
     - Paper: [https://arxiv.org/abs/1610.07214]
     - Image & extracted keypoint sequence (shape: 3 x 21 x 1500)
     - No explicit label on classes
+    - "B2 Counting" is from here
     - May be suitable for capturing the essence of continuity
 - Creative Senz3D (2015) [https://lttm.dei.unipd.it/downloads/gesture/#senz3d]
     - Paper: [https://lttm.dei.unipd.it/downloads/gesture/senz3d/images/paper.pdf][https://lttm.dei.unipd.it/paper_data/egovision/]
