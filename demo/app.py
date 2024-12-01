@@ -2,18 +2,20 @@
 Now do python demo/app.py instead of just python app.py.
 """
 
-from flask import Flask, render_template, Response, jsonify, request
-import cv2
-import threading
-import numpy as np
 import os
+import cv2
+import json
+import numpy as np
+import threading
+from flask import Flask, render_template, Response, jsonify, request
 from gesture_recognition import HandGestureRecognizer
 from pca_visualizer import PCAVisualizer
-import json
 import base64
 
-# Initialize Flask app
-app = Flask(__name__)
+# Initialize Flask app with proper template folder
+app = Flask(__name__, 
+           template_folder=os.path.join(os.path.dirname(__file__), 'templates'),
+           static_folder=os.path.join(os.path.dirname(__file__), 'static'))
 
 # Global variables
 current_prediction = "No Gesture Detected"
@@ -38,49 +40,70 @@ os.makedirs(CUSTOM_GESTURES_DIR, exist_ok=True)
 # Video capture function
 def gen_frames():
     global current_prediction, current_embedding, current_frame
-    cap = cv2.VideoCapture(0)
-    while True:
-        success, frame = cap.read()
-        if not success:
-            break
-
-        # Flip frame horizontally for a mirror-like effect
-        frame = cv2.flip(frame, 1)
-
-        # Store current frame
-        with lock:
-            current_frame = frame.copy()
-
-        # Process the frame for gesture recognition
-        if custom_gestures:
-            # Create a combined dictionary of model's class means and custom gestures
-            all_class_means = model.class_means.copy()
-            all_class_means.update(custom_gestures)
-            result = model.process_frame(frame, return_landmarks=True, supply_class_means=all_class_means)
-        else:
-            result = model.process_frame(frame, return_landmarks=True)
+    
+    try:
+        print("Opening video capture...")
+        cap = cv2.VideoCapture(0)
         
-        # Update the prediction result and embedding
-        with lock:
-            if isinstance(result, tuple):
-                pred, emb = result
-                # Check if we should skip alphabets
-                if not include_alphabets and pred.isalpha():
-                    current_prediction = "No Class"
-                else:
-                    current_prediction = pred
-                current_embedding = emb
+        if not cap.isOpened():
+            print("Error: Could not open video capture")
+            return
+            
+        print("Video capture opened successfully")
+        
+        while True:
+            success, frame = cap.read()
+            if not success:
+                print("Error: Could not read frame")
+                break
+                
+            # Flip frame horizontally for a mirror-like effect
+            frame = cv2.flip(frame, 1)
+            
+            # Store current frame for gesture capture
+            with lock:
+                current_frame = frame.copy()
+            
+            # Process the frame for gesture recognition
+            if custom_gestures:
+                # Create a combined dictionary of model's class means and custom gestures
+                all_class_means = model.class_means.copy()
+                all_class_means.update(custom_gestures)
+                result = model.process_frame(frame, return_landmarks=True, supply_class_means=all_class_means)
             else:
-                current_prediction = result
-                current_embedding = None
-
-        # Encode the frame as JPEG
-        ret, buffer = cv2.imencode('.jpg', frame)
-        frame = buffer.tobytes()
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-
-    cap.release()
+                result = model.process_frame(frame, return_landmarks=True)
+            
+            # Update the prediction result and embedding
+            with lock:
+                if isinstance(result, tuple):
+                    pred, emb = result
+                    print(f"Prediction: {pred}")
+                    # Check if we should skip alphabets
+                    if not include_alphabets and pred.isalpha():
+                        current_prediction = "No Class"
+                    else:
+                        current_prediction = pred
+                    current_embedding = emb
+                else:
+                    current_prediction = result
+                    current_embedding = None
+            
+            # Encode the frame as JPEG
+            ret, buffer = cv2.imencode('.jpg', frame)
+            if not ret:
+                print("Error: Could not encode frame")
+                break
+                
+            frame = buffer.tobytes()
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+                   
+    except Exception as e:
+        print(f"Error in video capture: {str(e)}")
+        
+    finally:
+        print("Releasing video capture...")
+        cap.release()
 
 # API endpoint for current prediction
 @app.route('/prediction')
