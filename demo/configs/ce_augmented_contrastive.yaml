@@ -1,2 +1,5 @@
-model: embedding_model_aug_contrastive.h5
-class_means: class_means_aug_contrastive.json
+# Contrastive Embedding: Augmented with Landmarks
+framework: tensorflow
+channels: keypoints
+model: demo/embedding_model_aug_contrastive.h5
+class_means: demo/class_means_aug_contrastive.json

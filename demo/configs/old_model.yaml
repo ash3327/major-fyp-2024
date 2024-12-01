@@ -1,2 +1,5 @@
-model: embedding_model.h5
-class_means: class_means.json
+# Contrastive Embedding: Augmented with Landmarks
+framework: tensorflow
+channels: keypoints
+model: demo/embedding_model.h5
+class_means: demo/class_means.json

@@ -1,0 +1,5 @@
+# Image Stream, Cross Entropy Loss
+framework: torch
+channels: images
+model: saved_models/model-2024-10-31-triplet.pth
+class_means: saved_models/model-2024-10-31-triplet.json

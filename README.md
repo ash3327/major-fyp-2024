@@ -10,6 +10,16 @@
 [![Planning Document](https://img.shields.io/badge/🔗%20Planning%20Document-blue?style=for-the-badge)](https://1drv.ms/w/s!Ago9nLnz9h82gosJqjlnjoOBK9SS-Q?e=YuU6Wy)
 [![Midterm Report (Updating)](https://img.shields.io/badge/🔗%20Midterm%20Report-orange?style=for-the-badge)](/Major_FYP_Planning_Report%20(updating).pdf)
 
+### HOW TO USE DEMO (LATEST - 1 DECEMBER)
+
+Execution:
+```bash
+python demo/app.py # NOT python app.py inside folder demo
+```
+
+After training new model:
+1) In `demo/configs`, write a new yaml file indicating the path of the new model, framework (torch or tensorflow), streams (images or keypoints) and class means.
+2) Run `python demo/generate_class_means.py demo/configs/<your_yaml_file>` to generate the new class means. It may take a while.
 
 ### Notes
 * PLEASE UPDATE YOUR PROGRESS IN THE PLANNING DOCUMENT.
@@ -73,7 +83,7 @@
 (tests/3_modularization_test/triplet_loss_raw/modularization_test_inference_triplet_fast.ipynb)
 | | | |
 |--|--|--|
-| ![alt text](/readme-src/image-122.png) |![](/demo/static/image.png) | ![alt text](image-3.png) |
+| ![alt text](/readme-src/image-122.png) |![](/demo/static/image.png) | ![alt text](/readme-src/image-37.png) |
 * We can see that the latent space is closer to the perceptual similarity (trained only by 60 epochs!)
 * Next: Improve separation while maintaining continuity of the space.
   * Use Tensorboard/whatever to monitor the evolution of the latent space?
@@ -84,9 +94,8 @@
 (demo/ce_augmented_test.ipynb)
 | | | |
 |--|--|--|
-| ![alt text](image-5.png) | ![ ](image-6.png) | ![alt text](image-1.png) | 
+| ![alt text](/readme-src/image-57.png) | ![ ](/readme-src/image-67.png) | ![alt text](/readme-src/image-172.png) | 
 * 3-layer MLP on Mediapipe results, trained for 20 epochs, achieved test accuracy of 0.9200.
-
 
 <details>
 <summary>Easily Confused Classes</summary>

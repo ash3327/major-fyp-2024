@@ -1,3 +1,7 @@
+"""
+Now do python demo/app.py instead of just python app.py.
+"""
+
 from flask import Flask, render_template, Response, jsonify, request
 import cv2
 import threading
@@ -21,7 +25,10 @@ include_alphabets = True  # Toggle for alphabet classification
 lock = threading.Lock()
 
 # Initialize models
-model = HandGestureRecognizer('configs/ce_augmented_deep.yaml')
+config_file = 'demo/configs/kpt_ce_augmented_deep.yaml'
+config_file = 'demo/configs/img_crossentropy.yaml'
+# config_file = 'demo/configs/img_triplet.yaml'
+model = HandGestureRecognizer(config_file)
 pca_viz = PCAVisualizer(model.config["class_means"])
 
 # Ensure the custom gestures directory exists
@@ -45,36 +52,23 @@ def gen_frames():
             current_frame = frame.copy()
 
         # Process the frame for gesture recognition
-        result = model.process_frame(frame, return_landmarks=True)
+        if custom_gestures:
+            # Create a combined dictionary of model's class means and custom gestures
+            all_class_means = model.class_means.copy()
+            all_class_means.update(custom_gestures)
+            result = model.process_frame(frame, return_landmarks=True, supply_class_means=all_class_means)
+        else:
+            result = model.process_frame(frame, return_landmarks=True)
         
         # Update the prediction result and embedding
         with lock:
             if isinstance(result, tuple):
                 pred, emb = result
-                # Check custom gestures first
-                if custom_gestures:
-                    min_dist = float('inf')
-                    closest_gesture = None
-                    for gesture_name, gesture_emb in custom_gestures.items():
-                        dist = np.linalg.norm(emb - gesture_emb)
-                        if dist < min_dist:
-                            min_dist = dist
-                            closest_gesture = gesture_name
-                    # If a custom gesture is closer than the threshold, use it
-                    if min_dist < 0.5:  # You may need to adjust this threshold
-                        current_prediction = closest_gesture
-                    else:
-                        # Check if we should skip alphabets
-                        if not include_alphabets and pred.isalpha():
-                            current_prediction = "No Gesture Detected"
-                        else:
-                            current_prediction = pred
+                # Check if we should skip alphabets
+                if not include_alphabets and pred.isalpha():
+                    current_prediction = "No Class"
                 else:
-                    # Check if we should skip alphabets
-                    if not include_alphabets and pred.isalpha():
-                        current_prediction = "No Gesture Detected"
-                    else:
-                        current_prediction = pred
+                    current_prediction = pred
                 current_embedding = emb
             else:
                 current_prediction = result
