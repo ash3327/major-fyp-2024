@@ -8,6 +8,8 @@
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script>
         let includeAlphabets = true;
+        let isWebcamMode = true;
+        let updateInterval;
 
         // Function to fetch and update stored gestures
         function fetchStoredGestures() {
@@ -176,6 +178,90 @@
             .catch(error => console.error('Error toggling alphabets:', error));
         }
 
+        // Function to toggle between webcam and image upload modes
+        function toggleMode() {
+            isWebcamMode = !isWebcamMode;
+            const button = document.getElementById('toggle-mode');
+            const uploadControls = document.getElementById('upload-controls');
+            const webcamFeed = document.getElementById('webcam-feed');
+            const imageDisplay = document.getElementById('image-display');
+
+            if (isWebcamMode) {
+                button.textContent = 'Switch to Image Upload';
+                uploadControls.style.display = 'none';
+                webcamFeed.style.display = 'block';
+                imageDisplay.style.display = 'none';
+                // Restart periodic updates
+                startPeriodicUpdates();
+            } else {
+                button.textContent = 'Switch to Webcam';
+                uploadControls.style.display = 'block';
+                webcamFeed.style.display = 'none';
+                imageDisplay.style.display = 'block';
+                // Stop periodic updates
+                stopPeriodicUpdates();
+            }
+
+            // Call backend to sync mode
+            fetch('/toggle_mode', {
+                method: 'POST'
+            });
+        }
+
+        // Function to upload and process image
+        function uploadImage() {
+            const fileInput = document.getElementById('image-upload');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select an image first');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            fetch('/upload_image', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                
+                // Update the image display
+                document.getElementById('uploaded-image').src = data.image;
+                // Update prediction
+                document.getElementById('prediction').textContent = `Current Prediction: ${data.prediction}`;
+                // Update PCA plot
+                updatePCAPlot();
+            })
+            .catch(error => {
+                console.error('Error uploading image:', error);
+                alert('Error uploading image. Please try again.');
+            });
+        }
+
+        // Function to start periodic updates
+        function startPeriodicUpdates() {
+            updateInterval = setInterval(() => {
+                if (isWebcamMode) {
+                    fetchPrediction();
+                    updatePCAPlot();
+                }
+            }, 500);
+        }
+
+        // Function to stop periodic updates
+        function stopPeriodicUpdates() {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+        }
+
         // Function to show save indicator
         function showSaveIndicator(message) {
             const indicator = document.getElementById('save-indicator');
@@ -186,6 +272,12 @@
             }, 2000);
         }
 
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchStoredGestures();
+            startPeriodicUpdates();
+        });
+
         // Handle keyboard events
         document.addEventListener('keydown', function(event) {
             if (event.code === 'Space') {
@@ -193,15 +285,6 @@
                 storeGesture();
             }
         });
-
-        // Initialize the page
-        document.addEventListener('DOMContentLoaded', function() {
-            fetchStoredGestures();
-        });
-
-        // Periodically update the prediction and PCA plot
-        setInterval(fetchPrediction, 500);
-        setInterval(updatePCAPlot, 500);
     </script>
     <style>
         body {
@@ -346,10 +429,24 @@
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="mb-0">Live Feed</h3>
+                        <h3 class="mb-0">Input Feed</h3>
                     </div>
                     <div class="card-body">
-                        <img class="video-feed" src="{{ url_for('video_feed') }}">
+                        <div class="mode-controls mb-3">
+                            <button id="toggle-mode" class="btn btn-primary" onclick="toggleMode()">
+                                Switch to Image Upload
+                            </button>
+                            <div id="upload-controls" style="display: none;" class="mt-3">
+                                <input type="file" id="image-upload" accept="image/*" class="form-control mb-2">
+                                <button onclick="uploadImage()" class="btn btn-success">Process Image</button>
+                            </div>
+                        </div>
+                        <div id="webcam-feed">
+                            <img class="video-feed" src="{{ url_for('video_feed') }}">
+                        </div>
+                        <div id="image-display" style="display: none;">
+                            <img id="uploaded-image" class="video-feed" src="">
+                        </div>
                         <div id="prediction">Current Prediction: No Gesture Detected</div>
                         <div class="text-center btn-controls">
                             <button id="toggle-alphabets" onclick="toggleAlphabets()" class="btn btn-danger mb-3">

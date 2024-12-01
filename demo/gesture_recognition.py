@@ -66,7 +66,8 @@ class HandGestureRecognizer:
         class_means = supply_class_means if supply_class_means else self.class_means
             
         embeddings = self.extract_embeddings(landmarks)
-        
+        # print('***',class_means)
+
         if len(class_means) == 0:
             return self.NO_GESTURE_DETECTED, embeddings
 
@@ -75,7 +76,7 @@ class HandGestureRecognizer:
         closest_distances = np.min(distances, axis=1)
         
         labels = list(class_means.keys())
-        closest_labels = [labels[i] if d < threshold else "No Class" for i, d in zip(closest_indices, closest_distances)]
+        closest_labels = [labels[i] if d < threshold else f"No Class (Closest: {labels[i]}, Dist: {d})" for i, d in zip(closest_indices, closest_distances)]
         
         return (closest_labels[0] if len(closest_labels) == 1 else closest_labels), embeddings
 

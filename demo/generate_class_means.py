@@ -74,7 +74,7 @@ def compute_class_means(model, X, y, classes):
 def main():
     parser = argparse.ArgumentParser(description='Generate class means for a model')
     parser.add_argument('config_path', help='Path to the model config YAML file')
-    parser.add_argument('--data', default='kaggle/input/synthetic-asl-alphabet/Test_Alphabet',
+    parser.add_argument('--data', default='kaggle/input/synthetic-asl-alphabet/Train_Alphabet',
                       help='Path to the training data directory')
     args = parser.parse_args()
 

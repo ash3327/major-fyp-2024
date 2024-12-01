@@ -24,12 +24,13 @@ current_frame = None
 custom_gestures = {}  # Store custom gesture embeddings
 gesture_counter = 1
 include_alphabets = True  # Toggle for alphabet classification
+is_webcam_mode = True  # New variable to track mode
 lock = threading.Lock()
 
 # Initialize models
 config_file = 'demo/configs/kpt_ce_augmented_deep.yaml'
 config_file = 'demo/configs/img_crossentropy.yaml'
-# config_file = 'demo/configs/img_triplet.yaml'
+config_file = 'demo/configs/img_triplet.yaml'
 model = HandGestureRecognizer(config_file)
 pca_viz = PCAVisualizer(model.config["class_means"])
 
@@ -172,6 +173,86 @@ def get_stored_gestures():
             'image_path': f'custom_gestures/{img_filename}'
         })
     return jsonify(gestures)
+
+@app.route('/upload_image', methods=['POST'])
+def upload_image():
+    global current_frame, current_prediction, current_embedding, is_webcam_mode
+    
+    try:
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image uploaded'}), 400
+            
+        file = request.files['image']
+        if file.filename == '':
+            return jsonify({'error': 'No image selected'}), 400
+            
+        # Read and process the uploaded image
+        image_bytes = file.read()
+        nparr = np.frombuffer(image_bytes, np.uint8)
+        frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        
+        if frame is None:
+            return jsonify({'error': 'Invalid image format'}), 400
+            
+        # Update current frame
+        with lock:
+            current_frame = frame
+            is_webcam_mode = False
+            
+            # Process the frame for gesture recognition
+            if custom_gestures:
+                all_class_means = model.class_means.copy()
+                all_class_means.update(custom_gestures)
+                result = model.process_frame(frame, return_landmarks=True, supply_class_means=all_class_means)
+            else:
+                result = model.process_frame(frame, return_landmarks=True)
+                
+            # Update prediction and embedding
+            if isinstance(result, tuple):
+                pred, emb = result
+                if not include_alphabets and pred.isalpha():
+                    current_prediction = "No Class"
+                else:
+                    current_prediction = pred
+                current_embedding = emb
+            else:
+                current_prediction = result
+                current_embedding = None
+                
+        # Convert the processed frame to base64 for display
+        _, buffer = cv2.imencode('.jpg', frame)
+        img_base64 = base64.b64encode(buffer).decode('utf-8')
+        
+        return jsonify({
+            'success': True,
+            'image': f'data:image/jpeg;base64,{img_base64}',
+            'prediction': current_prediction
+        })
+        
+    except Exception as e:
+        print(f"Error processing uploaded image: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/toggle_mode', methods=['POST'])
+def toggle_mode():
+    global is_webcam_mode
+    is_webcam_mode = not is_webcam_mode
+    return jsonify({'is_webcam_mode': is_webcam_mode})
+
+@app.route('/current_frame')
+def get_current_frame():
+    global current_frame
+    
+    if current_frame is None:
+        return jsonify({'error': 'No frame available'}), 404
+        
+    # Convert the current frame to base64
+    _, buffer = cv2.imencode('.jpg', current_frame)
+    img_base64 = base64.b64encode(buffer).decode('utf-8')
+    
+    return jsonify({
+        'image': f'data:image/jpeg;base64,{img_base64}'
+    })
 
 # Flask routes
 @app.route('/')
