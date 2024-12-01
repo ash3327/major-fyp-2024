@@ -35,7 +35,7 @@ model = HandGestureRecognizer(config_file)
 pca_viz = PCAVisualizer(model.config["class_means"])
 
 # Ensure the custom gestures directory exists
-CUSTOM_GESTURES_DIR = os.path.join('static', 'custom_gestures')
+CUSTOM_GESTURES_DIR = os.path.join('demo/static', 'custom_gestures')
 os.makedirs(CUSTOM_GESTURES_DIR, exist_ok=True)
 
 # Video capture function
@@ -154,7 +154,7 @@ def store_gesture():
         
         return jsonify({
             'gesture_name': gesture_name,
-            'image_path': f'custom_gestures/{img_filename}'
+            'image_path': f'static/custom_gestures/{img_filename}'
         })
 
 @app.route('/toggle_alphabets', methods=['POST'])
@@ -170,7 +170,7 @@ def get_stored_gestures():
         img_filename = f"{gesture_name.lower().replace(' ', '_')}.jpg"
         gestures.append({
             'name': gesture_name,
-            'image_path': f'custom_gestures/{img_filename}'
+            'image_path': f'static/custom_gestures/{img_filename}'
         })
     return jsonify(gestures)
 
