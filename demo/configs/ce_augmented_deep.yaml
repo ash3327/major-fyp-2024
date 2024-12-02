@@ -1,0 +1,5 @@
+# Contrastive Embedding: Augmented with Landmarks
+framework: tensorflow
+channels: keypoints
+model: demo/embedding_model_aug_deep.h5
+class_means: demo/class_means_aug_deep.json

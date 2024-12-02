@@ -51,7 +51,7 @@
 - DYNAMIC HAND GESTURE RECOGNITION BASED ON 3D HAND POSE ESTIMATION FOR HRI (2022) [https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9427388]
     - Insight for myself: Temporal: 
         - Gesture sequence extracted -> process into discretized "gestures", something like this:
-        - ![alt text](image.png)
+        - ![alt text](/readme-src/image-dyn-gest.png)
 
 ### Graph contrastive
 - GraphCL [https://arxiv.org/pdf/2010.13902]
@@ -69,6 +69,7 @@
     - Paper: [https://arxiv.org/abs/1610.07214]
     - Image & extracted keypoint sequence (shape: 3 x 21 x 1500)
     - No explicit label on classes
+    - "B2 Counting" is from here
     - May be suitable for capturing the essence of continuity
 - Creative Senz3D (2015) [https://lttm.dei.unipd.it/downloads/gesture/#senz3d]
     - Paper: [https://lttm.dei.unipd.it/downloads/gesture/senz3d/images/paper.pdf][https://lttm.dei.unipd.it/paper_data/egovision/]
@@ -79,3 +80,9 @@
 ### ASL Datasets
 - How2Sign (2020) [https://how2sign.github.io/#download]
     - Paper: [https://arxiv.org/abs/2008.08143]
+
+## Other Papers
+
+- Text to Gesture
+  - Hand1000 (2024)[https://arxiv.org/pdf/2408.15461]
+  - HanDiffuser (2024) [https://arxiv.org/pdf/2403.01693]

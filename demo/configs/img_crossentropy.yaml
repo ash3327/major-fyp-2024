@@ -1,0 +1,6 @@
+# Image Stream, Cross Entropy Loss
+# Fitted on TrainData
+framework: torch
+channels: images
+model: saved_models/model-2024-10-28-1.pth
+class_means: saved_models/model-2024-10-28-1.json
