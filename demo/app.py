@@ -202,7 +202,7 @@ def get_stored_gestures():
 
 @app.route('/upload_image', methods=['POST'])
 def upload_image():
-    global current_frame, current_prediction, current_embedding, is_webcam_mode
+    global current_frame, current_prediction, current_embedding, current_predictions, is_webcam_mode
     
     try:
         if 'image' not in request.files:
@@ -241,7 +241,7 @@ def upload_image():
                 else:
                     current_prediction = pred
                 current_embedding = emb
-                current_predictions = all_preds
+                current_predictions = all_preds  # Store all predictions
             else:
                 current_prediction = result
                 current_embedding = None
@@ -254,7 +254,8 @@ def upload_image():
         return jsonify({
             'success': True,
             'image': f'data:image/jpeg;base64,{img_base64}',
-            'prediction': current_prediction
+            'prediction': current_prediction,
+            'all_predictions': current_predictions  # Include all predictions in response
         })
         
     except Exception as e:
@@ -282,10 +283,17 @@ def get_current_frame():
         'image': f'data:image/jpeg;base64,{img_base64}'
     })
 
+@app.route('/model_info')
+def get_model_info():
+    return jsonify({
+        'model_name': args.model,
+        'config_path': config_path
+    })
+
 # Flask routes
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', model_name=args.model)
 
 @app.route('/video_feed')
 def video_feed():

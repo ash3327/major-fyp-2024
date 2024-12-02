@@ -169,11 +169,33 @@
             margin-left: 10px;
             color: #666;
         }
+        
+        .alert-info {
+            background-color: #e3f2fd;
+            border-color: #bee5eb;
+            color: #0c5460;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 1.1em;
+        }
+
+        .model-name {
+            text-transform: uppercase;
+            font-weight: bold;
+            color: #007bff;
+        }
     </style>
 </head>
 <body>
     <div id="save-indicator"></div>
     <div class="container">
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    Current Model: <strong class="model-name">{{ model_name }}</strong>
+                </div>
+            </div>
+        </div>
         <div class="row">
             <!-- Input Feed -->
             <div class="col-lg-6">
@@ -500,8 +522,49 @@
                 
                 // Update the image display
                 document.getElementById('uploaded-image').src = data.image;
-                // Update prediction
+                
+                // Update prediction and rankings
                 document.getElementById('currentPrediction').textContent = `Current Prediction: ${data.prediction}`;
+                
+                // Update prediction rankings
+                const rankingsContainer = document.getElementById('predictionRankings');
+                rankingsContainer.innerHTML = ''; // Clear previous rankings
+                
+                if (data.all_predictions && data.all_predictions.length > 0) {
+                    // Find the minimum distance for normalization
+                    const minDistance = Math.min(...data.all_predictions.map(p => p.distance));
+                    
+                    // Display top 5 predictions
+                    data.all_predictions.slice(0, 5).forEach(pred => {
+                        const container = document.createElement('div');
+                        container.className = 'prediction-bar-container';
+                        
+                        const label = document.createElement('span');
+                        label.className = 'prediction-label';
+                        label.textContent = pred.class;
+                        
+                        const barContainer = document.createElement('div');
+                        barContainer.style.display = 'inline-block';
+                        barContainer.style.width = '200px';
+                        
+                        const bar = document.createElement('div');
+                        bar.className = 'prediction-bar';
+                        // Calculate width based on relative distance (inverse relationship)
+                        const width = Math.max(20, (minDistance / pred.distance) * 100);
+                        bar.style.width = `${width}%`;
+                        
+                        const distance = document.createElement('span');
+                        distance.className = 'prediction-distance';
+                        distance.textContent = pred.distance.toFixed(3);
+                        
+                        barContainer.appendChild(bar);
+                        container.appendChild(label);
+                        container.appendChild(barContainer);
+                        container.appendChild(distance);
+                        rankingsContainer.appendChild(container);
+                    });
+                }
+                
                 // Update PCA plot
                 updatePCAPlot();
             })
@@ -542,6 +605,14 @@
         document.addEventListener('DOMContentLoaded', function() {
             fetchStoredGestures();
             startPeriodicUpdates();
+            
+            // Update model info in the UI
+            fetch('/model_info')
+                .then(response => response.json())
+                .then(data => {
+                    document.querySelector('.alert-info strong').textContent = data.model_name;
+                })
+                .catch(error => console.error('Error fetching model info:', error));
         });
 
         // Handle keyboard events
