@@ -66,19 +66,31 @@ class HandGestureRecognizer:
         class_means = supply_class_means if supply_class_means else self.class_means
             
         embeddings = self.extract_embeddings(landmarks)
-        # print('***',class_means)
 
         if len(class_means) == 0:
-            return self.NO_GESTURE_DETECTED, embeddings
+            return self.NO_GESTURE_DETECTED, embeddings, []
 
-        distances = np.array([[np.linalg.norm(embedding - np.array(mean)) for label, mean in class_means.items()] for embedding in embeddings])
-        closest_indices = np.argmin(distances, axis=1)
-        closest_distances = np.min(distances, axis=1)
+        # Calculate distances to all class means
+        distances = {}
+        for class_name, mean_embedding in class_means.items():
+            dist = np.linalg.norm(embeddings - mean_embedding)
+            distances[class_name] = float(dist)
+
+        # Sort distances and get predictions
+        sorted_predictions = sorted(distances.items(), key=lambda x: x[1])
+        best_prediction = sorted_predictions[0][0]
+        best_distance = sorted_predictions[0][1]
+
+        # Format predictions for return
+        all_predictions = [{"class": cls, "distance": dist} for cls, dist in sorted_predictions]
         
-        labels = list(class_means.keys())
-        closest_labels = [labels[i] if d < threshold else f"No Class (Closest: {labels[i]}, Dist: {d})" for i, d in zip(closest_indices, closest_distances)]
-        
-        return (closest_labels[0] if len(closest_labels) == 1 else closest_labels), embeddings
+        # Apply threshold
+        if best_distance > threshold:
+            best_prediction = f"No Class (Closest: {best_prediction}, Dist: {best_distance:.3f})"
+
+        if return_landmarks:
+            return best_prediction, embeddings, all_predictions
+        return best_prediction
 
     def process_frame(self, frame, threshold=0.5, return_landmarks=False, mode='bgr', supply_class_means=None):
         """
@@ -123,14 +135,14 @@ class HandGestureRecognizer:
 
         if model_inputs is not None:
             # Classify the gesture
-            classification_result, pred_embedding = self.classify_hand_landmarks(model_inputs, return_landmarks=True, supply_class_means=supply_class_means)
+            classification_result, pred_embedding, all_predictions = self.classify_hand_landmarks(model_inputs, return_landmarks=True, supply_class_means=supply_class_means)
             if return_landmarks:
-                return classification_result, pred_embedding
+                return classification_result, pred_embedding, all_predictions
             return classification_result
         
         # If no hand is detected
         if return_landmarks:
-            return self.NO_GESTURE_DETECTED, None
+            return self.NO_GESTURE_DETECTED, None, []
         return self.NO_GESTURE_DETECTED
         
         

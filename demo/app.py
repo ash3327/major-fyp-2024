@@ -11,6 +11,23 @@ from flask import Flask, render_template, Response, jsonify, request
 from gesture_recognition import HandGestureRecognizer
 from pca_visualizer import PCAVisualizer
 import base64
+import argparse
+
+# Create argument parser
+parser = argparse.ArgumentParser(description='Hand Gesture Recognition Demo')
+parser.add_argument('-m', '--model', type=str, choices=['kpt_contrastive', 'img_ce', 'img_triplet'],
+                    default='kpt_contrastive', help='Model to use for gesture recognition')
+args = parser.parse_args()
+
+# Map model choice to config file
+MODEL_CONFIGS = {
+    'kpt_contrastive': 'demo/configs/kpt_ce_augmented_deep.yaml',
+    'img_ce': 'demo/configs/img_crossentropy.yaml',
+    'img_triplet': 'demo/configs/img_triplet.yaml'
+}
+
+config_path = MODEL_CONFIGS[args.model]
+print(f"Using model config: {config_path}")
 
 # Initialize Flask app with proper template folder
 app = Flask(__name__, 
@@ -20,6 +37,7 @@ app = Flask(__name__,
 # Global variables
 current_prediction = "No Gesture Detected"
 current_embedding = None
+current_predictions = []  # Store all predictions
 current_frame = None
 custom_gestures = {}  # Store custom gesture embeddings
 gesture_counter = 1
@@ -28,11 +46,14 @@ is_webcam_mode = True  # New variable to track mode
 lock = threading.Lock()
 
 # Initialize models
-config_file = 'demo/configs/kpt_ce_augmented_deep.yaml'
-config_file = 'demo/configs/img_crossentropy.yaml'
-config_file = 'demo/configs/img_triplet.yaml'
-model = HandGestureRecognizer(config_file)
-pca_viz = PCAVisualizer(model.config["class_means"])
+try:
+    print(f"Initializing model with config: {config_path}")
+    model = HandGestureRecognizer(config_path)
+    pca_viz = PCAVisualizer(model.config["class_means"])
+    print(f"Successfully loaded model: {args.model}")
+except Exception as e:
+    print(f"Error initializing model: {str(e)}")
+    raise
 
 # Ensure the custom gestures directory exists
 CUSTOM_GESTURES_DIR = os.path.join('demo/static', 'custom_gestures')
@@ -40,7 +61,7 @@ os.makedirs(CUSTOM_GESTURES_DIR, exist_ok=True)
 
 # Video capture function
 def gen_frames():
-    global current_prediction, current_embedding, current_frame
+    global current_prediction, current_embedding, current_predictions, current_frame
     
     try:
         print("Opening video capture...")
@@ -77,17 +98,19 @@ def gen_frames():
             # Update the prediction result and embedding
             with lock:
                 if isinstance(result, tuple):
-                    pred, emb = result
-                    print(f"Prediction: {pred}")
+                    pred, emb, all_preds = result
+                    # print(f"Prediction: {pred}")
                     # Check if we should skip alphabets
                     if not include_alphabets and pred.isalpha():
                         current_prediction = "No Class"
                     else:
                         current_prediction = pred
                     current_embedding = emb
+                    current_predictions = all_preds
                 else:
                     current_prediction = result
                     current_embedding = None
+                    current_predictions = []
             
             # Encode the frame as JPEG
             ret, buffer = cv2.imencode('.jpg', frame)
@@ -109,9 +132,12 @@ def gen_frames():
 # API endpoint for current prediction
 @app.route('/prediction')
 def get_prediction():
-    global current_prediction
+    global current_prediction, current_predictions
     with lock:  # Ensure thread-safe access
-        return jsonify(prediction=current_prediction)
+        return jsonify({
+            'prediction': current_prediction,
+            'all_predictions': current_predictions
+        })
 
 # API endpoint for PCA data
 @app.route('/pca_data')
@@ -209,15 +235,17 @@ def upload_image():
                 
             # Update prediction and embedding
             if isinstance(result, tuple):
-                pred, emb = result
+                pred, emb, all_preds = result
                 if not include_alphabets and pred.isalpha():
                     current_prediction = "No Class"
                 else:
                     current_prediction = pred
                 current_embedding = emb
+                current_predictions = all_preds
             else:
                 current_prediction = result
                 current_embedding = None
+                current_predictions = []
                 
         # Convert the processed frame to base64 for display
         _, buffer = cv2.imencode('.jpg', frame)
