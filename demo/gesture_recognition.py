@@ -96,7 +96,7 @@ class HandGestureRecognizer:
         """
         Process a video frame, detect hand landmarks, adjust coordinates, 
         and classify the hand gesture.
-        
+            
         Args:
             frame: A single video frame (BGR format).
             threshold: Distance threshold for classification.

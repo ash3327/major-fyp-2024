@@ -239,11 +239,40 @@
             <!-- Visualization and Stored Gestures -->
             <div class="col-lg-6">
                 <div class="card mb-4">
-                    <div class="card-header">Gesture Space Visualization</div>
+                    <div class="card-header">
+                        <ul class="nav nav-tabs card-header-tabs">
+                            <li class="nav-item">
+                                <a class="nav-link active" onclick="showContent('pca')" href="javascript:void(0);">Gesture Space Visualization</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" onclick="showContent('reference')" href="javascript:void(0);">Reference Image</a>
+                            </li>
+                        </ul>
+                    </div>
                     <div class="card-body">
-                        <div id="pca-plot"></div>
+                        <div id="content">
+                            <div id="pca" class="content-pane">
+                                <div id="pca-plot"></div>
+                            </div>
+                            <div id="reference" class="content-pane" style="display: none;">
+                                <img src="static/image.png" class="img-fluid" alt="Reference Image">
+                            </div>
+                        </div>
                     </div>
                 </div>
+                
+                <script>
+                    function showContent(type) {
+                        // Hide all content panes
+                        const panes = document.querySelectorAll('.content-pane');
+                        panes.forEach(pane => {
+                            pane.style.display = 'none';
+                        });
+                
+                        // Show the selected content pane
+                        document.getElementById(type).style.display = 'block';
+                    }
+                </script>
                 
                 <div class="card">
                     <div class="card-header">Stored Gestures</div>
