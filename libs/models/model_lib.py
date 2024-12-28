@@ -7,7 +7,7 @@ class ModelLib:
         
     def load(self, device='cuda'):
         self.model = SimpleClassifier(num_classes=27)
-        self.model = _load_model(self.model, f'{ROOT}/saved_models/model-2024-10-28-1.pth')
+        self.model = _load_model(self.model, f'{ROOT}/saved_models/img_crossentropy/model-2024-10-28-1.pth')
         self.model.to(device)
 
     def extract_features(self, dataloader, device='cuda'):

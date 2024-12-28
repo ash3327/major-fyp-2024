@@ -2,13 +2,13 @@ import sys
 import json
 import numpy as np
 import yaml
+sys.path.append(".")
 
 import cv2
 import torch
 import mediapipe as mp
 from tensorflow.keras.models import load_model
 
-sys.path.append(".")
 from libs.models.efficientnet_mlp_classifier import SimpleClassifier
 from libs.model_loader import load_model as torch_load_model
 

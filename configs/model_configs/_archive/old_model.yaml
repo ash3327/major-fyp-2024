@@ -1,0 +1,5 @@
+# Contrastive Embedding: Augmented with Landmarks
+framework: tensorflow
+channels: keypoints
+model: saved_models/old_model/embedding_model.h5
+class_means: saved_models/old_model/class_means.json

@@ -13,3 +13,9 @@ images/
 *.zip
 *.weights.h5
 *.pth
+*.h5
+*.csv
+
+# archived
+# _archive/
+/data/*

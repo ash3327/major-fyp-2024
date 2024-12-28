@@ -1,6 +1,5 @@
 """
 Now do python demo/app.py instead of just python app.py.
-Example: -m kpt_contrastive_1
 """
 
 import os
@@ -16,17 +15,19 @@ import argparse
 
 # Create argument parser
 parser = argparse.ArgumentParser(description='Hand Gesture Recognition Demo')
-parser.add_argument('-m', '--model', type=str,
-                    default='kpt_contrastive_1', help='Model to use for gesture recognition, advised list under demo/configs/ (file name only, without .yaml suffix)')
+parser.add_argument('-m', '--model', type=str, choices=['kpt_contrastive', 'img_ce', 'img_triplet'],
+                    default='kpt_contrastive', help='Model to use for gesture recognition')
 args = parser.parse_args()
 
 # Map model choice to config file
+MODEL_CONFIGS = {
+    'kpt_contrastive': 'demo/configs/kpt_ce_augmented_deep.yaml',
+    'img_ce': 'demo/configs/img_crossentropy.yaml',
+    'img_triplet': 'demo/configs/img_triplet.yaml'
+}
 
-config_path = f'configs/model_configs/{args.model}.yaml' #MODEL_CONFIGS[args.model]
-if not os.path.exists(config_path):
-    print(f"Error: Config file {config_path} does not exist.\nView the advised list under demo/configs/ (file name only, without .yaml suffix)")
-    exit(1)
-print(f"Using model config: {config_path}\n\n")
+config_path = MODEL_CONFIGS[args.model]
+print(f"Using model config: {config_path}")
 
 # Initialize Flask app with proper template folder
 app = Flask(__name__, 

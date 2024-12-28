@@ -4,11 +4,11 @@
 
 ### Useful Links
 [![GitHub](https://img.shields.io/badge/📄Description%20doc-grey?style=for-the-badge)](/README.md)
-[![Demo & Setup Doc](https://img.shields.io/badge/📄%20Demo%20Doc-blueviolet?style=for-the-badge)](/demo/README.md)
-[![](https://img.shields.io/badge/📄TESTS%20SETUP%20GUIDE-yellow?style=for-the-badge)](/README-dev.md)
-[![Reference Papers](https://img.shields.io/badge/📄Reference%20Papers-green?style=for-the-badge)](/README-references.md)
+[![Demo & Setup Doc](https://img.shields.io/badge/📄%20Demo%20Doc-blueviolet?style=for-the-badge)](/tests/contrastive/README.md)
+[![](https://img.shields.io/badge/📄TESTS%20SETUP%20GUIDE-yellow?style=for-the-badge)](/docs/README-dev.md)
+[![Reference Papers](https://img.shields.io/badge/📄Reference%20Papers-green?style=for-the-badge)](/docs/README-references.md)
 [![Planning Document](https://img.shields.io/badge/🔗%20Planning%20Document-blue?style=for-the-badge)](https://1drv.ms/w/s!Ago9nLnz9h82gosJqjlnjoOBK9SS-Q?e=YuU6Wy)
-[![Midterm Report (Updating)](https://img.shields.io/badge/🔗%20Midterm%20Report-orange?style=for-the-badge)](/Major_FYP_Planning_Report%20(updating).pdf)
+[![First Term Report](https://img.shields.io/badge/🔗%20Term%201%20Report-orange?style=for-the-badge)](/docs/KTL2401_1155175983_1155174636_final_report.pdf)
 
 ### HOW TO USE DEMO (LATEST - 1 DECEMBER)
 
@@ -71,19 +71,19 @@ After training new model:
 * Extraction of skeleton for hands, detecting multiple hands.
 * Search for datasets
 
-| **Category** | **CE** | **Triplet** |
-| --- | --- | --- |
-| **Dataset** | ![](/readme-src/data-ce.png)<br>libs.data.ImageDataset | ![](/readme-src/dataset-triplet.png)<br>libs.data.TripletDataset |
-| **Number of Epochs Trained** | 30 | 40 |
-| **Loss** | ![](/readme-src/loss-ce.png) | ![](/readme-src/losses-triplet.png) |
-| **Test Accuracy** | 0.9889 | 0.8419 (cosine similarity) |
-| **TSNE** | ![](/readme-src/tsne-ce.png) <br> (more focused) | ![](/readme-src/tsne-triplet.png) <br> (may potentially capture more information about similarity of the gestures) |
-| **Maximally Confused Classes** | GH; MN; RU; ST; VW | GH; MN; RU; ST; VW |
+| **Category**                   | **CE**                                                      | **Triplet**                                                                                                             |
+| ------------------------------ | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **Dataset**                    | ![](/docs/README-src/data-ce.png)<br>libs.data.ImageDataset | ![](/docs/README-src/dataset-triplet.png)<br>libs.data.TripletDataset                                                   |
+| **Number of Epochs Trained**   | 30                                                          | 40                                                                                                                      |
+| **Loss**                       | ![](/docs/README-src/loss-ce.png)                           | ![](/docs/README-src/losses-triplet.png)                                                                                |
+| **Test Accuracy**              | 0.9889                                                      | 0.8419 (cosine similarity)                                                                                              |
+| **TSNE**                       | ![](/docs/README-src/tsne-ce.png) <br> (more focused)       | ![](/docs/README-src/tsne-triplet.png) <br> (may potentially capture more information about similarity of the gestures) |
+| **Maximally Confused Classes** | GH; MN; RU; ST; VW                                          | GH; MN; RU; ST; VW                                                                                                      |
 
 (tests/3_modularization_test/triplet_loss_raw/modularization_test_inference_triplet_fast.ipynb)
-| | | |
-|--|--|--|
-| ![alt text](/readme-src/image-122.png) |![](/demo/static/image.png) | ![alt text](/readme-src/image-37.png) |
+|                                             |                             |                                            |
+| ------------------------------------------- | --------------------------- | ------------------------------------------ |
+| ![alt text](/docs/README-src/image-122.png) | ![](/demo/static/image.png) | ![alt text](/docs/README-src/image-37.png) |
 * We can see that the latent space is closer to the perceptual similarity (trained only by 60 epochs!)
 * Next: Improve separation while maintaining continuity of the space.
   * Use Tensorboard/whatever to monitor the evolution of the latent space?
@@ -92,24 +92,24 @@ After training new model:
 * Test accuracy: 0.8589
 
 (demo/ce_augmented_test.ipynb)
-| | | |
-|--|--|--|
-| ![alt text](/readme-src/image-57.png) | ![ ](/readme-src/image-67.png) | ![alt text](/readme-src/image-172.png) | 
+|                                            |                                     |                                             |
+| ------------------------------------------ | ----------------------------------- | ------------------------------------------- |
+| ![alt text](/docs/README-src/image-57.png) | ![ ](/docs/README-src/image-67.png) | ![alt text](/docs/README-src/image-172.png) |
 * 3-layer MLP on Mediapipe results, trained for 20 epochs, achieved test accuracy of 0.9200.
 
 <details>
 <summary>Easily Confused Classes</summary>
 
-| G | H |
-|---|---|
+| G                                                                         | H                                                                         |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | ![alt text](readme-src/00bb7b60-ba39-47be-b92c-f5f954bf7a15.rgb_0000.png) | ![alt text](readme-src/2cd47dda-bc0e-4d1e-ba90-f0a78f2cf3ec.rgb_0000.png) |
-| M | N |
+| M                                                                         | N                                                                         |
 | ![alt text](readme-src/0a2f0d48-3726-4d70-80fb-2d80073da26d.rgb_0000.png) | ![alt text](readme-src/1e094c57-91ed-4eea-a2a8-fb82f3377998.rgb_0000.png) |
-| R | U |
+| R                                                                         | U                                                                         |
 | ![alt text](readme-src/7dcf3d24-f09b-4f2f-a734-dea1e02a57d4.rgb_0000.png) | ![alt text](readme-src/9b8bf6d9-e786-4215-916e-7fc9e7152d8e.rgb_0000.png) |
-| S | T |
+| S                                                                         | T                                                                         |
 | ![alt text](readme-src/0b9575c8-3e57-4212-b7fd-7251edd72e98.rgb_0000.png) | ![alt text](readme-src/2ec7ba20-9be8-4488-a361-45fb357249ea.rgb_0000.png) |
-| V | W |
+| V                                                                         | W                                                                         |
 | ![alt text](readme-src/3f8b9033-478b-4b10-b8f8-49016646087c.rgb_0000.png) | ![alt text](readme-src/0a395fe4-45c0-44d6-915d-76838680dc6d.rgb_0000.png) |
 
 </details>
@@ -180,22 +180,22 @@ The difficulty of this project - which turned out to be too ambitious - includes
        * Dataset: [face dataset](https://www.kaggle.com/datasets/stoicstatic/face-recognition-dataset/)
        * Reference Implementation: [tensorflow: siamese network](https://www.kaggle.com/code/tatianakushniruk/face-recognition-with-siamese-network/notebook)
        * Progress: Execution successful on both Kaggle notebooks and local. Code will be updated later.<details>
-         * ![alt text](/readme-src/image-1.png)
+         * ![alt text](/docs/README-src/image-1.png)
              * Trained without learning rate decay, so the performance is not as good (the face dataset consists of 1680 people and around 8-9 samples each)
-         * ![alt text](/readme-src/image-2.png)
+         * ![alt text](/docs/README-src/image-2.png)
              * Trained with learning rate decay, extended patience, result is still not very satisfactory.
              * The similarity matrix (max cosine similarity): 
-             * ![](/readme-src/output-confusion-max.png)
+             * ![](/docs/README-src/output-confusion-max.png)
              * Min cosine similarity:
-             * ![](/readme-src/output-confusion-min.png)
+             * ![](/docs/README-src/output-confusion-min.png)
              * Direct comparison of the maximum inter-class cosine similarities and minimum intra-class cosine similarities:
-             * ![](/readme-src/output-confusion-comparison.png)
+             * ![](/docs/README-src/output-confusion-comparison.png)
              * We can observe that the current set does not work very well, as the diagonal values are NOT always the highest value within the group - that is, during recognition, SOME faces would still get misclassified.
              * But from the mean:
-             * ![](/readme-src/output-confusion-mean.png)
+             * ![](/docs/README-src/output-confusion-mean.png)
              * we can see that in general most faces should get classfied correctly (further analsysis required).
          * T-SNE result on 15 distinct faces:
-             * ![](/readme-src/output-tsne.png)
+             * ![](/docs/README-src/output-tsne.png)
              * The clusters are clearly visible, indicating that they might still be easily separable.</details>
          * **Directions**: the original source did NOT generate new triplets for every iteration. This causes the triplets (specific anchor-positive-negative triplets) to be reused instead of fully utilizing the available images.
 2. Time Series
@@ -207,7 +207,7 @@ The difficulty of this project - which turned out to be too ambitious - includes
         * Progress: Spatio-Temporal Graph Convolutional Neural Netowrk - (STGCN) with multi-class classification (during internship).
         * Preliminary analysis showed that it achieved around 90%+ accuracy trained just for a short amount of time **on a 20-class classification problem** for sign language.
         * Trained based on cropped and speed-adjusted gesture keypoint sequences.
-        * ![alt text](/readme-src/image.png)
+        * ![alt text](/docs/README-src/image.png)
         * Mostly rely on my compnay senior's advise, so will need to reformulate and refactor the entire project in order to maintain a consistent style.</details>
         * Need to solve: the accuracy instability issue.
         * The augmentations are not sufficient.
