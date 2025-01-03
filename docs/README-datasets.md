@@ -53,3 +53,5 @@ Includes images and extracted keypoint sequence (shape: 3 x 21 x 1500), with no 
 **Path**: `data/raw/B2Counting`
 
 **Potential Ussage**: May be suitable for capturing the essence of continuity
+
+**Installation**: Clone the files from the link provided in the github repo.

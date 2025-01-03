@@ -1,3 +1,16 @@
+"""
+Basically this script helps to visualize the keypoints and 
+most importantly catch the images that failed the keypoints detection
+
+Current biases detected:
+1. Demographic bias: Landmark detection fails at a much higher rate for darker-skinned people
+
+python tests/test-2/visualize_keypoints.py -k tests/test-2/kpts/basic_hand_landmarks -f
+python tests/test-2/visualize_keypoints.py -k tests/test-2/kpts/b2_counting_landmarks -f
+
+VERSION 1
+"""
+
 import os
 import argparse
 import cv2
@@ -65,6 +78,7 @@ def visualize_keypoints(keypoints_folder):
     data = pd.read_csv(keypoints_file)
 
     key = None
+    is_paused = True
     index = 0
     while key != ord('q'):
         image = cv2.imread(data.iloc[index]['image_path'])
@@ -77,6 +91,7 @@ def visualize_keypoints(keypoints_folder):
             model_complexity=1
         ).process(image_rgb)
 
+        # Draw landmarks (raw extracted)
         if results.multi_hand_landmarks:
             for hand_landmarks in results.multi_hand_landmarks:
                 mp_drawing.draw_landmarks(
@@ -87,13 +102,25 @@ def visualize_keypoints(keypoints_folder):
                     mp_drawing_styles.get_default_hand_connections_style()
                 )
 
+        # Draw landmarks (pre-extracted)
+        for i in range(20):
+            x = int(image.shape[1]//2 + data.iloc[index][i*3] * image.shape[1])
+            y = int(image.shape[0]//2 + data.iloc[index][i*3+1] * image.shape[0])
+            cv2.circle(image, (x, y), 3, (0, 255, 0), -1)
+        cv2.circle(image, (image.shape[1]//2, image.shape[0]//2), 3, (0, 0, 255), -1)
+
+        # Frame id
+        cv2.putText(image, str(index), (image.shape[1] - 80, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
+
         cv2.imshow('Keypoints', image)
 
-        key = cv2.waitKey(0)
-        if key == ord('d'):
+        key = cv2.waitKey(1)
+        if not is_paused:
             index = (index + 1) % len(data)
-        elif key == ord('a'):
-            index = (index - 1) % len(data)
+        # elif key == ord('a'):
+        #     index = (index - 1) % len(data)
+        if key == ord(' '):
+            is_paused = not is_paused
 
     cv2.destroyAllWindows()
 
