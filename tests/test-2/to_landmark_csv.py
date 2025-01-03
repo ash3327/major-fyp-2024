@@ -28,7 +28,7 @@ filter_fmt = None
 # Trials (Hard-coded)
 # dataset, subfolder, output_file = "synthetic-asl-alphabet", "Test_Alphabet", "kpts/basic_hand_landmarks_"
 # dataset, subfolder, output_file = "synthetic-asl-alphabet", "Train_Alphabet", "kpts/basic_hand_landmarks_train"
-dataset, subfolder, output_file, have_class, filter_fmt, ordered = "B2Counting", ".", "kpts/b2_counting_landmarks", False, "SK_color_", True
+# dataset, subfolder, output_file, have_class, filter_fmt, ordered = "B2Counting", ".", "kpts/b2_counting_landmarks", False, "SK_color_", True
 
 # Enable GPU acceleration for MediaPipe
 mp.solutions.hands.HAND_CONNECTIONS
@@ -161,7 +161,8 @@ def process_folder(data_dir, dataset, subfolder, output_dir, output_file, have_c
 
     data.to_csv(os.path.join(output_folder, 'landmarks.csv'), index=False)
     with open(os.path.join(output_folder, 'instructions.txt'), "w") as f:
-        f.write("Keypoints: \n0~59: (x,y,z) relative to wrist, in the order x0 y0 z0 x1 y1 z1 ...")
+        f.write("Keypoints: \n0~59: (x,y,z) relative to wrist, in the order x0 y0 z0 x1 y1 z1 ...\n")
+        f.write(f"Done with {len(data)} samples and {len(failed_paths)} failed images.")
 
     formats = pd.DataFrame({"start_id": [0], "end_id": [60], "n_features_per_channel": [3], "name": ["hand 1"]})
     formats.to_csv(os.path.join(output_folder, 'landmark_formats.csv'), index=False)

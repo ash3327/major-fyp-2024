@@ -55,3 +55,16 @@ Includes images and extracted keypoint sequence (shape: 3 x 21 x 1500), with no 
 **Potential Ussage**: May be suitable for capturing the essence of continuity
 
 **Installation**: Clone the files from the link provided in the github repo.
+
+## Pheonix 2014-T Dataset
+
+[![Source](https://img.shields.io/badge/Source-Link-blue)](https://www-i6.informatik.rwth-aachen.de/~koller/RWTH-PHOENIX-2014-T/)
+[![Source](https://img.shields.io/badge/Paper-CVPR-blue)](https://openaccess.thecvf.com/content_cvpr_2018/html/Camgoz_Neural_Sign_Language_CVPR_2018_paper.html)
+![master](https://img.shields.io/badge/Updated-2018-yellow)
+![](https://img.shields.io/badge/Unused-grey)
+
+Cite: Necati Cihan Camgöz, Simon Hadfield, Oscar Koller, Hermann Ney, Richard Bowden, Neural Sign Language Translation, IEEE Conf. on Computer Vision and Pattern Recognition, Salt Lake City, UT, 2018.
+
+**Path:** `data/raw/phoenix-2014-t`
+
+**Installation:** Download the dataset from the link provided.
