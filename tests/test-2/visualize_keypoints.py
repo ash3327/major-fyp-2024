@@ -7,6 +7,7 @@ Current biases detected:
 
 python tests/test-2/visualize_keypoints.py -k tests/test-2/kpts/basic_hand_landmarks -f
 python tests/test-2/visualize_keypoints.py -k tests/test-2/kpts/b2_counting_landmarks -f
+python tests/test-2/visualize_keypoints.py -k tests/test-2/kpts/phoenix_heute-6697
 
 VERSION 1
 """

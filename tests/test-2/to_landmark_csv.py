@@ -29,6 +29,7 @@ filter_fmt = None
 # dataset, subfolder, output_file = "synthetic-asl-alphabet", "Test_Alphabet", "kpts/basic_hand_landmarks_"
 # dataset, subfolder, output_file = "synthetic-asl-alphabet", "Train_Alphabet", "kpts/basic_hand_landmarks_train"
 # dataset, subfolder, output_file, have_class, filter_fmt, ordered = "B2Counting", ".", "kpts/b2_counting_landmarks", False, "SK_color_", True
+dataset, subfolder, output_file, have_class = "phoenix-2014-t", "PHOENIX-2014-T/features/fullFrame-210x260px/dev/01April_2010_Thursday_heute-6697", "kpts/phoenix_heute-6697", False
 
 # Enable GPU acceleration for MediaPipe
 mp.solutions.hands.HAND_CONNECTIONS

@@ -11,6 +11,9 @@
 [![Planning Document](https://img.shields.io/badge/🔗%20Planning%20Document-blue?style=for-the-badge)](https://1drv.ms/w/s!Ago9nLnz9h82gosJqjlnjoOBK9SS-Q?e=YuU6Wy)
 [![First Term Report](https://img.shields.io/badge/🔗%20Term%201%20Report-orange?style=for-the-badge)](/docs/KTL2401_1155175983_1155174636_final_report.pdf)
 
+> [!NOTE]
+> Still refactoring the codebase.
+
 ### HOW TO USE DEMO (LATEST - 1 DECEMBER)
 
 Execution:

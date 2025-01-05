@@ -1,0 +1,5 @@
+root: "data/raw" # subfolder under project root
+path: "synthetic-asl-alphabet" # subfolder under root
+train: "Train_Alphabet" # subfolder under path
+test: "Test_Alphabet" # subfolder under path
+layoutType: "lexset"
