@@ -26,6 +26,8 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 from PIL import Image
 
+from tqdm import tqdm
+
 class LexsetDataset(Dataset):
     """
     Loader for layout type: lexset
@@ -81,7 +83,7 @@ class LexsetDataset(Dataset):
         """
         Recursively scan directory for images and collect paths
         """
-        for class_name in os.listdir(directory):
+        for class_name in tqdm(os.listdir(directory), desc="Scanning directories"):
             class_path = os.path.join(directory, class_name)
             if os.path.isdir(class_path):
                 for file in os.listdir(class_path):

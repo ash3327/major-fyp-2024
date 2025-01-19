@@ -1,6 +1,8 @@
 """
 Example of loading data from a dataset.
 
+python src/test/sample_loader.py
+
 ONLY WORKS IF EXECUTED FROM ROOT
 """
 
@@ -25,7 +27,7 @@ if __name__ == '__main__':
         split=split
     )
 
-    print(len(dataset))
+    print(len(dataset), dataset.root_dir)
 
     dataloader = torch.utils.data.DataLoader(
             dataset, 

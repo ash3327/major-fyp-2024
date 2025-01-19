@@ -13,6 +13,7 @@
 
 ## Setting Up & Usage
 
-* `cd` to `demo/`.
-* Run `app.py`.
+* `cd` to project root.
+* Now do `python demo/app.py` instead of just python app.py.
+Example: `python demo/app.py -m kpt_contrastive_1`
 * Go to `http://127.0.0.1:5000/` to view the results.
