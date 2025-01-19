@@ -52,7 +52,7 @@
 - DYNAMIC HAND GESTURE RECOGNITION BASED ON 3D HAND POSE ESTIMATION FOR HRI (2022) [https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9427388]
     - Insight for myself: Temporal: 
         - Gesture sequence extracted -> process into discretized "gestures", something like this:
-        - ![alt text](/docs/README-src/image-dyn-gest.png)
+        - ![alt text](/docs/readme-src/image-dyn-gest.png)
 
 ### Graph contrastive
 - GraphCL [https://arxiv.org/pdf/2010.13902]

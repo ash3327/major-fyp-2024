@@ -191,22 +191,22 @@ The difficulty of this project - which turned out to be too ambitious - includes
        * Dataset: [face dataset](https://www.kaggle.com/datasets/stoicstatic/face-recognition-dataset/)
        * Reference Implementation: [tensorflow: siamese network](https://www.kaggle.com/code/tatianakushniruk/face-recognition-with-siamese-network/notebook)
        * Progress: Execution successful on both Kaggle notebooks and local. Code will be updated later.<details>
-         * ![alt text](/docs/README-src/image-1.png)
+         * ![alt text](/docs/readme-src/image-1.png)
              * Trained without learning rate decay, so the performance is not as good (the face dataset consists of 1680 people and around 8-9 samples each)
-         * ![alt text](/docs/README-src/image-2.png)
+         * ![alt text](/docs/readme-src/image-2.png)
              * Trained with learning rate decay, extended patience, result is still not very satisfactory.
              * The similarity matrix (max cosine similarity): 
-             * ![](/docs/README-src/output-confusion-max.png)
+             * ![](/docs/readme-src/output-confusion-max.png)
              * Min cosine similarity:
-             * ![](/docs/README-src/output-confusion-min.png)
+             * ![](/docs/readme-src/output-confusion-min.png)
              * Direct comparison of the maximum inter-class cosine similarities and minimum intra-class cosine similarities:
-             * ![](/docs/README-src/output-confusion-comparison.png)
+             * ![](/docs/readme-src/output-confusion-comparison.png)
              * We can observe that the current set does not work very well, as the diagonal values are NOT always the highest value within the group - that is, during recognition, SOME faces would still get misclassified.
              * But from the mean:
-             * ![](/docs/README-src/output-confusion-mean.png)
+             * ![](/docs/readme-src/output-confusion-mean.png)
              * we can see that in general most faces should get classfied correctly (further analsysis required).
          * T-SNE result on 15 distinct faces:
-             * ![](/docs/README-src/output-tsne.png)
+             * ![](/docs/readme-src/output-tsne.png)
              * The clusters are clearly visible, indicating that they might still be easily separable.</details>
          * **Directions**: the original source did NOT generate new triplets for every iteration. This causes the triplets (specific anchor-positive-negative triplets) to be reused instead of fully utilizing the available images.
 2. Time Series
@@ -218,7 +218,7 @@ The difficulty of this project - which turned out to be too ambitious - includes
         * Progress: Spatio-Temporal Graph Convolutional Neural Netowrk - (STGCN) with multi-class classification (during internship).
         * Preliminary analysis showed that it achieved around 90%+ accuracy trained just for a short amount of time **on a 20-class classification problem** for sign language.
         * Trained based on cropped and speed-adjusted gesture keypoint sequences.
-        * ![alt text](/docs/README-src/image.png)
+        * ![alt text](/docs/readme-src/image.png)
         * Mostly rely on my compnay senior's advise, so will need to reformulate and refactor the entire project in order to maintain a consistent style.</details>
         * Need to solve: the accuracy instability issue.
         * The augmentations are not sufficient.
@@ -286,9 +286,9 @@ Goals: Extract extra information - like **distance**, **direction**, **object in
 ## Our Progress
 | **Category** | **CE**                                                | **Triplet**                                                                                                             |
 | ------------ | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| **Dataset**  | ![](/docs/README-src/data-ce.png)                     | ![](/docs/README-src/dataset-triplet.png)                                                                               |
-| **Loss**     | ![](/docs/README-src/loss-ce.png)                     | ![](/docs/README-src/losses-triplet.png)                                                                                |
-| **TSNE**     | ![](/docs/README-src/tsne-ce.png) <br> (more focused) | ![](/docs/README-src/tsne-triplet.png) <br> (may potentially capture more information about similarity of the gestures) |
+| **Dataset**  | ![](/docs/readme-src/data-ce.png)                     | ![](/docs/readme-src/dataset-triplet.png)                                                                               |
+| **Loss**     | ![](/docs/readme-src/loss-ce.png)                     | ![](/docs/readme-src/losses-triplet.png)                                                                                |
+| **TSNE**     | ![](/docs/readme-src/tsne-ce.png) <br> (more focused) | ![](/docs/readme-src/tsne-triplet.png) <br> (may potentially capture more information about similarity of the gestures) |
 
 ## Plan
 
