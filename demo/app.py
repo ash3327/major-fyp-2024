@@ -17,7 +17,7 @@ import argparse
 # Create argument parser
 parser = argparse.ArgumentParser(description='Hand Gesture Recognition Demo')
 parser.add_argument('-m', '--model', type=str,
-                    default='kpt_contrastive_1', help='Model to use for gesture recognition, advised list under demo/configs/ (file name only, without .yaml suffix)')
+                    default='kpt_contrastive_1', help='Model to use for gesture recognition, advised list under demo/configs/model_configs/ (file name only, without .yaml suffix)')
 args = parser.parse_args()
 
 # Map model choice to config file

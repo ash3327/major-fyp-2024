@@ -56,6 +56,20 @@ After training new model:
 * Make the project goal and rationale clearer, specific up to the application and details.
 * Preliminary analysis on multi-class classification on the ASL dataset, and possibly contrastive learning model on the ASL dataset. Refer to the section [Datasets](#datasets) for more information.
 
+## Progress
+
+* Static Images (see report)
+* Continous Sequence of Images
+  * demo-1 / kpt_contrastive_1: ![alt text](docs/readme-src/image-demo-1.png)
+    * Smoother trasition across frames
+    * Smaller distances for similar gestures
+  * demo-2 / img_triplet_1: ![](docs/readme-src/image-demo-2.png)
+  * demo-3 / img_ce_1: ![](docs/readme-src/image-demo-3.png)
+    * Significant jumps across frames
+    * Large distances for similar gestures
+    * Still able to maintain a relatively close proximity for similar gestures, but clusters are much less visible, especially for an unseen dataset
+* `demo/test.py` produces an interactive console for visualizing the latent space of a dynamic sequence of gesture.
+
 ## What will we deliver
 
 * An interface (web or python) for capturing live video from user

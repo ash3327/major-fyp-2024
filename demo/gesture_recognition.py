@@ -96,6 +96,8 @@ class HandGestureRecognizer:
         """
         Process a video frame, detect hand landmarks, adjust coordinates, 
         and classify the hand gesture.
+
+        Notes: The frame should be unprocessed, in BGR format for OpenCV.
             
         Args:
             frame: A single video frame (BGR format).

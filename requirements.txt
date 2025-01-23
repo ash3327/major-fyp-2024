@@ -42,3 +42,6 @@ graphviz
 #==0.10.14
 # try to use POWERSHELL to install if you are using windows. if you are not, good luck debugging.
 mediapipe==0.10.9
+
+# dash
+dash

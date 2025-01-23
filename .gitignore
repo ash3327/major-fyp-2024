@@ -19,3 +19,4 @@ images/
 # archived
 # _archive/
 /data/*
+/temp/*
