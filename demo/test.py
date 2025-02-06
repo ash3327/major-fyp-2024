@@ -68,6 +68,8 @@ def process_image_sequence(file_paths, config_path=None):
             pred, emb, _ = result
             if isinstance(emb, torch.Tensor):
                 emb = emb.detach().cpu().numpy()
+            if emb is None:
+                continue
             latent_embeddings.append(emb)
             labels.append(pred)
 
@@ -168,8 +170,9 @@ def visualize_embeddings_with_interaction(latent_embeddings, images):
 
     # Auto-increment slider using FuncAnimation
     def auto_increment(frame):
+        amt = 1#5
         current_val = slider.val
-        next_val = (current_val + 5) % len(latent_embeddings)  # Loop back to 0 at the end
+        next_val = (current_val + amt) % len(latent_embeddings)  # Loop back to 0 at the end
         slider.set_val(next_val)
 
     ani = FuncAnimation(fig, auto_increment, interval=100)  # Update every 100ms
@@ -179,12 +182,20 @@ def visualize_embeddings_with_interaction(latent_embeddings, images):
 # Main script
 if __name__ == "__main__":
     # Path to your images
+    ### TEST 1
+    trial = 1
     base_path = "D:\\kht3327\\_Projects\\Major FYP\\proj\\data\\raw\\B2Counting"
     file_paths = [f"SK_color_{i}.png" for i in range(1500)]
+    
+    ### TEST 2
+    trial = 2
+    base_path = "D:\\kht3327\\_Projects\\Major FYP\\proj\\data\\raw\\phoenix-2014-t\\PHOENIX-2014-T\\features\\fullFrame-210x260px\\test\\01April_2011_Friday_tagesschau-3377"
+    file_paths = [f"images{i:04d}.png" for i in range(1,172)]
+    ### 
     file_paths = [os.path.join(base_path, f) for f in file_paths]
 
     # Cache file
-    cache_file = os.path.join(CACHE_DIR, f"embeddings_cache_{args.model}.pkl")
+    cache_file = os.path.join(CACHE_DIR, f"embeddings_cache_{args.model}_{trial}.pkl")
 
     # Generate or load cached embeddings
     latent_embeddings, _ = cache_embeddings(cache_file, process_image_sequence, file_paths)
