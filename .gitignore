@@ -1,0 +1,22 @@
+# virtualenv
+venv
+
+# compilables
+__pycache__
+
+# environment variables
+.env
+
+# data
+kaggle/
+images/
+*.zip
+*.weights.h5
+*.pth
+*.h5
+*.csv
+
+# archived
+# _archive/
+/data/*
+/temp/*

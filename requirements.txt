@@ -1,0 +1,47 @@
+# virtualenv -p python3.10 venv
+# Requires: Python 3.10, CUDA 11.8, CUDNN 8
+
+# standard math & plot libs
+numpy==1.26.4
+matplotlib
+
+# standard AI/ML libraries
+opencv-python
+scikit-learn
+
+# loading yaml
+pyyaml
+
+# visualization
+tqdm
+
+# pytorch version 2.4.1+cu118
+--extra-index-url https://download.pytorch.org/whl/cu118
+torch
+torchvision
+torchaudio
+
+    # efficientnet
+    efficientnet-pytorch
+
+# tensorflow (Compatible on Windows)
+tensorflow==2.10
+
+# kaggle
+kaggle
+seaborn 
+
+# plot model
+pydot_ng==2.0.0
+pydot
+graphviz
+
+# mediapipe
+### FIXING PROTOBUF PROBLEM: wget https://raw.githubusercontent.com/protocolbuffers/protobuf/main/python/google/protobuf/internal/builder.py -O venv/Lib/site-packages/google/protobuf/internal/builder.py
+#==0.10.11
+#==0.10.14
+# try to use POWERSHELL to install if you are using windows. if you are not, good luck debugging.
+mediapipe==0.10.9
+
+# dash
+dash
