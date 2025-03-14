@@ -4,7 +4,8 @@
 ### Prerequsites
 
 * Using WSL, linux or macOS to run the scripts for downloading and unzipping the datasets.
-* Make sure that you have `apt-get install`-ed `wget`, `p7zip-full` and `unzip`, or the script will terminate without achieving what we expect.
+* Make sure that you have done `sudo apt-get install wget p7zip-full unzip pv dos2unix` (you may need to `sudo`), or the script will terminate without achieving what we expect.
+  * If there are strange characters `\r` following the zip names or folder names, run `dos2unix <script_path>` before executing the scripts.
 * Fixing PROTOBUF problem (powershell, modify if using linux/macOS):
     * Execute: `wget https://raw.githubusercontent.com/protocolbuffers/protobuf/main/python/google/protobuf/internal/builder.py -O venv/Lib/site-packages/google/protobuf/internal/builder.py`
 
@@ -60,20 +61,8 @@
     - Very poor lighting conditions
     - Only hand
 - **PHOENIX_Weather_2014MS_Handshapes dataset** | [Source](https://www-i6.informatik.rwth-aachen.de/~koller/1miohands-data/) | [Paper](https://doi.org/10.1109/CVPR.2016.412)
-  - **Download**:
-    - Download the dataset from the link provided, and unzip it within the `data/raw` folder.
-        ```bash
-        # Test
-        mkdir "data/raw/ph2014-handshape/test"
-
-        # No progress bar
-        tar -xvf data/raw/ph2014-dev-set-handshape-annotations.tar.gz -C data/raw/ph2014-handshape/test --strip-components=1
-
-        # or WSL
-        pv data/raw/ph2014-dev-set-handshape-annotations.tar.gz | tar -xf - -C data/raw/ph2014-handshape/test --strip-components=1
-
-        # Replace `test` with `train` and the tar path with the train dataset path to unpack the train dataset.
-        ```
+  - **Download**: 
+      - Execute `./data/scripts/dl_handshape_test.bash` and `./data/scripts/dl_handshape_train.bash` in WSL, linux or macOS.
   - **File structure**: ![alt text](image-15.png)
   - **Description**: 3359 images, 45 pose-independent hand shape classes, highly imbalanced.
   - ![alt text](image-4.png)
