@@ -19,6 +19,7 @@ images/
 
 # archived
 # _archive/
-/data/*
+/data/raw/
+/data/kpts/
 /temp/*
 /runs/*

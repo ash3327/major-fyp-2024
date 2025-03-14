@@ -6,6 +6,8 @@
      - Examples:
        - Missing hand (enhanced with YOLO clipping)
        - Wrongly detected full-body gesture over single-hand images (enhanced with YOLO-pose detection)
+2) Fine-tuned YOLO-v11 over hand keypoint detection (trained 100 epochs over the default dataset) | [Source](https://docs.ultralytics.com/datasets/pose/hand-keypoints/#introduction)
+3) 
 
 ### Methods
 
@@ -46,6 +48,7 @@ Note: The notation (Name)<sup>#</sup> indicates that the value has been adjusted
 | Lexset     | Test  | 14.7<sup>#</sup> | 20.4<sup>#</sup> | 12.6<sup>#</sup> | **4.89**<sup>#</sup> | *12.7*<sup>#</sup> | **7.70**
 | Hands      | -     | 35.6    | 35.6      | -         | 9.98     | **8.40** | 9.96 |
 | Senz3d     | -     | 2.30    | 2.30      | -         | 0.23     | **0.00** | **0.00** |
+| Pheonix-2014T Handshapes | Test | - | - | - | - | - | **6.79** |
 
 **Notes:**
 - **Lexset:** Significant improvement with YOLO (9.2% problematic ratio in train split).

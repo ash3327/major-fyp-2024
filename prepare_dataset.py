@@ -44,6 +44,14 @@ def get_info(dataset):
                 data=""
             )
             dyn = True
+        case 'handshape' | 'ph2014-handshape':
+            print('Fetching Handshapes Dataset...')
+            dataset = 'ph2014-handshape'
+            subfolders = dict(
+                test="test/images",
+                train="train"
+            )
+            dyn = False
     return data_dir, dataset, subfolders, output_dir, dyn
 
 def fetch_dataset(dataset):
@@ -55,7 +63,8 @@ if __name__ == '__main__':
         'lexset', 'synthetic-asl-alphabet',
         'senz3d', 'senz3d_dataset',
         'roboflowasl', 'roboflow-asl-alphabet-1',
-        'hands', 'hands_dataset'
+        'hands', 'hands_dataset',
+        'handshape', 'ph2014-handshape'
     ]
     parser = argparse.ArgumentParser(description='Prepare dataset by extracting features.')
     parser.add_argument('dataset', type=str, help='Path to the dataset file', default='lexset', choices=choices)
