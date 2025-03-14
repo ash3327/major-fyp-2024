@@ -14,3 +14,35 @@
 ## Approach
 
 * **Contrastive Pre-training.** Utilizes contrastive learning to 
+
+## Setting Up
+
+### Environment
+
+* **System Requirement:**
+    * Requires: Python 3.10, CUDA 11.8, CUDNN 8
+* **Virtual Environment:** 
+    1. Create and enter virtual environment (expect this will require around 15 minutes).
+        ```bash
+        # on windows cmd
+        virtualenv -p python3.10 venv # create venv
+        .\venv\Scripts\activate # enter venv
+
+        # on wsl/linux
+        python3.10 -m venv env # create env
+        source env/bin/activate # enter env
+
+        # please remember to set your default interpreter to venv or env.
+        ```
+    2. `pip install -r requirements.txt` 
+* **Data Architecture:**
+  * All data are stored within the directory `data/raw` and the processed data are stored under `data/kpts`.
+  * 
+
+### Data Extraction
+
+* **Code**:  `python prepare_dataset.py <dataset_name>`.
+* **Steps**:
+    1. 
+
+

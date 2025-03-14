@@ -1,0 +1,64 @@
+import argparse
+from feature_extractor import extract_features
+
+def get_info(dataset):
+    data_dir = "data/raw"
+    output_dir = "data/kpts"
+    match dataset:
+        case 'asl_alphabet':
+            print('Fetching ASL Alphabet dataset...')
+            dataset = "asl_alphabet"
+            subfolders = dict(
+                train="asl_alphabet_train/asl_alphabet_train",
+                test="asl_alphabet_test/asl_alphabet_test"
+            )
+            dyn = False
+        case 'lexset' | 'synthetic-asl-alphabet':
+            print('Fetching Lexset (Synthetic ASL Alphabet) dataset...')
+            dataset = "synthetic-asl-alphabet"
+            subfolders = dict(
+                train="Train_Alphabet",
+                test="Test_Alphabet"
+            )
+            dyn = False
+        case 'senz3d' | 'senz3d_dataset':
+            print('Fetching Senz3D dataset...')
+            dataset = "senz3d_dataset"
+            subfolders = dict(
+                acquisitions="acquisitions"
+            )
+            dyn = True
+        case 'roboflowasl' | 'roboflow-asl-alphabet-1':
+            print('Fetching Roboflow ASL Alphabet 1 dataset...')
+            dataset = "roboflow-asl-alphabet-1"
+            subfolders = dict(
+                train="train",
+                test="test",
+                valid="valid"
+            )
+            dyn = False
+        case 'hands' | 'hands_dataset':
+            print('Fetching Hands dataset...')
+            dataset = "hands_dataset"
+            subfolders = dict(
+                data=""
+            )
+            dyn = True
+    return data_dir, dataset, subfolders, output_dir, dyn
+
+def fetch_dataset(dataset):
+    extract_features(*get_info(dataset))
+
+if __name__ == '__main__':
+    choices = [
+        'asl_alphabet',
+        'lexset', 'synthetic-asl-alphabet',
+        'senz3d', 'senz3d_dataset',
+        'roboflowasl', 'roboflow-asl-alphabet-1',
+        'hands', 'hands_dataset'
+    ]
+    parser = argparse.ArgumentParser(description='Prepare dataset by extracting features.')
+    parser.add_argument('dataset', type=str, help='Path to the dataset file', default='lexset', choices=choices)
+    args = parser.parse_args()
+
+    fetch_dataset(args.dataset)

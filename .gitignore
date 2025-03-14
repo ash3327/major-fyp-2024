@@ -1,4 +1,5 @@
 # virtualenv
+env
 venv
 
 # compilables
@@ -20,3 +21,4 @@ images/
 # _archive/
 /data/*
 /temp/*
+/runs/*

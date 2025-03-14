@@ -48,6 +48,8 @@
   * Sign2Text task / Sign Language Translation (SLT):
     * BLEU | BLEU: a Method for Automatic Evaluation of Machine Translation (2002) [https://aclanthology.org/P02-1040.pdf]
     * rBLEU: Blacklisting frequent non-contextual words (articles, prepositions, pronouns) | Sign Language Translation from Instructional Videos (2023) [https://arxiv.org/pdf/2304.06371]
+    * Rouge-1/2: Measuring the unigram/bigram precision, recall or F1 score (often F1 score)
+    * Rouge-L: similar to rogue-1, but numerator is length of LCS of reference and the generated text.
   * Sign2Gloss task / Sign Language Recognition (SLR):
     * Word Error Rate (WER)
 
@@ -91,6 +93,10 @@
 - LSA64: A Dataset for Argentinian Sign Language [https://facundoq.github.io/datasets/lsa64/]
   - Paper: [http://sedici.unlp.edu.ar/bitstream/handle/10915/56764/Documento_completo.pdf-PDFA.pdf?sequence=1&isAllowed=y]
   - 64 signs, 3200 videos
+- **LSA64** | LSA64: A Dataset of Argentinian Sign Language (2016) [https://facundoq.github.io/datasets/lsa64/]
+  - Paper: [http://sedici.unlp.edu.ar/bitstream/handle/10915/56764/Documento_completo.pdf-PDFA.pdf?sequence=1&isAllowed=y]
+  - Argentinian Sign Language, 64 signs, 3200 videos; 1.5 GB.
+  - One or both hands.
 - **PHOENIX-Weather 2014-T dataset** | Neural Sign Language Translation (2018) [https://www-i6.informatik.rwth-aachen.de/~koller/RWTH-PHOENIX-2014-T/]
   - Paper: [https://openaccess.thecvf.com/content_cvpr_2018/html/Camgoz_Neural_Sign_Language_CVPR_2018_paper.html]
   - 39GB, >0.95M frames, >67K signs, vocab >1K and >99K words from German vocab of >2.8K
