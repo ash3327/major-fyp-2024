@@ -1,6 +1,5 @@
 """
-With parallelization, faster, but may not work on your computer.
-Use noparallel one if this script fails.
+Without parallelization
 """
 
 import os
@@ -11,25 +10,18 @@ import torch
 from tqdm import tqdm
 from ultralytics import YOLO
 
-import concurrent.futures
-
 # --------------------------
 # Mediapipe and YOLO Setup
 # --------------------------
 mp_hands = mp.solutions.hands
-# mp_pose = mp.solutions.pose
+mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 
 # YOLO models (update paths as needed)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # yolo = YOLO("model/yolo11n.pt")
 pose_model = YOLO("model/yolo11n-pose.pt")
-pose_model.fuse()
-pose_model.to(device)
 hand_model = YOLO("model/best-3.pt")
-hand_model.fuse()
-hand_model.to(device)
 
 # --------------------------
 # Original Functions
@@ -116,7 +108,7 @@ def _extract_features_from_img(image_rgb, hands, dyn=False, image_path=None):
 
 def extract_features_from_image(image_rgb, dyn=False, hands=None):
     if hands is None:
-        with mp.solutions.hands.Hands(
+        with mp_hands.Hands(
             static_image_mode=not dyn,
             max_num_hands=2,
             min_detection_confidence=0.5,
@@ -129,38 +121,32 @@ def extract_features_from_image(image_rgb, dyn=False, hands=None):
 def extract_features_from_subfolder(data_dir, dataset, subfolder, output_dir, split, dyn=False):
     main_dir = os.path.join(data_dir, dataset, subfolder)
     print('Extracting', main_dir, output_dir)
-    
-    data = []
-    image_paths = []
-    for root, _, files in os.walk(main_dir):
-        for file in files:
-            if file.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.tiff')):
-                image_paths.append((root, os.path.join(root, file)))
-    num_images = len(image_paths)
-    pbar = tqdm(total=num_images, desc="Processing images")
-
-    def extract_features(image_path):
-        _, num_bodies, num_hands, landmarks = _extract_features_from_imgpath(image_path, dyn=dyn)
-        dpath = image_path.split(main_dir)[1].replace("\\", "/")
-        dpath = dpath[1:] if dpath and dpath[0] == "/" else dpath
-        return (dpath, num_bodies, num_hands, landmarks)
-    
-    num_threads = min(os.cpu_count(), num_images, 16)
-    
-    with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
-        futures = [executor.submit(extract_features, image_path) for label, image_path in image_paths]
-        
-        for future in concurrent.futures.as_completed(futures):
-            data.append(future.result())
+    with mp_hands.Hands(
+        static_image_mode=not dyn,
+        max_num_hands=2,
+        min_detection_confidence=0.7,
+        model_complexity=1
+    ) as hands:
+        data = []
+        image_paths = []
+        for root, _, files in os.walk(main_dir):
+            for file in files:
+                if file.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.tiff')):
+                    image_paths.append((root, os.path.join(root, file)))
+        pbar = tqdm(total=len(image_paths), desc="Processing images")
+        for label, image_path in image_paths:
+            _, num_bodies, num_hands, landmarks = _extract_features_from_imgpath(image_path, dyn=dyn, hands=hands)
+            dpath = image_path.split(main_dir)[1].replace("\\", "/")
+            dpath = dpath[1:] if dpath and dpath[0] == "/" else dpath
+            data.append((dpath, num_bodies, num_hands, landmarks))
             pbar.update(1)
-            
-    pbar.close()
-    print("Saving data to npy file...")
-    data = np.array(data, dtype=object)
-    output_dir = os.path.join(output_dir, dataset)
-    os.makedirs(output_dir, exist_ok=True)
-    np.save(os.path.join(output_dir, f"record_{split}.npy"), data)
-    print("Done!")
+        pbar.close()
+        print("Saving data to npy file...")
+        data = np.array(data, dtype=object)
+        output_dir = os.path.join(output_dir, dataset)
+        os.makedirs(output_dir, exist_ok=True)
+        np.save(os.path.join(output_dir, f"record_{split}.npy"), data)
+        print("Done!")
 
 def extract_features(data_dir, dataset, subfolders, output_dir, dyn=False):
     for split, subfolder in subfolders.items():

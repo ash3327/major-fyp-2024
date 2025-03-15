@@ -71,13 +71,13 @@ def parse_dataset(dataset, split):
             image = Image.open(os.path.join(data_dir, dataset, subfolders[split], item[0]))
             lmks = (item[3]['pose'], item[3]['hands'][0], item[3]['hands'][1])
             
-            if item[2] == 0:
-                plt.imshow(image)
-                print(fname:=os.path.join(subfolders[split], item[0]),item[2])
-                plt.title(fname)
-                for landmarks, c in zip(lmks, ['b','g','r','k']):
-                    plt.scatter(landmarks[:, 0]*image.size[0], landmarks[:, 1]*image.size[1], s=10, marker='.', c=c)
-                plt.show()
+            # if item[2] == 0:
+            #     plt.imshow(image)
+            #     print(fname:=os.path.join(subfolders[split], item[0]),item[2])
+            #     plt.title(fname)
+            #     for landmarks, c in zip(lmks, ['b','g','r','k']):
+            #         plt.scatter(landmarks[:, 0]*image.size[0], landmarks[:, 1]*image.size[1], s=10, marker='.', c=c)
+            #     plt.show()
 
     cnts = np.array((count, cnt0, cnt1, cnt2, cnt3))
     print('Problematic Items:',cnts,'out of',total)
