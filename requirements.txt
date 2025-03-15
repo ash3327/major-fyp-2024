@@ -8,6 +8,7 @@ matplotlib
 # standard AI/ML libraries
 opencv-python
 scikit-learn
+ultralytics
 
 # loading yaml
 pyyaml
