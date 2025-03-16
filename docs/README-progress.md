@@ -122,3 +122,35 @@ Use the following commands to test and validate the pipeline:
   - 8/3: Data preprocessing and cleaning completed.
   - 9/3: Contrastive pre-training initiated.
   - 14/4: Report deadline.
+
+## MANO augmentations
+
+Source: https://github.com/otaheri/MANO
+
+Installation Steps:
+```bash
+pip install -r requirements.txt # (chumpy and pyglet)
+git clone https://github.com/otaheri/MANO.git
+# cd into MANO/
+# if the following fails, please go to MANO/setup.py and 
+# remove the line "long_description=..." and repeat.
+python setup.py install
+python setup.py build
+# cd back to project root
+```
+Follow the instructions from [here](https://github.com/otaheri/MANO) to download the model and put into designated folders (go to MODELS & CODE section of [here](https://mano.is.tue.mpg.de/download.php)), unzip the folder, and place in a folder with following structure:
+```
+model
+|
+└── mano
+    ├── MANO_RIGHT.pkl
+    └── MANO_LEFT.pkl
+```
+### Scripts
+`test.py` and `test2.py` under `tests/hand_augmentations` samples random hand gestures from the anatomically accurate PCA space. Both hand mesh and landmarks are available, which is good for performing data augmentation and for providing fake data for training the contrastive models.
+
+The sampled keypoints are as follows:
+![alt text](image-18.png)
+
+### Relevant Ideas
+MANO and SMPL are two useful methods for generating realistic gesture landmarks.

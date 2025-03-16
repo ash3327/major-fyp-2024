@@ -46,3 +46,7 @@ mediapipe==0.10.9
 
 # dash
 dash
+
+# mano @ git+https://github.com/otaheri/MANO
+chumpy @ git+https://github.com/mattloper/chumpy
+pyglet<2

@@ -48,7 +48,7 @@ def get_info(dataset):
             print('Fetching Handshapes Dataset...')
             dataset = 'ph2014-handshape'
             subfolders = dict(
-                test="test/images",
+                # test="test/images",
                 train="train"
             )
             dyn = False

@@ -7,6 +7,9 @@
 [First Term Report](/docs/KTL2401_1155175983_1155174636_final_report.pdf)
 * **Progress:** [Progress Document](/docs/README-progress.md)
 
+> [!NOTE]
+> Please read the [Progress Document](/docs/README-progress.md) to see the current progress.
+
 ## Goals
 
 * **Adaptation.** Allowing for quick adaptation to new set of data without full-scale re-training.
