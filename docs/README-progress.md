@@ -45,11 +45,12 @@ Note: The notation (Name)<sup>#</sup> indicates that the value has been adjusted
 
 | Dataset    | Split | Raw (%) | CLAHE (%) | Mixed (%) | YOLO (%) | YOLO-Hierarchical (%) | YOLO-H-v2 (%) | YOLO-H-v2 (parallelized) (%)
 |------------|-------|---------|-----------|-----------|----------|-----------------------|-|-|
-| Lexset     | Train | 10.2<sup>#</sup> | 20.3<sup>#</sup> | 12.1<sup>#</sup> | **5.47**<sup>#</sup>  | *12.4*<sup>#</sup> | **7.74** 
-| Lexset     | Test  | 14.7<sup>#</sup> | 20.4<sup>#</sup> | 12.6<sup>#</sup> | **4.89**<sup>#</sup> | *12.7*<sup>#</sup> | **7.70** | **5.15**
-| Hands      | -     | 35.6    | 35.6      | -         | 9.98     | **8.40** | 9.96 |
-| Senz3d     | -     | 2.30    | 2.30      | -         | 0.23     | **0.00** | **0.00** | **0.00**
-| Pheonix-2014T Handshapes | Test | - | - | - | - | - | **6.79** | **5.80**
+| Lexset     | Train | 10.2<sup>#</sup> | 20.3<sup>#</sup> | 12.1<sup>#</sup> | **5.47**<sup>#</sup>  | *12.4*<sup>#</sup> | **3.00**
+| Lexset     | Test  | 14.7<sup>#</sup> | 20.4<sup>#</sup> | 12.6<sup>#</sup> | **4.89**<sup>#</sup> | *12.7*<sup>#</sup> | **3.19** | **1.81**
+| Hands      | -     | 35.6    | 35.6      | -         | 9.98     | **8.40** | **9.98** |
+| Senz3d     | -     | 2.30    | 2.30      | -         | 0.23     | **0.00** | **0.08** | **0.00**
+| Pheonix-2014T Handshapes | Test | - | - | - | - | - | **5.57** | **5.80**
+| Pheonix-2014T Handshapes | Train | - | - | - | - | - | *36.3*
 
 ### Efficiency
 
@@ -147,7 +148,7 @@ model
     └── MANO_LEFT.pkl
 ```
 ### Scripts
-`test.py` and `test2.py` under `tests/hand_augmentations` samples random hand gestures from the anatomically accurate PCA space. Both hand mesh and landmarks are available, which is good for performing data augmentation and for providing fake data for training the contrastive models.
+`test.py` and `test2.py` under `test/hand_augmentations` samples random hand gestures from the anatomically accurate PCA space. Both hand mesh and landmarks are available, which is good for performing data augmentation and for providing fake data for training the contrastive models.
 
 The sampled keypoints are as follows:
 ![alt text](image-18.png)

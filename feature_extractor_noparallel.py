@@ -302,7 +302,7 @@ def extract_features_from_clipped_region(image_rgb, dyn=False, hands=None):
                 chei, cwid, _ = clipped_img.shape
                 ihei, iwid, _ = image_rgb.shape
                 features[3]['hands'][i][:,:2] = yolo_hand*[iwid,ihei]/[cwid,chei]
-                # features[2] += 1
+                features[2] += 1
                 fcount += 1
                 # print('\t',i,yolo_hand.dtype,features[3]['hands'][i].dtype)
                 # print(min(yolo_hand[:,0]),max(yolo_hand[:,0]),min(yolo_hand[:,1]),max(yolo_hand[:,1]),cwid,chei,image_rgb.shape)

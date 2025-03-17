@@ -48,10 +48,12 @@ def get_info(dataset):
             print('Fetching Handshapes Dataset...')
             dataset = 'ph2014-handshape'
             subfolders = dict(
-                # test="test/images",
+                test="test/images",
                 train="train"
             )
             dyn = False
+        case _:
+            raise Exception("Such dataset is not defined within `prepare_dataset.py`.")
     return data_dir, dataset, subfolders, output_dir, dyn
 
 def fetch_dataset(dataset):

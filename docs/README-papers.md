@@ -35,6 +35,8 @@
 - **MediaPipe** | MediaPipe: A Framework for Building Perception Pipelines (2019) [https://arxiv.org/abs/1906.08172]
 - **HR Net** | Deep High-Resolution Representation Learning for Visual Recognition (2020) [https://arxiv.org/abs/1908.07919]
 - On-Device Real-Time Hand Gesture Recognition (2021) [https://arxiv.org/abs/2111.00038]
+- **SMPL** | SMPL: a skinned multi-person linear model (2015) [https://files.is.tue.mpg.de/black/papers/SMPL2015.pdf]
+- **MANO** | Embodied Hands: Modeling and Capturing Hands and Bodies Together (2022) [https://arxiv.org/pdf/2201.02610]
 
 ### Keypoint Approaches
 - An improved hand gesture recognition system using keypoints and hand bounding boxes (2022) [https://doi.org/10.1016/j.array.2022.100251]
