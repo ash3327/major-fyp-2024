@@ -47,10 +47,10 @@ Note: The notation (Name)<sup>#</sup> indicates that the value has been adjusted
 |------------|-------|---------|-----------|-----------|----------|-----------------------|-|-|
 | Lexset     | Train | 10.2<sup>#</sup> | 20.3<sup>#</sup> | 12.1<sup>#</sup> | **5.47**<sup>#</sup>  | *12.4*<sup>#</sup> | **3.00**
 | Lexset     | Test  | 14.7<sup>#</sup> | 20.4<sup>#</sup> | 12.6<sup>#</sup> | **4.89**<sup>#</sup> | *12.7*<sup>#</sup> | **3.19** | **1.81**
-| Hands      | -     | 35.6    | 35.6      | -         | 9.98     | **8.40** | **9.98** |
+| Hands      | -     | 35.6    | 35.6      | -         | 9.98     | **8.40** | **9.98** | **7.22**
 | Senz3d     | -     | 2.30    | 2.30      | -         | 0.23     | **0.00** | **0.08** | **0.00**
 | Pheonix-2014T Handshapes | Test | - | - | - | - | - | **5.57** | **5.80**
-| Pheonix-2014T Handshapes | Train | - | - | - | - | - | *36.3*
+| Pheonix-2014T Handshapes | Train | - | - | - | - | - | *34.5*
 
 ### Efficiency
 
@@ -127,6 +127,8 @@ Use the following commands to test and validate the pipeline:
 ## MANO augmentations
 
 Source: https://github.com/otaheri/MANO
+Source: https://github.com/vchoutas/smplx
+Source: https://smpl-x.is.tue.mpg.de/
 
 Installation Steps:
 ```bash
@@ -147,11 +149,42 @@ model
     ├── MANO_RIGHT.pkl
     └── MANO_LEFT.pkl
 ```
+
 ### Scripts
 `test.py` and `test2.py` under `test/hand_augmentations` samples random hand gestures from the anatomically accurate PCA space. Both hand mesh and landmarks are available, which is good for performing data augmentation and for providing fake data for training the contrastive models.
 
 The sampled keypoints are as follows:
 ![alt text](image-18.png)
+
+## SMPL augmentations
+Installation Steps:
+```bash
+pip install -r requirements.txt # (chumpy and pyglet)
+git clone https://github.com/vchoutas/smplx.git
+# cd into smplx/
+python setup.py install
+python setup.py build
+# cd back to project root
+```
+
+For SMPL, download following the instructions [here](https://github.com/vchoutas/smplx) and download the models from [here](https://smpl-x.is.tue.mpg.de/download.php). Unzip the folder and place in a folder with the following structure:
+```
+models
+├── mano
+|   ├── MANO_RIGHT.pkl
+|   └── MANO_LEFT.pkl
+└── smplx
+    ├── SMPLX_FEMALE.npz
+    ├── SMPLX_FEMALE.pkl
+    ├── SMPLX_MALE.npz
+    ├── SMPLX_MALE.pkl
+    ├── SMPLX_NEUTRAL.npz
+    └── SMPLX_NEUTRAL.pkl
+```
+<!-- 
+```
+git clone https://github.com/vchoutas/smplify-x
+``` -->
 
 ### Relevant Ideas
 MANO and SMPL are two useful methods for generating realistic gesture landmarks.

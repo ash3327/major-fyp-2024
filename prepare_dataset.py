@@ -52,6 +52,22 @@ def get_info(dataset):
                 train="train"
             )
             dyn = False
+        case 'lsa64' | 'lsa64_preprocessed':
+            print('Fetching LSA64 Dataset')
+            dataset = 'lsa64_preprocessed'
+            subfolders = dict(
+                vid="lsa64_hand_videos"
+            )
+            dyn = True
+        case 'phoenix' | 'phoenix-2014-t':
+            print('Fetching Phoenix-2014T Weather Dataset')
+            dataset = 'phoenix-2014-t'
+            subfolders = dict(
+                dev="PHOENIX-2014-T/features/fullFrame-210x260px/dev",
+                test="PHOENIX-2014-T/features/fullFrame-210x260px/test",
+                train="PHOENIX-2014-T/features/fullFrame-210x260px/train"
+            )
+            dyn = True
         case _:
             raise Exception("Such dataset is not defined within `prepare_dataset.py`.")
     return data_dir, dataset, subfolders, output_dir, dyn
@@ -66,7 +82,10 @@ if __name__ == '__main__':
         'senz3d', 'senz3d_dataset',
         'roboflowasl', 'roboflow-asl-alphabet-1',
         'hands', 'hands_dataset',
-        'handshape', 'ph2014-handshape'
+        'handshape', 'ph2014-handshape',
+        # dynamic datasets
+        'lsa64', 'lsa64_preprocessed',
+        'phoenix', 'phoenix-2014-t'
     ]
     parser = argparse.ArgumentParser(description='Prepare dataset by extracting features.')
     parser.add_argument('dataset', type=str, help='Path to the dataset file', default='lexset', choices=choices)

@@ -126,18 +126,50 @@ def extract_features_from_image(image_rgb, dyn=False, hands=None):
     else:
         return _extract_features_from_img(image_rgb, hands, dyn=dyn)
 
+def extract_frames_from_video(video_path):
+    cap = cv2.VideoCapture(video_path)
+    frames = []
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+        frames.append(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+    cap.release()
+    return frames
+
+def extract_features_from_video(video_path, output_dir, dataset):
+    frames = extract_frames_from_video(video_path)
+    data = []
+    video_name = os.path.splitext(os.path.basename(video_path))[0]
+    
+    def process_frame(idx, frame):
+        features, _, _ = extract_features_from_clipped_region(frame, dyn=True)
+        data.append(features)
+    
+    for idx, frame in enumerate(frames):
+        process_frame(idx, frame)
+    
+    output_path = os.path.join(output_dir, dataset, f"{video_name}.npy")
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    np.save(output_path, np.array(data, dtype=object))
+    print(f"Saved video features to {output_path}")
+
 def extract_features_from_subfolder(data_dir, dataset, subfolder, output_dir, split, dyn=False):
     main_dir = os.path.join(data_dir, dataset, subfolder)
     print('Extracting', main_dir, output_dir)
     
     data = []
     image_paths = []
+    video_paths = []
     for root, _, files in os.walk(main_dir):
         for file in files:
             if file.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.tiff')):
                 image_paths.append((root, os.path.join(root, file)))
+            elif file.lower().endswith(('.avi', '.mp4', '.mov', '.mkv')):
+                video_paths.append(os.path.join(root, file))
     num_images = len(image_paths)
-    pbar = tqdm(total=num_images, desc="Processing images")
+    num_videos = len(video_paths)
+    print(num_images, num_videos)
 
     def extract_features(image_path):
         _, num_bodies, num_hands, landmarks = _extract_features_from_imgpath(image_path, dyn=dyn)
@@ -145,22 +177,30 @@ def extract_features_from_subfolder(data_dir, dataset, subfolder, output_dir, sp
         dpath = dpath[1:] if dpath and dpath[0] == "/" else dpath
         return (dpath, num_bodies, num_hands, landmarks)
     
-    num_threads = min(os.cpu_count(), num_images, 16)
-    
-    with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
-        futures = [executor.submit(extract_features, image_path) for label, image_path in image_paths]
+    if num_images != 0:
+        pbar = tqdm(total=num_images, desc="Processing images")
+        num_threads = min(os.cpu_count(), num_images, 16)
         
-        for future in concurrent.futures.as_completed(futures):
-            data.append(future.result())
-            pbar.update(1)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
+            futures = [executor.submit(extract_features, image_path) for label, image_path in image_paths]
             
-    pbar.close()
-    print("Saving data to npy file...")
-    data = np.array(data, dtype=object)
-    output_dir = os.path.join(output_dir, dataset)
-    os.makedirs(output_dir, exist_ok=True)
-    np.save(os.path.join(output_dir, f"record_{split}.npy"), data)
-    print("Done!")
+            for future in concurrent.futures.as_completed(futures):
+                data.append(future.result())
+                pbar.update(1)
+                
+        pbar.close()
+        print("Saving data to npy file...")
+        data = np.array(data, dtype=object)
+        output_dir = os.path.join(output_dir, dataset)
+        os.makedirs(output_dir, exist_ok=True)
+        np.save(os.path.join(output_dir, f"record_{split}.npy"), data)
+
+    if num_videos != 0:
+        print("Processing videos...")
+        for video_path in tqdm(video_paths, desc="Processing videos"):
+            extract_features_from_video(video_path, output_dir, dataset)
+    
+    print("Feature extraction complete!")
 
 def extract_features(data_dir, dataset, subfolders, output_dir, dyn=False):
     for split, subfolder in subfolders.items():

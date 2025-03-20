@@ -5,6 +5,8 @@
 * **Efficient Net** | EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks (2020) [https://arxiv.org/abs/1905.11946]
     * has been an efficient and accurate benchmark for visual tasks, suitable for using as backbone of downstream fine-tuning tasks.
 * **YOLO-v8** | Real-Time Flying Object Detection with YOLOv8 (2024) [https://arxiv.org/abs/2305.09972]
+* **YOLO-v11** | YOLOv11: An Overview of the Key Architectural Enhancements (2024) [https://arxiv.org/abs/2410.17725]
+  * YOLO-pose for landmark extraction, fine-tunable.
 
 ### Other Approaches:
 - Gesture Recognition Machine Vision Video Calling Application Using YOLOv8 (2023) [https://doi.org/10.1109/ISCIT57293.2023.10376141]
@@ -57,6 +59,12 @@
 - **STGCN-GR** | A Spatio-Temporal Graph Convolutional Network for Gesture Recognition from High-Density Electromyography (2023) [https://arxiv.org/abs/2312.00553]
   - Application of STGCN over Gesture Recognition
   - Biological detection rather than focusing on image
+- **SignVTCL** | SignVTCL: Multi-Modal Continuous Sign Language Recognition Enhanced by
+Visual-Textual Contrastive Learning (2024) [https://arxiv.org/pdf/2401.11847]
+  - Multimodal, with landmarks, image, and optical flow augmented.
+  - CTC decoder
+  - Alignment of multi-modal output and the textual encoder using CLIP-like architecture
+  - Use of sign-pyramid network.
 
 ### Temporal Contrastive Approaches
 - **Contrastive Predictive Coding** | Representation Learning with Contrastive Predictive Coding (2019) [https://arxiv.org/abs/1807.03748]
@@ -72,6 +80,11 @@
     - Insight for myself: Temporal: 
         - Gesture sequence extracted -> process into discretized "gestures", something like this:
         - ![alt text](/docs/readme-src/image-dyn-gest.png)
+
+### Few-shot Learning
+- A Transformer-Based Contrastive Learning Approach
+for Few-Shot Sign Language Recognition [https://arxiv.org/abs/2204.02803]
+  - Transformer + Mediapipe Holistic
 
 ### Graph contrastive
 - **GraphCL** | Graph Contrastive Learning with Augmentations (2021) [https://arxiv.org/pdf/2010.13902]
