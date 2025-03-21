@@ -4,6 +4,7 @@ from feature_extractor import extract_features
 def get_info(dataset):
     data_dir = "data/raw"
     output_dir = "data/kpts"
+    is_video = False
     match dataset:
         case 'asl_alphabet':
             print('Fetching ASL Alphabet dataset...')
@@ -52,13 +53,14 @@ def get_info(dataset):
                 train="train"
             )
             dyn = False
-        case 'lsa64' | 'lsa64_preprocessed':
+        case 'lsa64' | 'lsa64_raw':
             print('Fetching LSA64 Dataset')
-            dataset = 'lsa64_preprocessed'
+            dataset = 'lsa64_raw'
             subfolders = dict(
-                vid="lsa64_hand_videos"
+                vid="all"
             )
             dyn = True
+            is_video = True
         case 'phoenix' | 'phoenix-2014-t':
             print('Fetching Phoenix-2014T Weather Dataset')
             dataset = 'phoenix-2014-t'
@@ -70,7 +72,7 @@ def get_info(dataset):
             dyn = True
         case _:
             raise Exception("Such dataset is not defined within `prepare_dataset.py`.")
-    return data_dir, dataset, subfolders, output_dir, dyn
+    return data_dir, dataset, subfolders, output_dir, dyn, is_video
 
 def fetch_dataset(dataset):
     extract_features(*get_info(dataset))
@@ -84,7 +86,7 @@ if __name__ == '__main__':
         'hands', 'hands_dataset',
         'handshape', 'ph2014-handshape',
         # dynamic datasets
-        'lsa64', 'lsa64_preprocessed',
+        'lsa64', 'lsa64_raw',
         'phoenix', 'phoenix-2014-t'
     ]
     parser = argparse.ArgumentParser(description='Prepare dataset by extracting features.')

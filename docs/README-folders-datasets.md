@@ -110,9 +110,9 @@
   - 118,562/14,787/14,743 videos each
   - 100px x 100px, 12 fps
   - more than 1,300 unique crowd actors
-  - ![alt text](image-1.png)
-- **IPN Hand Dataset** | IPN Hand: A Video Dataset and Benchmark for Real-Time Continuous Hand Gesture Recognition (2020) [https://gibranbenitez.github.io/IPN_Hand/]
-  - Paper: [https://arxiv.org/abs/2005.02134] -->
+  - ![alt text](image-1.png)-->
+- **IPN Hand Dataset** | [Source](https://gibranbenitez.github.io/IPN_Hand/) | [Paper](https://arxiv.org/abs/2005.02134)
+  - **Download**: Go to [this link](https://drive.google.com/drive/folders/1aL645mUzzAvoTMwJKrbtQiNiDVJZ2EsA), download the zip, and 
 
 #### Sign Language Datasets
 - **How2Sign** | [Source](https://how2sign.github.io/#download) | [Paper](https://arxiv.org/abs/2008.08143)
@@ -130,7 +130,7 @@
       - ![alt text](image-3.png)
 - **LSA64** | [Source](https://facundoq.github.io/datasets/lsa64/) | [Paper](http://sedici.unlp.edu.ar/bitstream/handle/10915/56764/Documento_completo.pdf-PDFA.pdf?sequence=1&isAllowed=y)
   - **Descriptions**: Argentinian Sign Language, 64 signs, 3200 videos; 1.5 GB; one or both hands.
-  - **Download**: Download [this version](https://drive.google.com/file/d/1yhfPpI2iJzPXyx4C7MYR6IPZC3YuuYaL/view?usp=sharing), unzip and put it under `data/raw`.
+  - **Download**: Download [this version](https://mega.nz/file/kJBDxLSL#zamibF1KPtgQFHn3RM0L1WBuhcBUvo0N0Uec9hczK_M), unzip and put it under `data/raw`.
 - **PHOENIX-Weather 2014-T dataset** | [Source](https://www-i6.informatik.rwth-aachen.de/~koller/RWTH-PHOENIX-2014-T/) | [Paper](https://openaccess.thecvf.com/content_cvpr_2018/html/Camgoz_Neural_Sign_Language_CVPR_2018_paper.html)
   - **Download**:
       - Download the dataset from the link provided, and unzip it within the `data/raw` folder.
