@@ -137,10 +137,17 @@ def extract_frames_from_video(video_path):
     cap.release()
     return frames
 
-def extract_features_from_video(video_path, output_dir, dataset, split):
+def extract_features_from_video(video_path, output_dir, dataset, split, skip=False):
+    video_name = os.path.splitext(os.path.basename(video_path))[0]
+    output_path = os.path.join(output_dir, dataset, split, f"{video_name}.npy")
+    
+    # print(f"{output_path} exists: {os.path.exists(output_path)} | skip={skip}")
+    if skip and os.path.exists(output_path):
+        print(f"Skipping {video_path}, features already extracted.")
+        return
+    
     frames = extract_frames_from_video(video_path)
     data = []
-    video_name = os.path.splitext(os.path.basename(video_path))[0]
     
     def process_frame(idx, frame):
         features, _, _ = extract_features_from_clipped_region(frame, dyn=True)
@@ -150,12 +157,11 @@ def extract_features_from_video(video_path, output_dir, dataset, split):
     for idx, frame in enumerate(frames):
         process_frame(idx, frame)
     
-    output_path = os.path.join(output_dir, dataset, split, f"{video_name}.npy")
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     np.save(output_path, np.array(data, dtype=object))
     print(f"Saved video features to {output_path}")
 
-def extract_features_from_subfolder(data_dir, dataset, subfolder, output_dir, split, dyn=False):
+def extract_features_from_subfolder(data_dir, dataset, subfolder, output_dir, split, dyn=False, skip=False):
     main_dir = os.path.join(data_dir, dataset, subfolder)
     print('Extracting', main_dir, output_dir)
     
@@ -199,13 +205,13 @@ def extract_features_from_subfolder(data_dir, dataset, subfolder, output_dir, sp
     if num_videos != 0:
         print("Processing videos...")
         for video_path in tqdm(video_paths, desc="Processing videos"):
-            extract_features_from_video(video_path, output_dir, dataset, split)
+            extract_features_from_video(video_path, output_dir, dataset, split, skip=skip)
     
     print("Feature extraction complete!")
 
-def extract_features(data_dir, dataset, subfolders, output_dir, dyn=False, *args, **kwargs):
+def extract_features(data_dir, dataset, subfolders, output_dir, dyn=False, *args, skip=False, **kwargs):
     for split, subfolder in subfolders.items():
-        extract_features_from_subfolder(data_dir, dataset, subfolder, output_dir, split, dyn=dyn)
+        extract_features_from_subfolder(data_dir, dataset, subfolder, output_dir, split, dyn=dyn, skip=skip)
 
 # --------------------------
 # New Functions for YOLO Detection & Clipping

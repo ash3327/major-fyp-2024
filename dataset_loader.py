@@ -49,6 +49,40 @@ def visualize_video_frame(fname, frame_id, features):
 
     cap.release()
 
+def visualize_video(fname, features):
+    cap = cv2.VideoCapture(fname)
+    if not cap.isOpened():
+        print(f"Error: Unable to open video file {fname}")
+        return
+
+    frame_id = 0
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        if frame_id < len(features):
+            frame_lmks = features[frame_id][3]
+            lmks = (frame_lmks['pose'], frame_lmks['hands'][0], frame_lmks['hands'][1])
+            for landmarks, c in zip(lmks, ['b', 'g', 'r', 'k']):
+                for landmark in landmarks:
+                    x, y = int(landmark[0] * frame.shape[1]), int(landmark[1] * frame.shape[0])
+                    cv2.circle(frame, (x, y), 3, (255, 0, 0) if c == 'b' else (0, 255, 0) if c == 'g' else (0, 0, 255), -1)
+
+            # Add dynamic title to the frame
+            num_hands = features[frame_id][2]  # Number of hands
+            title_text = f"Frame: {frame_id} | Hands: {num_hands}"
+            cv2.putText(frame, title_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2, cv2.LINE_AA)
+            
+        cv2.imshow(f"Video: {fname}", frame)
+        if cv2.waitKey(30) & 0xFF == ord('q'):  # Press 'q' to quit
+            break
+
+        frame_id += 1
+
+    cap.release()
+    cv2.destroyAllWindows()
+
 #-----------
 # Prepare Dataset
 #-----------
@@ -79,7 +113,8 @@ def parse_dataset(dataset, split):
         'senz3d_dataset': [(1, 1)],
         'hands_dataset': [(1, 2)],
         'ph2014-handshape': [(1, 1)],
-        'lsa64_preprocessed': [(1, 2)]
+        'lsa64_raw': [(1, 2)],
+        'IPN_Hand': [(1, 2)]
     }
     actual_cnts = dict()
     expected_cnts = expected_cnts[dataset]
@@ -87,9 +122,13 @@ def parse_dataset(dataset, split):
 
     def evaluate(data, rpath=None):
         nonlocal count, cnt0, cnt1, cnt2, cnt3, total
+        flag = False
+        features = list()
         for i, item in tqdm(enumerate(data)):
             total += 1
             shapes[(item[3]['pose'].shape, item[3]['hands'].shape)] = shapes.get((item[3]['pose'].shape, item[3]['hands'].shape),0)+1
+            if is_video:
+                features.append(item)
             if dataset == 'synthetic-asl-alphabet' and item[0].startswith('Blank'):
                 continue
             if not (item[1], item[2]) in expected_cnts:
@@ -118,11 +157,15 @@ def parse_dataset(dataset, split):
             # if item[0] == "final_phoenix_noPause_noCompound_lefthandtag_noClean/30July_2010_Friday_tagesschau_default-7/1/.png_fn000135-0.png":
                 if is_video:
                     fname, frame_idx = item[0].rsplit('$',1)
-                    visualize_video_frame(fname, int(frame_idx), item)
+                    if not flag:
+                        visualize_video_frame(fname, int(frame_idx), item)
+                    flag = True
                 else:
                     fname = os.path.join(subfolders[split], item[0])
                     fpath = os.path.join(data_dir, dataset, fname)
                     visualize_image(fname, fpath, item)
+        if flag and is_video:
+            visualize_video(fname, features)
 
     if is_video:
         root_path = os.path.join("data/kpts", dataset, split)

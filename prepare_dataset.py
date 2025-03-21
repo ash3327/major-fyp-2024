@@ -70,27 +70,37 @@ def get_info(dataset):
                 train="PHOENIX-2014-T/features/fullFrame-210x260px/train"
             )
             dyn = True
+        case 'ipn' | 'IPN_Hand':
+            print('Fetching IPN Dataset')
+            dataset = 'IPN_Hand'
+            subfolders = dict(
+                vid="videos"
+            )
+            dyn = True
+            is_video = True
         case _:
             raise Exception("Such dataset is not defined within `prepare_dataset.py`.")
     return data_dir, dataset, subfolders, output_dir, dyn, is_video
 
-def fetch_dataset(dataset):
-    extract_features(*get_info(dataset))
+def fetch_dataset(dataset, skip=False):
+    extract_features(*get_info(dataset), skip=skip)
 
 if __name__ == '__main__':
-    choices = [
-        'asl_alphabet',
-        'lexset', 'synthetic-asl-alphabet',
-        'senz3d', 'senz3d_dataset',
-        'roboflowasl', 'roboflow-asl-alphabet-1',
-        'hands', 'hands_dataset',
-        'handshape', 'ph2014-handshape',
-        # dynamic datasets
-        'lsa64', 'lsa64_raw',
-        'phoenix', 'phoenix-2014-t'
-    ]
+    # choices = [
+    #     'asl_alphabet',
+    #     'lexset', 'synthetic-asl-alphabet',
+    #     'senz3d', 'senz3d_dataset',
+    #     'roboflowasl', 'roboflow-asl-alphabet-1',
+    #     'hands', 'hands_dataset',
+    #     'handshape', 'ph2014-handshape',
+    #     # dynamic datasets
+    #     'lsa64', 'lsa64_raw',
+    #     'phoenix', 'phoenix-2014-t',
+    #     'ipn'
+    # ]
     parser = argparse.ArgumentParser(description='Prepare dataset by extracting features.')
-    parser.add_argument('dataset', type=str, help='Path to the dataset file', default='lexset', choices=choices)
+    parser.add_argument('dataset', type=str, help='Path to the dataset file', default='lexset')
+    parser.add_argument('--skip', action='store_true', help='Skip processing if already done.')
     args = parser.parse_args()
 
-    fetch_dataset(args.dataset)
+    fetch_dataset(args.dataset, skip=args.skip)
