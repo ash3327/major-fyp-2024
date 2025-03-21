@@ -10,6 +10,7 @@ from torchvision import transforms
 from PIL import Image
 import matplotlib.pyplot as plt
 import argparse
+from tqdm import tqdm
 
 from prepare_dataset import get_info
 
@@ -49,7 +50,7 @@ def parse_dataset(dataset, split):
     actual_cnts = dict()
     expected_cnts = expected_cnts[dataset]
     shapes = dict()
-    for i, item in enumerate(data):
+    for i, item in tqdm(enumerate(data)):
         total += 1
         shapes[(item[3]['pose'].shape, item[3]['hands'].shape)] = shapes.get((item[3]['pose'].shape, item[3]['hands'].shape),0)+1
         if dataset == 'synthetic-asl-alphabet' and item[0].startswith('Blank'):
