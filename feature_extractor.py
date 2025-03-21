@@ -137,19 +137,20 @@ def extract_frames_from_video(video_path):
     cap.release()
     return frames
 
-def extract_features_from_video(video_path, output_dir, dataset):
+def extract_features_from_video(video_path, output_dir, dataset, split):
     frames = extract_frames_from_video(video_path)
     data = []
     video_name = os.path.splitext(os.path.basename(video_path))[0]
     
     def process_frame(idx, frame):
         features, _, _ = extract_features_from_clipped_region(frame, dyn=True)
+        features[0] = f"{video_path}${idx}"
         data.append(features)
     
     for idx, frame in enumerate(frames):
         process_frame(idx, frame)
     
-    output_path = os.path.join(output_dir, dataset, f"{video_name}.npy")
+    output_path = os.path.join(output_dir, dataset, split, f"{video_name}.npy")
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     np.save(output_path, np.array(data, dtype=object))
     print(f"Saved video features to {output_path}")
@@ -198,11 +199,11 @@ def extract_features_from_subfolder(data_dir, dataset, subfolder, output_dir, sp
     if num_videos != 0:
         print("Processing videos...")
         for video_path in tqdm(video_paths, desc="Processing videos"):
-            extract_features_from_video(video_path, output_dir, dataset)
+            extract_features_from_video(video_path, output_dir, dataset, split)
     
     print("Feature extraction complete!")
 
-def extract_features(data_dir, dataset, subfolders, output_dir, dyn=False):
+def extract_features(data_dir, dataset, subfolders, output_dir, dyn=False, *args, **kwargs):
     for split, subfolder in subfolders.items():
         extract_features_from_subfolder(data_dir, dataset, subfolder, output_dir, split, dyn=dyn)
 
