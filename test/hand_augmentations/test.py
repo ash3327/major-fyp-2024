@@ -20,9 +20,9 @@ variance_default = dict(
     global_orient=1 # 1
 )
 variance_new = dict(
-    betas=1.,
-    pose=.5,
-    global_orient=1
+    betas=.5,
+    pose=3,
+    global_orient=5
 )
 variance = variance_new
 
@@ -85,6 +85,7 @@ if flag:
         joints = output.joints[j]
         # joints = j_meshes[0].vertices  # shape = [21, 3]
         joints = np.array([joints[mmap[i]] for i in range(21)])
+        joints[:, [0, 1]] = joints[:, [1, 0]]
         joints -= joints[0]
         # ax.scatter(joints[:, 0], joints[:, 1], joints[:, 2], c=np.full((21,),j/batch_size), marker='o', label=f'Hand {j}')
 
@@ -101,6 +102,17 @@ if flag:
                 [joints[start, 2], joints[end, 2]],
                 color=colors[j]
             )
+
+    ax.set_xlim(-.5, .5)
+    ax.set_ylim(-.5, .5)
+    ax.set_zlim(-.5, .5)
+    
+    ax.quiver(0, 0, 0, 0.5, 0, 0, color='r', label='X-axis')  # X-axis in red
+    ax.quiver(0, 0, 0, 0, 0.5, 0, color='g', label='Y-axis')  # Y-axis in green
+    ax.quiver(0, 0, 0, 0, 0, 0.5, color='b', label='Z-axis')  # Z-axis in blue
+    ax.text(0.5, 0, 0, 'X', color='r')
+    ax.text(0, 0.5, 0, 'Y', color='g')
+    ax.text(0, 0, 0.5, 'Z', color='b')
 
     ax.set_xlabel('X')
     ax.set_ylabel('Y')

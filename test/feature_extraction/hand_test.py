@@ -42,9 +42,20 @@ def main():
         # print(lmks)
         # Visualize keypoints on the frame
         for landmarks, c in zip(lmks, [(255, 0, 0), (0, 255, 0), (0, 0, 255), (0, 0, 0)]):
-            # print(landmarks.shape, frame_rgb.shape)
-            for x, y in landmarks[:,:2]:
-                cv2.circle(frame, (int(x * frame.shape[1]), int(y * frame.shape[0])), 3, c, -1)
+            for p in landmarks:
+                if len(p) == 3:
+                    x, y, z = p
+                else:
+                    x, y = p
+                    z = 0
+                # Draw the circle
+                cx, cy = int(x * frame.shape[1]), int(y * frame.shape[0])
+                cv2.circle(frame, (cx, cy), 3, c, -1)
+                
+                # Draw the vertical line to indicate the 3rd dimension (z)
+                line_length = int(frame.shape[0] / 10)
+                cz = int(z * line_length)
+                cv2.line(frame, (cx, cy), (cx, cy - cz), c, 1)
 
         # Display the resulting frame
         cv2.imshow('Keypoint Detection', frame)

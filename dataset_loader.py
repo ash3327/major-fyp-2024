@@ -22,8 +22,13 @@ from mpl_toolkits.mplot3d import Axes3D
 #-----------
 def visualize_image(fname, fpath, features, show3d=False):
     image = Image.open(fpath)
+    only_hands = False
     lmks = [features[3]['pose'], features[3]['hands'][0], features[3]['hands'][1]]
-    
+    if only_hands:
+        # offset back to (0,0,0) for wrist,
+        lmks = np.array([lmks[1]-lmks[1][0], lmks[2]-lmks[2][0]])
+        # orientation issues: hand is pointing upwards (-y)
+
     if show3d:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
@@ -31,24 +36,33 @@ def visualize_image(fname, fpath, features, show3d=False):
         xx, yy = np.meshgrid(np.linspace(0, 1, image.size[0] // step), np.linspace(0, 1, image.size[1] // step))
         zz = np.zeros_like(xx)
         reduced_image = np.array(image.resize((xx.shape[1], yy.shape[0]))) / 255  # Downsample the image
-        # ax.plot_surface(xx, yy, zz, rstride=1, cstride=1, facecolors=reduced_image, shade=False)
-        # print(lmks[0].shape)
 
-        # if features[2] == 2 and (lmks[0][9:11] != 0).all():
-        #     if np.linalg.norm(lmks[0][9]-lmks[1][0][:2]) > np.linalg.norm(lmks[0][9]-lmks[2][0][:2]):
-        #         lmks[1],lmks[2] = lmks[2],lmks[1]
-        
         for landmarks, c in zip(lmks, ['b', 'g', 'r', 'k']):
             ax.scatter(landmarks[:, 0], 
                landmarks[:, 1], 
                landmarks[:, 2] if landmarks.shape[1] > 2 else 0, 
                s=10, marker='.', c=c)
-        ax.scatter([lmks[0][9][0]],[lmks[0][9][1]],[0], s=20, c='k')
-        ax.scatter([lmks[0][10][0]],[lmks[0][10][1]],[0], s=20, c='k')
-        ax.set_xlim(0, 1)
-        ax.set_ylim(0, 1)
-        ax.set_zlim(-.5, .5)
+        if only_hands: # In the cube [-.5,.5]^3
+            ax.set_xlim(-.5, .5)
+            ax.set_ylim(-.5, .5)
+            ax.set_zlim(-.5, .5)
+        else: # In the cuboid [0,1]^2 x [-1,1]
+            ax.scatter([lmks[0][9][0]],[lmks[0][9][1]],[0], s=20, c='k')
+            ax.scatter([lmks[0][10][0]],[lmks[0][10][1]],[0], s=20, c='k')
+            ax.set_xlim(0, 1)
+            ax.set_ylim(0, 1)
+            ax.set_zlim(-.5, .5)
+        
+        # Paint and label the axes
+        ax.quiver(0, 0, 0, 0.5, 0, 0, color='r', label='X-axis')  # X-axis in red
+        ax.quiver(0, 0, 0, 0, 0.5, 0, color='g', label='Y-axis')  # Y-axis in green
+        ax.quiver(0, 0, 0, 0, 0, 0.5, color='b', label='Z-axis')  # Z-axis in blue
+        ax.text(0.5, 0, 0, 'X', color='r')
+        ax.text(0, 0.5, 0, 'Y', color='g')
+        ax.text(0, 0, 0.5, 'Z', color='b')
+
         ax.set_title(fname)
+        ax.legend()
 
         # Ensure the scale of the three axes is the same and adjust based on landmarks
         # all_landmarks = np.vstack([lmks[0], lmks[1], lmks[2]])
@@ -204,7 +218,8 @@ def parse_dataset(dataset, split, show3d=False):
                     fpath = os.path.join(data_dir, dataset, fname)
                     print(fname, item[2])
 
-            if item[2] != 0:
+            if item[2] == 0:
+            # if item[1] != 0:
             # if item[0] == "final_phoenix_noPause_noCompound_lefthandtag_noClean/30July_2010_Friday_tagesschau_default-7/1/.png_fn000135-0.png":
                 if is_video:
                     cum_count += 1

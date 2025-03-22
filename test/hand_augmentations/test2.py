@@ -10,8 +10,8 @@ size = 5
 
 variance_new = dict(
     betas=.5,
-    pose=1,
-    global_orient=1
+    pose=3,
+    global_orient=5
 )
 variance = variance_new
 

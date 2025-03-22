@@ -43,12 +43,12 @@ The table below summarizes the problematic detection ratios for each method acro
 
 Note: The notation (Name)<sup>#</sup> indicates that the value has been adjusted as it was previously measured incorrectly by not removing the blank class from the "missing detections" count.
 
-| Dataset    | Split | Raw (%) | CLAHE (%) | Mixed (%) | YOLO (%) | YOLO-Hierarchical (%) | YOLO-H-v2 (%) | YOLO-H-v2 (parallelized) (%)
-|------------|-------|---------|-----------|-----------|----------|-----------------------|-|-|
-| Lexset     | Train | 10.2<sup>#</sup> | 20.3<sup>#</sup> | 12.1<sup>#</sup> | **5.47**<sup>#</sup>  | *12.4*<sup>#</sup> | **3.00**
+| Dataset    | Split | Raw (%) | CLAHE (%) | Mixed (%) | YOLO (%) | YOLO-Hierarchical (%) | YOLO-H-v2 (%) | YOLO-H-v2 (parallelized) (%) | Mediapipe-Holistic (%)
+|------------|-------|---------|-----------|-----------|----------|-----------------------|-|-|-|
+| Lexset     | Train | 10.2<sup>#</sup> | 20.3<sup>#</sup> | 12.1<sup>#</sup> | **5.47**<sup>#</sup>  | *12.4*<sup>#</sup> | **3.00** | | *95.2*
 | Lexset     | Test  | 14.7<sup>#</sup> | 20.4<sup>#</sup> | 12.6<sup>#</sup> | **4.89**<sup>#</sup> | *12.7*<sup>#</sup> | **3.19** | **1.81**
-| Hands      | -     | 35.6    | 35.6      | -         | 9.98     | **8.40** | **9.98** | **7.22**
-| Senz3d     | -     | 2.30    | 2.30      | -         | 0.23     | **0.00** | **0.08** | **0.00**
+| Hands      | -     | 35.6    | 35.6      | -         | 9.98     | **8.40** | **9.98** | **7.22** | **1.51**
+| Senz3d     | -     | 2.30    | 2.30      | -         | 0.23     | **0.00** | **0.08** | **0.00** | *6.89*
 | Pheonix-2014T Handshapes | Test | - | - | - | - | - | **5.57** | **5.80**
 | Pheonix-2014T Handshapes | Train | - | - | - | - | - | *34.5*
 
@@ -57,18 +57,20 @@ Note: The notation (Name)<sup>#</sup> indicates that the value has been adjusted
 NVIDIA GeForce RTX 4060, 8GB VRAM (Laptop), 32GB RAM
 
 <sup>#</sup>NVIDIA GeForce RTX 3060 Ti, 8GB VRAM (Desktop), 16GB RAM
-| Dataset \ Time (hh:mm:ss) | YOLO-H-v2 | YOLO-H-v2 (parallelized, 16 threads) |
-| --- | -- | -- |
-| Lexset (train) | 45:00 | 36:00 (expected) |
-| Lexset (test)  | 12:16 | 8:18 |
+| Dataset \ Time (hh:mm:ss) | YOLO-H-v2 | YOLO-H-v2 (parallelized, 16 threads) | Mediapipe-Holistic
+| --- | -- | -- | -- | 
+| Lexset (train) | 45:00 | 36:00 (expected) | 
+| Lexset (test)  | 12:16 | 8:18 | 5:40
 | Handshape (test) | 7:20<sup>#</sup> | 8:48 | 
 
 **Notes:**
 - **Lexset:** Significant improvement with YOLO (9.2% problematic ratio in train split).
 - **Hands:** YOLO-Hierarchical achieved the lowest problematic ratio (8.4%) by solving the problem of not able to detect hands with the person only occupying a very small portion of the image, but occlusion is still an issue.
-  - Image showcasing the problem: 
+  - Image showcasing the problem (YOLO-H version): 
     - ![alt text](image-16.png)
     - ![alt text](image-17.png)
+  - Mediapipe Holistic version:
+    - ![alt text](image-23.png)
 - **Senz3d:** YOLO-hierachical solved failures in detection.
   - Multi-detection (more than one hands are detected):
     - ![alt text](<Pasted image 20250313211552.png>)
