@@ -1,5 +1,6 @@
 '''
 python dataset_loader.py -d lexset -s train
+--show3d shows the 3d plot of the hands.
 '''
 
 import os

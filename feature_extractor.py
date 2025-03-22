@@ -301,9 +301,23 @@ def postprocess_landmarks(features):
     # print(np.max(landmarks['hands'],axis=(0,1))-np.min(landmarks['hands'],axis=(0,1)))
     # print(np.max(landmarks['pose'],axis=0)-np.min(landmarks['pose'],axis=0))
     body = features[3]['pose']
-    if features[2] == 2 and (body[9:11] != 0).all():
-        if np.linalg.norm(body[9]-features[3]['hands'][0,0,:2]) > np.linalg.norm(body[9]-features[3]['hands'][0,1,:2]):
-            features[3]['hands'][0],features[3]['hands'][1] = np.copy(features[3]['hands'][1]),np.copy(features[3]['hands'][0])
+    hand1, hand2 = np.copy(features[3]['hands'][0]), np.copy(features[3]['hands'][1])
+    b1, b2 = (body[9] != 0).all(), (body[10] != 0).all()
+    if features[2] == 2 and b1 and b2:
+        if np.linalg.norm(body[9]-hand1[0,:2]) > np.linalg.norm(body[9]-hand2[0,:2]):
+            features[3]['hands'][0],features[3]['hands'][1] = hand2, hand1
+    elif features[2] == 1:
+        hand1, hand2 = (hand1, hand2) if (hand2 == 0).all() else (hand2, hand1)
+        if b1 and b2:
+            if np.linalg.norm(body[9]-hand1[0,:2]) < np.linalg.norm(body[10]-hand1[0,:2]):
+                b2 = False
+            else:
+                b1 = False
+        if b1: # have left hand
+            features[3]['hands'][0],features[3]['hands'][1] = hand1, hand2
+        elif b2:
+            features[3]['hands'][0],features[3]['hands'][1] = hand2, hand1
+            
     return features[3]
 
 def extract_features_from_clipped_region(image_rgb, dyn=False, hands=None):

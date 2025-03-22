@@ -1,20 +1,21 @@
 import cv2
 import sys
 sys.path.append('.')
-from feature_extractor import extract_features_from_image  # Ensure this function exists in feature_extractor.py
+
+import numpy as np
+from matplotlib import pyplot as plt
+
+from feature_extractor import extract_features_from_clipped_region  # Ensure this function exists in feature_extractor.py
 
 def extract_keypoints(frame):
     """
     Wrapper function to extract keypoints from a frame using the feature_extractor module.
     """
-    _, _, _, landmarks = extract_features_from_image(frame)
-    keypoints = []
-    for hand in landmarks['hands']:
-        for point in hand:
-            keypoints.append((point[0] * frame.shape[1], point[1] * frame.shape[0]))  # Scale back to image dimensions
-    for point in landmarks['pose']:
-        keypoints.append((point[0] * frame.shape[1], point[1] * frame.shape[0]))
-    return keypoints
+    features, _, _ = extract_features_from_clipped_region(frame)
+
+    landmarks = features[3]
+
+    return landmarks['pose'], landmarks['hands'][0], landmarks['hands'][1], landmarks['pose'][9:10,:]
 
 def main():
     # Open the camera
@@ -36,11 +37,14 @@ def main():
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         # Process the frame to extract keypoints
-        keypoints = extract_keypoints(frame_rgb)
+        lmks = extract_keypoints(frame_rgb)
 
+        # print(lmks)
         # Visualize keypoints on the frame
-        for x, y in keypoints:
-            cv2.circle(frame, (int(x), int(y)), 5, (0, 255, 0), -1)
+        for landmarks, c in zip(lmks, [(255, 0, 0), (0, 255, 0), (0, 0, 255), (0, 0, 0)]):
+            # print(landmarks.shape, frame_rgb.shape)
+            for x, y in landmarks[:,:2]:
+                cv2.circle(frame, (int(x * frame.shape[1]), int(y * frame.shape[0])), 3, c, -1)
 
         # Display the resulting frame
         cv2.imshow('Keypoint Detection', frame)

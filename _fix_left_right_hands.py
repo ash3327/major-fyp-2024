@@ -34,11 +34,27 @@ def fix_npy_features(data_dir, dataset, subfolders, output_dir):
                         # Update entries
                         for features in data:
                             body = features[3]['pose']
-                            if features[2] == 2 and (body[9:11] != 0).all():
-                                if np.linalg.norm(body[9]-features[3]['hands'][0,0,:2]) > np.linalg.norm(body[9]-features[3]['hands'][0,1,:2]):
-                                    features[3]['hands'][0],features[3]['hands'][1] = np.copy(features[3]['hands'][1]),np.copy(features[3]['hands'][0])
-                                    # print(f'Switched {features[0]}')
-
+                            hand1, hand2 = np.copy(features[3]['hands'][0]), np.copy(features[3]['hands'][1])
+                            b1, b2 = (body[9] != 0).all(), (body[10] != 0).all()
+                            flag = True
+                            if features[2] == 2 and b1 and b2:
+                                if np.linalg.norm(body[9]-hand1[0,:2]) > np.linalg.norm(body[9]-hand2[0,:2]):
+                                    features[3]['hands'][0],features[3]['hands'][1] = hand2, hand1
+                            elif features[2] == 1:
+                                hand1, hand2 = (hand1, hand2) if (hand2 == 0).all() else (hand2, hand1)
+                                if b1 and b2:
+                                    if np.linalg.norm(body[9]-hand1[0,:2]) < np.linalg.norm(body[10]-hand1[0,:2]):
+                                        b2 = False
+                                    else:
+                                        b1 = False
+                                if b1: # have left hand
+                                    features[3]['hands'][0],features[3]['hands'][1] = hand1, hand2
+                                elif b2:
+                                    features[3]['hands'][0],features[3]['hands'][1] = hand2, hand1
+                            else:
+                                flag = False
+                            # if flag:
+                            #     print(f'Switched {features[0]}')
                         # Save the updated array back to the .npy file
                         np.save(npy_path, data)
                         print(f"Successfully updated: {npy_path}")
