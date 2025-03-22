@@ -14,18 +14,62 @@ import argparse
 from tqdm import tqdm
 
 from prepare_dataset import get_info
+from mpl_toolkits.mplot3d import Axes3D
 
 #-----------
 # Visualization
 #-----------
-def visualize_image(fname, fpath, features):
+def visualize_image(fname, fpath, features, show3d=False):
     image = Image.open(fpath)
-    lmks = (features[3]['pose'], features[3]['hands'][0], features[3]['hands'][1])
-    plt.imshow(image)
-    plt.title(fname)
-    for landmarks, c in zip(lmks, ['b','g','r','k']):
-        plt.scatter(landmarks[:, 0]*image.size[0], landmarks[:, 1]*image.size[1], s=10, marker='.', c=c)
-    plt.show()
+    lmks = [features[3]['pose'], features[3]['hands'][0], features[3]['hands'][1]]
+    
+    if show3d:
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        step = max(1, image.size[0] // 120)  # Reduce resolution to 1/50 of the image size
+        xx, yy = np.meshgrid(np.linspace(0, 1, image.size[0] // step), np.linspace(0, 1, image.size[1] // step))
+        zz = np.zeros_like(xx)
+        reduced_image = np.array(image.resize((xx.shape[1], yy.shape[0]))) / 255  # Downsample the image
+        # ax.plot_surface(xx, yy, zz, rstride=1, cstride=1, facecolors=reduced_image, shade=False)
+        # print(lmks[0].shape)
+
+        # if features[2] == 2 and (lmks[0][9:11] != 0).all():
+        #     if np.linalg.norm(lmks[0][9]-lmks[1][0][:2]) > np.linalg.norm(lmks[0][9]-lmks[2][0][:2]):
+        #         lmks[1],lmks[2] = lmks[2],lmks[1]
+        
+        for landmarks, c in zip(lmks, ['b', 'g', 'r', 'k']):
+            ax.scatter(landmarks[:, 0], 
+               landmarks[:, 1], 
+               landmarks[:, 2] if landmarks.shape[1] > 2 else 0, 
+               s=10, marker='.', c=c)
+        ax.scatter([lmks[0][9][0]],[lmks[0][9][1]],[0], s=20, c='k')
+        ax.scatter([lmks[0][10][0]],[lmks[0][10][1]],[0], s=20, c='k')
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.set_zlim(-.5, .5)
+        ax.set_title(fname)
+
+        # Ensure the scale of the three axes is the same and adjust based on landmarks
+        # all_landmarks = np.vstack([lmks[0], lmks[1], lmks[2]])
+        # max_range = np.array([all_landmarks[:, 0].max() - all_landmarks[:, 0].min(),
+        #               all_landmarks[:, 1].max() - all_landmarks[:, 1].min(),
+        #               all_landmarks[:, 2].max() - all_landmarks[:, 2].min()]).max() / 2.0
+        # mid_x = (all_landmarks[:, 0].max() + all_landmarks[:, 0].min()) * 0.5
+        # mid_y = (all_landmarks[:, 1].max() + all_landmarks[:, 1].min()) * 0.5
+        # mid_z = (all_landmarks[:, 2].max() + all_landmarks[:, 2].min()) * 0.5
+        # ax.set_xlim(mid_x - max_range, mid_x + max_range)
+        # ax.set_ylim(mid_y - max_range, mid_y + max_range)
+        # ax.set_zlim(mid_z - max_range, mid_z + max_range)
+
+        plt.show()
+    else:
+        plt.imshow(image)
+        plt.title(fname)
+        for landmarks, c in zip(lmks, ['b', 'g', 'r', 'k']):
+            plt.scatter(landmarks[:, 0] * image.size[0], 
+                        landmarks[:, 1] * image.size[1], 
+                        s=10, marker='.', c=c)
+        plt.show()
 
 def visualize_video_frame(fname, frame_id, features):
     cap = cv2.VideoCapture(fname)
@@ -87,7 +131,7 @@ def visualize_video(fname, features):
 # Prepare Dataset
 #-----------
 
-def parse_dataset(dataset, split):
+def parse_dataset(dataset, split, show3d=False):
     data_dir, dataset, subfolders, output_dir, dyn, is_video, *args = get_info(dataset)
     splits = list(subfolders.keys())
 
@@ -124,8 +168,12 @@ def parse_dataset(dataset, split):
         nonlocal count, cnt0, cnt1, cnt2, cnt3, total
         flag = False
         features = list()
+        cum_total = 0
+        cum_count = 0
+        # mindepth, maxdepth = 0,0
         for i, item in tqdm(enumerate(data)):
             total += 1
+            cum_total += 1
             shapes[(item[3]['pose'].shape, item[3]['hands'].shape)] = shapes.get((item[3]['pose'].shape, item[3]['hands'].shape),0)+1
             if is_video:
                 features.append(item)
@@ -144,28 +192,36 @@ def parse_dataset(dataset, split):
                 cnt1 += b and not a
                 cnt2 += a and b
                 cnt3 += c
+                # cum_count += c
                 actual_cnts[(item[1], item[2])] = actual_cnts.get((item[1], item[2]), 0) + 1
 
                 if is_video:
-                    print(rpath, i)
+                    # print(rpath, i)
+                    pass
                 else:
                     fname = os.path.join(subfolders[split], item[0])
                     fpath = os.path.join(data_dir, dataset, fname)
                     print(fname, item[2])
 
-            if item[2] == 0:
+            if item[2] != 0:
             # if item[0] == "final_phoenix_noPause_noCompound_lefthandtag_noClean/30July_2010_Friday_tagesschau_default-7/1/.png_fn000135-0.png":
                 if is_video:
+                    cum_count += 1
                     fname, frame_idx = item[0].rsplit('$',1)
-                    if not flag:
-                        visualize_video_frame(fname, int(frame_idx), item)
-                    flag = True
+                    # if not flag:
+                    #     visualize_video_frame(fname, int(frame_idx), item)
+                    # flag = True
                 else:
                     fname = os.path.join(subfolders[split], item[0])
                     fpath = os.path.join(data_dir, dataset, fname)
-                    visualize_image(fname, fpath, item)
-        if flag and is_video:
+                    visualize_image(fname, fpath, item, show3d=show3d)
+                    # mindepth = min(mindepth, np.min(item[3]['hands'][:,:,2]))
+                    # maxdepth = max(maxdepth, np.max(item[3]['hands'][:,:,2]))
+        # if flag and is_video:
+        if cum_count/cum_total > .3 and is_video:
             visualize_video(fname, features)
+
+        # print(f"MIN={mindepth}, MAX={maxdepth}")
 
     if is_video:
         root_path = os.path.join("data/kpts", dataset, split)
@@ -194,5 +250,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Dataset Loader")
     parser.add_argument('-d','--dataset', type=str, default='lexset', help='Name of the dataset')
     parser.add_argument('-s', '--split', type=str, default=None, help='Name of the split')
+    parser.add_argument('--show3d', action='store_true', help="whether 3d plot is shown instead of 2d")
     args = parser.parse_args()
-    parse_dataset(args.dataset, split=args.split)
+    parse_dataset(args.dataset, split=args.split, show3d=args.show3d)

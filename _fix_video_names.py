@@ -1,3 +1,7 @@
+"""
+python _fix_video_names.py -d <dataset_name> -s <split_name>
+"""
+
 import os
 import numpy as np
 from tqdm import tqdm

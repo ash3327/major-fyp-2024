@@ -72,6 +72,8 @@ NVIDIA GeForce RTX 4060, 8GB VRAM (Laptop), 32GB RAM
 - **Senz3d:** YOLO-hierachical solved failures in detection.
   - Multi-detection (more than one hands are detected):
     - ![alt text](<Pasted image 20250313211552.png>)
+- **LSA64:** The hand is not normal color, cannot detect often.
+- **IPN:** Good detection.
 
 ## Current Progress and Todos
 
@@ -123,6 +125,14 @@ Use the following commands to test and validate the pipeline:
   - 8/3: Data preprocessing and cleaning completed.
   - 9/3: Contrastive pre-training initiated.
   - 14/4: Report deadline.
+
+## Notes:
+
+### Mediapipe keypoints
+![alt text](image-21.png)
+
+### YOLO pose keypoints
+![alt text](image-22.png)
 
 ## MANO augmentations
 

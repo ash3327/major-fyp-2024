@@ -38,7 +38,7 @@ output = rh_model(betas=betas,
                   return_verts=True,
                   return_tips = True)
 
-flag = False
+flag = True
 
 if not flag:
     h_meshes = rh_model.hand_meshes(output)

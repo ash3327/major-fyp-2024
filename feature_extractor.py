@@ -292,7 +292,7 @@ def transform_landmarks(landmarks, bbox, image_shape, normalize=True):
     landmarks['hands'] = np.where(landmarks['hands'] == 0, 0, (landmarks['hands'] * scale + offset) / screen_size)
     return landmarks
 
-def postprocess_landmarks(landmarks):
+def postprocess_landmarks(features):
     # if (np.min(landmarks['pose'],axis=0)[:2] == 0).all():
     #     return landmarks
     # if (landmarks['hands'][0]-landmarks['hands'][1])[:2]:
@@ -300,7 +300,11 @@ def postprocess_landmarks(landmarks):
     # print(landmarks['hands'].shape)
     # print(np.max(landmarks['hands'],axis=(0,1))-np.min(landmarks['hands'],axis=(0,1)))
     # print(np.max(landmarks['pose'],axis=0)-np.min(landmarks['pose'],axis=0))
-    return landmarks
+    body = features[3]['pose']
+    if features[2] == 2 and (body[9:11] != 0).all():
+        if np.linalg.norm(body[9]-features[3]['hands'][0,0,:2]) > np.linalg.norm(body[9]-features[3]['hands'][0,1,:2]):
+            features[3]['hands'][0],features[3]['hands'][1] = np.copy(features[3]['hands'][1]),np.copy(features[3]['hands'][0])
+    return features[3]
 
 def extract_features_from_clipped_region(image_rgb, dyn=False, hands=None):
     """
@@ -375,6 +379,6 @@ def extract_features_from_clipped_region(image_rgb, dyn=False, hands=None):
             # % (([correct-bbox_corner]/bbox_wh*image_wh)*bbox_wh+bbox_corner)/image_wh
     if bbox is not None:
         features[3] = transform_landmarks(features[3], bbox, image_rgb.shape)
-    features[3] = postprocess_landmarks(features[3])
+    features[3] = postprocess_landmarks(features)
     features[2] = sum(np.any(hand != 0) for hand in features[3]['hands'])
     return features, bbox, num_person

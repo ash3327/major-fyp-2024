@@ -88,6 +88,14 @@ for Few-Shot Sign Language Recognition [https://arxiv.org/abs/2204.02803]
 
 ### Graph contrastive
 - **GraphCL** | Graph Contrastive Learning with Augmentations (2021) [https://arxiv.org/pdf/2010.13902]
+- **SkeletonACL** | GRAPH CONTRASTIVE LEARNING FOR SKELETONBASED ACTION RECOGNITION (2023) [https://arxiv.org/pdf/2301.10900]
+   - Contrastive loss with memory bank, graph
+
+### YOLO Contrastive
+- **CLDA-YOLO** | CLDA-YOLO: Visual Contrastive Learning Based
+Domain Adaptive YOLO Detector (2024) [https://arxiv.org/pdf/2412.11812]
+  - ![alt text](image-19.png)
+  - Pooling, student-teacher model, distillation loss
 
 ### Sign Language Annotation
 - **Sign Language Annotation Tool** | Towards Semi-automatic Sign Language Annotation Tool: SLAN-tool (2022) [https://www.sign-lang.uni-hamburg.de/lrec/pub/22030.pdf]
