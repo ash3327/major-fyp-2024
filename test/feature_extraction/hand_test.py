@@ -67,6 +67,9 @@ def main():
         return
 
     print("Press 'q' to quit.")
+
+    cummaxz = -999
+    cumminz = 999
     
     while True:
         ret, frame = cap.read()
@@ -81,21 +84,29 @@ def main():
         pose, hand0, hand1 = lmks = extract_keypoints(frame_rgb)
 
         # Visualize keypoints on the frame
+        maxz = -999
+        minz = 999
         for landmarks, c in zip(lmks, [(255, 0, 0), (0, 255, 0), (0, 0, 255), (0, 0, 0)]):
             for p in landmarks:
                 if len(p) == 3:
                     x, y, z = p
                 else:
                     x, y = p
-                    z = 0
+                    z = None
                 # Draw the circle
                 cx, cy = int(x * frame.shape[1]), int(y * frame.shape[0])
                 cv2.circle(frame, (cx, cy), 3, c, -1)
                 
-                # Draw the vertical line to indicate the 3rd dimension (z)
-                line_length = int(frame.shape[0] / 10)
-                cz = int(z * line_length)
-                cv2.line(frame, (cx, cy), (cx, cy - cz), c, 1)
+                if z is not None:
+                    # Draw the vertical line to indicate the 3rd dimension (z)
+                    line_length = int(frame.shape[0] / 10)
+                    cz = int(z * line_length)
+                    maxz = max(maxz, z)
+                    minz = min(minz, z)
+                    cv2.line(frame, (cx, cy), (cx, cy - cz), c, 1)
+        
+        cummaxz = max(cummaxz, maxz)
+        cumminz = min(cumminz, minz)
         
         # Prepare left frame: resize original frame to a square of size (2*m) x (2*m)
         left_frame = cv2.resize(frame, (2*m*frame_rgb.shape[1]//frame_rgb.shape[0], 2*m))
@@ -117,6 +128,10 @@ def main():
         # Combine left and right frames side-by-side
         combined = np.hstack((left_frame, right_frame))
         cv2.imshow('Original (left) | Hand Landmark Plot (right)', combined)
+
+        cumlist = minz,maxz,cumminz,cummaxz
+        cumlist = [round(v,4) for v in cumlist]
+        cv2.setWindowTitle('Original (left) | Hand Landmark Plot (right)', f"Max Depth (cz): {cumlist}")
         
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break

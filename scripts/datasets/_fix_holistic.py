@@ -1,5 +1,5 @@
 """
-python fix_holistic.py -d <dataset_name> -s <split> --output_dir <output_directory>
+python scripts/datasets/fix_holistic.py -d <dataset_name> -s <split> --output_dir <output_directory>
   
 This script iterates through .npy files in the dataset’s output directory,
 checks for entries where features[2] != 2, re-runs holistic MediaPipe detection,

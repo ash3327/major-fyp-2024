@@ -1,5 +1,5 @@
 """
-python prepare_dataset.py <dataset_name> [--holistic]
+python scripts/datasets/prepare_dataset.py <dataset_name> [--holistic]
 # only use --holistic if the dataset is guaranteed to contain the entire body and two hands, otherwise detection can be screwed up.
 """
 

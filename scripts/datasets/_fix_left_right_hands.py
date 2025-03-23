@@ -1,5 +1,5 @@
 """
-python _fix_left_right_hands.py -d <dataset_name> -s <split_name>
+python scripts/datasets/_fix_left_right_hands.py -d <dataset_name> -s <split_name>
 """
 
 import os

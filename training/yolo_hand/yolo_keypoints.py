@@ -1,3 +1,15 @@
+"""
+Train the yolo hand keypoints model (as in model/hand/best.pt)
+
+Utilizes the default yolo hand keypoints detection dataset, 
+with poor detection accuracy since only a small dataset is used.
+
+Instructions: 
+- python training/yolo_hand/yolo_keypoints.py
+- wait.
+- go to runs/train/hand<run_id>/weights/best.pt and replace the current model
+"""
+
 from ultralytics import YOLO
 from multiprocessing import freeze_support
 
