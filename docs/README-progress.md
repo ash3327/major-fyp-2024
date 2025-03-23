@@ -170,6 +170,15 @@ The sampled keypoints are as follows:
 
 ### Generation of Fake Data
 The module scripts are under `scripts/fake_data/`.
+The training script (infoNCE loss) is under `training/contrastive/`.
+* `train_contrastive_fake_data.py`
+
+| Version | Batch size | Num iters per epoch | Time per epoch | Speed |
+|---|---|---|---|---|
+| v1-1 | 256 | 10000 | 28s | 1.4it/s |
+| v1-2 | 256 | 256000 | 1h 14m 51s | 4.53s/it |
+| v1-3 | 256 | 25600 | 7m 40s | 4.73s/it | 
+| v1-4 | 256 | 25600 | 1m | 1.4it/s |
 
 ## SMPL augmentations
 Installation Steps:

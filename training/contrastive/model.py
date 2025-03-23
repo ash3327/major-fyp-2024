@@ -1,6 +1,7 @@
 # model.py
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 class HandEncoder(nn.Module):
     def __init__(self):
@@ -12,4 +13,5 @@ class HandEncoder(nn.Module):
         )
     
     def forward(self, x):
-        return self.fc(x.view(x.size(0), -1))  # Flatten input and pass through layers
+        embeddings = self.fc(x.view(x.size(0), -1))  # Compute raw embeddings
+        return F.normalize(embeddings, p=2, dim=1)   # L2 normalization to unit norm

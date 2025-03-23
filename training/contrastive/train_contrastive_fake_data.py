@@ -21,14 +21,20 @@ from model import HandEncoder
 from losses import info_nce_loss
 from datetime import datetime
 
-# Hyperparameters
-batch_size = 256
-num_samples = 10000
-num_epochs = 100
-learning_rate = 0.001
+from torch.optim.lr_scheduler import CosineAnnealingLR
+import math
+
+# Train info
 version_id = 1
 current_time = datetime.now().strftime('%Y%m%d%H%M%S')
 train_path_root = f'runs/hand_contrastive_learning/v{version_id}/{current_time}'
+
+# Hyperparameters
+batch_size = 256
+num_samples = 100 * batch_size
+num_epochs = 200
+base_learning_rate = 0.01  # Base LR
+warmup_epochs = 10  # Warmup period
 
 # Device configuration
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -39,7 +45,8 @@ dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 # Initialize model and optimizer
 model = HandEncoder().to(device)
-optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+optimizer = torch.optim.Adam(model.parameters(), lr=base_learning_rate)
+scheduler = CosineAnnealingLR(optimizer, T_max=10)
 
 # Initialize TensorBoard writer
 os.makedirs(train_path_root, exist_ok=True)
@@ -60,40 +67,33 @@ best_loss = float('inf')
 # Training loop
 for epoch in range(num_epochs):
     total_loss = 0.0
-    for batch_idx, (joints_base, joints_aug) in tqdm(enumerate(dataloader), total=num_samples // batch_size + 1):
+    for batch_idx, (joints_base, joints_aug) in tqdm(enumerate(dataloader), total=len(dataloader)):
         joints_base, joints_aug = joints_base.to(device), joints_aug.to(device)
         
         # Forward pass
         embeddings_base = model(joints_base)
         embeddings_aug = model(joints_aug)
         
-        # Compute loss
+        # Compute loss and backward pass
         loss = info_nce_loss(embeddings_base, embeddings_aug)
-        
-        # Backward pass and optimization
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        
+
         total_loss += loss.item()
     
-    # Calculate average loss for the epoch
     avg_loss = total_loss / len(dataloader)
-    
-    # Log the average loss to TensorBoard
     writer.add_scalar('Loss/train', avg_loss, epoch)
+    writer.add_scalar('Learning Rate', scheduler.get_last_lr()[0], epoch)
     
-    # Check if this is the best loss so far
-    if avg_loss < best_loss:
+    if avg_loss < best_loss: # save the best model
         best_loss = avg_loss
-        # Save the best model
         torch.save(model.state_dict(), best_model_path)
-
-    # Save the last model after training completes
-    torch.save(model.state_dict(), last_model_path)
     
-    # Print progress
-    print(f"Epoch {epoch+1}/{num_epochs}, Loss: {avg_loss:.4f}")
+    torch.save(model.state_dict(), last_model_path)
+    scheduler.step()
+    
+    print(f"Epoch {epoch+1}/{num_epochs}, Loss: {avg_loss:.4f}, LR: {scheduler.get_last_lr()[0]:.6f}")
 
 # Clean up
 writer.close()
