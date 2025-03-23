@@ -87,7 +87,7 @@ def process_npy_file(npy_path, data_dir, dataset, subfolder, is_video=False):
         
         # Overwrite hand landmarks with the holistic detection results
         # We assume new_features[3] has the updated 'hands' field.
-        if new_features[2] == 2:
+        if new_features[2] > features[2]:
             # print(f'UPDATED {features[0]}')
             features[3]['hands'] = new_features[3]['hands']
             features[2] = 2
