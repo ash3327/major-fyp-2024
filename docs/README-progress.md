@@ -108,13 +108,13 @@ Use the following commands to test and validate the pipeline:
 
 - **Prepare Dataset:**
   ```python
-  python prepare_dataset.py <dataset_name>
+  python scripts/datasets/prepare_dataset.py <dataset_name>
   ```
 
 - **Verify Failed Detections:**
   - After feature extraction (saved under `data/kpts/`):
     ```python
-    python dataset_loader.py -d <dataset_name> -s <split_name>
+    python scripts/datasets/dataset_loader.py -d <dataset_name> -s <split_name>
     ```
 
 ## Additional Notes
@@ -167,6 +167,9 @@ model
 
 The sampled keypoints are as follows:
 ![alt text](image-18.png)
+
+### Generation of Fake Data
+The module scripts are under `scripts/fake_data/`.
 
 ## SMPL augmentations
 Installation Steps:

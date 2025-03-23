@@ -293,6 +293,9 @@ def transform_landmarks(landmarks, bbox, image_shape, normalize=True):
     return landmarks
 
 def postprocess_landmarks(features):
+    """
+    Problem of this function: sometimes when person is too close to camera, the left,right hand detection cannot be performed.
+    """
     # if (np.min(landmarks['pose'],axis=0)[:2] == 0).all():
     #     return landmarks
     # if (landmarks['hands'][0]-landmarks['hands'][1])[:2]:
@@ -304,8 +307,10 @@ def postprocess_landmarks(features):
     hand1, hand2 = np.copy(features[3]['hands'][0]), np.copy(features[3]['hands'][1])
     b1, b2 = (body[9] != 0).all(), (body[10] != 0).all()
     if features[2] == 2 and b1 and b2:
+        # print(np.linalg.norm(body[9]-hand1[0,:2]),np.linalg.norm(body[10]-hand2[0,:2]),np.linalg.norm(body[9]-hand2[0,:2]),np.linalg.norm(body[10]-hand1[0,:2]))
         if np.linalg.norm(body[9]-hand1[0,:2]) > np.linalg.norm(body[9]-hand2[0,:2]):
             features[3]['hands'][0],features[3]['hands'][1] = hand2, hand1
+        
     elif features[2] == 1:
         hand1, hand2 = (hand1, hand2) if (hand2 == 0).all() else (hand2, hand1)
         if b1 and b2:
@@ -317,7 +322,7 @@ def postprocess_landmarks(features):
             features[3]['hands'][0],features[3]['hands'][1] = hand1, hand2
         elif b2:
             features[3]['hands'][0],features[3]['hands'][1] = hand2, hand1
-            
+
     return features[3]
 
 def extract_features_from_clipped_region(image_rgb, dyn=False, hands=None):
@@ -393,6 +398,6 @@ def extract_features_from_clipped_region(image_rgb, dyn=False, hands=None):
             # % (([correct-bbox_corner]/bbox_wh*image_wh)*bbox_wh+bbox_corner)/image_wh
     if bbox is not None:
         features[3] = transform_landmarks(features[3], bbox, image_rgb.shape)
-    features[3] = postprocess_landmarks(features)
     features[2] = sum(np.any(hand != 0) for hand in features[3]['hands'])
+    features[3] = postprocess_landmarks(features)
     return features, bbox, num_person

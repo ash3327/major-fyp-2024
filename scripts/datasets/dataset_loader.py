@@ -1,5 +1,5 @@
 '''
-python dataset_loader.py -d lexset -s train
+python scripts/datasets/dataset_loader.py -d lexset -s train
 --show3d shows the 3d plot of the hands.
 '''
 
@@ -218,7 +218,7 @@ def parse_dataset(dataset, split, show3d=False):
                     fpath = os.path.join(data_dir, dataset, fname)
                     print(fname, item[2])
 
-            if item[2] == 0:
+            # if item[2] == 0:
             # # if item[1] != 0:
             # # if item[0] == "Subject2/Subject2/2445_color.png":
             # # if item[0] == "final_phoenix_noPause_noCompound_lefthandtag_noClean/30July_2010_Friday_tagesschau_default-7/1/.png_fn000135-0.png":

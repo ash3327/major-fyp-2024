@@ -10,14 +10,20 @@ size = 5
 
 variance_new = dict(
     betas=.5,
-    pose=3,
+    pose=.5,
     global_orient=5
 )
+# variance_new = dict(
+#     betas=.1,
+#     pose=.1,
+#     global_orient=1
+# )
 variance = variance_new
 
 # Parameters to control pose variance and bias
-pose_variance_magnitude = .5  # Adjust the magnitude of the variance
+# pose_variance_magnitude = variance['pose']  # Adjust the magnitude of the variance
 pose_bias = torch.zeros(n_comps)  # Bias towards a specific pose (e.g., flat pose)
+vpow = 1
 
 # Generate 100 hand meshes
 batch_size = size**2
@@ -30,7 +36,7 @@ rh_model = mano.load(model_path=model_path,
 betas = torch.rand(batch_size, 10) * variance['betas']
 pose = (torch.rand(batch_size, n_comps) - 0.5) * 2 # + pose_bias
 # print((torch.rand(1, batch_size) * pose_variance_magnitude).shape, pose.shape)
-pose = (torch.rand(batch_size, 1)**.5 * pose_variance_magnitude) * pose
+pose = (torch.rand(batch_size, 1)**vpow * variance['pose']) * pose
 # print(pose.shape)
 global_orient = torch.rand(batch_size, 3) * variance['global_orient']
 transl = torch.zeros(batch_size, 3)
