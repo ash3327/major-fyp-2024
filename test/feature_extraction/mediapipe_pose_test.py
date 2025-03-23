@@ -78,11 +78,11 @@ def process_frame(frame, holistic, is_video=False):
         return
 
 # Example usage:
-# process_input()  # Use webcam
+process_input()  # Use webcam
 
 # process_input("data/raw/synthetic-asl-alphabet/Test_Alphabet/A/4ab5c2a9-7a18-4453-aed3-f0af875f69e2.rgb_0000.png")
 # process_input("data/raw/senz3d_dataset/acquisitions/S1/G11/30-color.png")
-process_input("data/raw/hands_dataset/Subject1/Subject1/1007_color.png")
+# process_input("data/raw/hands_dataset/Subject1/Subject1/1007_color.png")
 # process_input("data/raw/hands_dataset/Subject1/Subject1/2296_color.png")
 # process_input("data/raw/hands_dataset/Subject1/Subject1/3379_color.png")
 # process_input("data/raw/hands_dataset/Subject2/Subject2/2445_color.png")

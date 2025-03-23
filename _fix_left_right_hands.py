@@ -65,48 +65,6 @@ def fix_npy_features(data_dir, dataset, subfolders, output_dir):
                 else:
                     print(f"Warning: .npy file not found at {npy_path}")
                     # pass
-    # for split, subfolder in subfolders.items():
-    #     # Construct the path to the subfolder containing video files
-    #     main_dir = os.path.join(output_dir, dataset)
-    #     print(f"Processing subfolder: {main_dir}")
-
-    #     # Collect all video file paths in the subfolder
-    #     video_paths = []
-    #     for root, _, files in os.walk(main_dir):
-    #         for file in files:
-    #             # Check for common video file extensions
-    #             if file.lower().endswith(('.avi', '.mp4', '.mov', '.mkv')):
-    #                 video_path = os.path.join(root, file)
-    #                 video_paths.append(video_path)
-
-    #     # Process each video and its corresponding .npy file
-    #     for video_path in tqdm(video_paths, desc=f"Fixing {split} videos"):
-    #         # Extract the video name without extension to match the .npy filename
-    #         video_name = os.path.splitext(os.path.basename(video_path))[0]
-    #         npy_path = os.path.join(output_dir, dataset, split, f"{video_name}.npy")
-
-    #         # Check if the .npy file exists
-    #         if os.path.exists(npy_path):
-    #             try:
-    #                 # Load the .npy file with allow_pickle=True since it contains object arrays
-    #                 data = np.load(npy_path, allow_pickle=True)
-
-    #                 # Update each entry's features[0] to f"{video_path}${idx}"
-    #                 for i, entry in enumerate(data):
-    #                     # Assuming entry is a tuple or array with at least 4 elements
-    #                     # Create a new tuple with updated features[0]
-    #                     updated_entry = (f"{video_path}${i}", entry[1], entry[2], entry[3])
-    #                     data[i] = updated_entry
-
-    #                 # Save the updated array back to the .npy file
-    #                 np.save(npy_path, data)
-    #                 print(f"Successfully updated: {npy_path}")
-
-    #             except Exception as e:
-    #                 print(f"Error processing {npy_path}: {e}")
-    #         else:
-    #             # print(f"Warning: .npy file not found at {npy_path}")
-    #             pass
 
 def parse_dataset(dataset, split=None):
     data_dir, dataset, subfolders, output_dir, dyn, is_video, *args = get_info(dataset)

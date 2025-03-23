@@ -99,7 +99,7 @@ def extract_features_from_video(video_path, output_dir, dataset, split, skip=Fal
     np.save(output_path, np.array(data, dtype=object))
     print(f"Saved video features to {output_path}")
 
-def extract_features_from_subfolder(data_dir, dataset, subfolder, output_dir, split, dyn=False, skip=False):
+def extract_features_from_subfolder(data_dir, dataset, subfolder, output_dir, split, dyn=False, skip=False, update_if_missing=False):
     main_dir = os.path.join(data_dir, dataset, subfolder)
     print('Extracting', main_dir, output_dir)
     
@@ -148,6 +148,6 @@ def extract_features_from_subfolder(data_dir, dataset, subfolder, output_dir, sp
     
     print("Feature extraction complete!")
 
-def extract_features(data_dir, dataset, subfolders, output_dir, dyn=False, *args, skip=False, **kwargs):
+def extract_features(data_dir, dataset, subfolders, output_dir, dyn=False, *args, skip=False, update_if_missing=False, **kwargs):
     for split, subfolder in subfolders.items():
-        extract_features_from_subfolder(data_dir, dataset, subfolder, output_dir, split, dyn=dyn, skip=skip)
+        extract_features_from_subfolder(data_dir, dataset, subfolder, output_dir, split, dyn=dyn, skip=skip, update_if_missing=update_if_missing)

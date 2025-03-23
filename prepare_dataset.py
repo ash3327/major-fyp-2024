@@ -1,5 +1,11 @@
+"""
+python prepare_dataset.py <dataset_name> [--holistic]
+# only use --holistic if the dataset is guaranteed to contain the entire body and two hands, otherwise detection can be screwed up.
+"""
+
 import argparse
 from feature_extractor import extract_features
+from feature_extractor_holistic import extract_features as extract_features_holistic
 
 def get_info(dataset):
     data_dir = "data/raw"
@@ -61,6 +67,14 @@ def get_info(dataset):
             )
             dyn = True
             is_video = True
+        case 'lsa64p' | 'lsa64_preprocessed':
+            print('Fetching LSA64 (preprocessed) Dataset (please do not use this)')
+            dataset = 'lsa64_preprocessed'
+            subfolders = dict(
+                vid="lsa64_hand_videos"
+            )
+            dyn = True
+            is_video = True
         case 'phoenix' | 'phoenix-2014-t':
             print('Fetching Phoenix-2014T Weather Dataset')
             dataset = 'phoenix-2014-t'
@@ -82,8 +96,11 @@ def get_info(dataset):
             raise Exception("Such dataset is not defined within `prepare_dataset.py`.")
     return data_dir, dataset, subfolders, output_dir, dyn, is_video
 
-def fetch_dataset(dataset, skip=False):
-    extract_features(*get_info(dataset), skip=skip)
+def fetch_dataset(dataset, skip=False, holistic=False):
+    data_dir, dataset, subfolders, output_dir, dyn, is_video, *rest = info = get_info(dataset)
+    extract_features(*info, skip=skip)
+    if holistic:
+        fix_dataset(data_dir, dataset, subfolders, output_dir, is_video=is_video)
 
 if __name__ == '__main__':
     # choices = [
@@ -101,6 +118,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Prepare dataset by extracting features.')
     parser.add_argument('dataset', type=str, help='Path to the dataset file', default='lexset')
     parser.add_argument('--skip', action='store_true', help='Skip processing if already done.')
+    parser.add_argument('--holistic', action='store_true', help='Update the items with holistic ones if missing.')
     args = parser.parse_args()
 
-    fetch_dataset(args.dataset, skip=args.skip)
+    fetch_dataset(args.dataset, skip=args.skip, holistic=args.holistic)

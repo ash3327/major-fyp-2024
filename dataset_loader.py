@@ -219,20 +219,21 @@ def parse_dataset(dataset, split, show3d=False):
                     print(fname, item[2])
 
             if item[2] == 0:
-            # if item[1] != 0:
-            # if item[0] == "final_phoenix_noPause_noCompound_lefthandtag_noClean/30July_2010_Friday_tagesschau_default-7/1/.png_fn000135-0.png":
-                if is_video:
-                    cum_count += 1
-                    fname, frame_idx = item[0].rsplit('$',1)
-                    # if not flag:
-                    #     visualize_video_frame(fname, int(frame_idx), item)
-                    # flag = True
-                else:
-                    fname = os.path.join(subfolders[split], item[0])
-                    fpath = os.path.join(data_dir, dataset, fname)
-                    visualize_image(fname, fpath, item, show3d=show3d)
-                    # mindepth = min(mindepth, np.min(item[3]['hands'][:,:,2]))
-                    # maxdepth = max(maxdepth, np.max(item[3]['hands'][:,:,2]))
+            # # if item[1] != 0:
+            # # if item[0] == "Subject2/Subject2/2445_color.png":
+            # # if item[0] == "final_phoenix_noPause_noCompound_lefthandtag_noClean/30July_2010_Friday_tagesschau_default-7/1/.png_fn000135-0.png":
+            #     if is_video:
+            #         cum_count += 1
+            #         fname, frame_idx = item[0].rsplit('$',1)
+            #         # if not flag:
+            #         #     visualize_video_frame(fname, int(frame_idx), item)
+            #         # flag = True
+            #     else:
+            #         fname = os.path.join(subfolders[split], item[0])
+            #         fpath = os.path.join(data_dir, dataset, fname)
+            #         visualize_image(fname, fpath, item, show3d=show3d)
+            #         # mindepth = min(mindepth, np.min(item[3]['hands'][:,:,2]))
+            #         # maxdepth = max(maxdepth, np.max(item[3]['hands'][:,:,2]))
         # if flag and is_video:
         if cum_count/cum_total > .3 and is_video:
             visualize_video(fname, features)

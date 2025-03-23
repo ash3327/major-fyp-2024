@@ -43,13 +43,13 @@ The table below summarizes the problematic detection ratios for each method acro
 
 Note: The notation (Name)<sup>#</sup> indicates that the value has been adjusted as it was previously measured incorrectly by not removing the blank class from the "missing detections" count.
 
-| Dataset    | Split | Raw (%) | CLAHE (%) | Mixed (%) | YOLO (%) | YOLO-Hierarchical (%) | YOLO-H-v2 (%) | YOLO-H-v2 (parallelized) (%) | Mediapipe-Holistic (%)
-|------------|-------|---------|-----------|-----------|----------|-----------------------|-|-|-|
+| Dataset    | Split | Raw (%) | CLAHE (%) | Mixed (%) | YOLO (%) | YOLO-Hierarchical (%) | YOLO-H-v2 (%) | YOLO-H-v2 (parallelized) (%) | Mediapipe-Holistic (%) | YOLO-H-v2p, fixed with Mediapipe-Holistic (%)
+|------------|-------|---------|-----------|-----------|----------|-----------------------|-|-|-|-|
 | Lexset     | Train | 10.2<sup>#</sup> | 20.3<sup>#</sup> | 12.1<sup>#</sup> | **5.47**<sup>#</sup>  | *12.4*<sup>#</sup> | **3.00** | | *95.2*
 | Lexset     | Test  | 14.7<sup>#</sup> | 20.4<sup>#</sup> | 12.6<sup>#</sup> | **4.89**<sup>#</sup> | *12.7*<sup>#</sup> | **3.19** | **1.81**
-| Hands      | -     | 35.6    | 35.6      | -         | 9.98     | **8.40** | **9.98** | **7.22** | **1.51**
-| Senz3d     | -     | 2.30    | 2.30      | -         | 0.23     | **0.00** | **0.08** | **0.00** | *6.89*
-| Pheonix-2014T Handshapes | Test | - | - | - | - | - | **5.57** | **5.80**
+| Hands      | -     | 35.6    | 35.6      | -         | 9.98     | **8.40** | **9.98** | **7.22** | **1.51** | **0.00567**
+| Senz3d     | -     | 2.30    | 2.30      | -         | 0.23     | **0.00** | **0.08** | **0.00** | *6.89* | 
+| Pheonix-2014T Handshapes | Test | - | - | - | - | - | **5.57** | **5.80** | *73.8*
 | Pheonix-2014T Handshapes | Train | - | - | - | - | - | *34.5*
 
 ### Efficiency
@@ -61,7 +61,7 @@ NVIDIA GeForce RTX 4060, 8GB VRAM (Laptop), 32GB RAM
 | --- | -- | -- | -- | 
 | Lexset (train) | 45:00 | 36:00 (expected) | 
 | Lexset (test)  | 12:16 | 8:18 | 5:40
-| Handshape (test) | 7:20<sup>#</sup> | 8:48 | 
+| Handshape (test) | 7:20<sup>#</sup> | 8:48 | 5:39
 
 **Notes:**
 - **Lexset:** Significant improvement with YOLO (9.2% problematic ratio in train split).
