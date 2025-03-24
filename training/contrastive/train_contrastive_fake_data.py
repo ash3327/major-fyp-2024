@@ -74,15 +74,16 @@ for epoch in range(num_epochs):
     model.train()  # Enable training mode (dropout and batch norm active)
     total_train_loss = 0.0
     for batch_idx, (joints_base, joints_aug) in tqdm(enumerate(dataloader), total=len(dataloader), desc=f"Epoch {epoch+1}/{num_epochs} - Training"):
-        # joints = torch.cat([joints_base, joints_aug], dim=0).to
-        joints_base, joints_aug = joints_base.to(device), joints_aug.to(device)
+        joints = torch.cat([joints_base, joints_aug], dim=0).to(device)
+        # joints_base, joints_aug = joints_base.to(device), joints_aug.to(device)
         
         # Forward pass
-        embeddings_base = model(joints_base)
-        embeddings_aug = model(joints_aug)
+        features = model(joints) # [2B, 21, 3] -> [2B, D]
+        # embeddings_base = model(joints_base)
+        # embeddings_aug = model(joints_aug)
         
         # Compute loss and backward pass
-        loss = info_nce_loss(embeddings_base, embeddings_aug)
+        loss = info_nce_loss(features, device=device)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -96,14 +97,16 @@ for epoch in range(num_epochs):
     total_eval_loss = 0.0
     with torch.no_grad():  # Disable gradient computation for evaluation
         for batch_idx, (joints_base, joints_aug) in tqdm(enumerate(dataloader_val), total=len(dataloader_val), desc=f"Epoch {epoch+1}/{num_epochs} - Evaluation"):
-            joints_base, joints_aug = joints_base.to(device), joints_aug.to(device)
+            joints = torch.cat([joints_base, joints_aug], dim=0).to(device)
+            # joints_base, joints_aug = joints_base.to(device), joints_aug.to(device)
             
             # Forward pass
-            embeddings_base = model(joints_base)
-            embeddings_aug = model(joints_aug)
+            features = model(joints)
+            # embeddings_base = model(joints_base)
+            # embeddings_aug = model(joints_aug)
             
-            # Compute loss (no backward pass)
-            loss = info_nce_loss(embeddings_base, embeddings_aug)
+            # Compute loss and backward pass
+            loss = info_nce_loss(features, device=device)
             total_eval_loss += loss.item()
     
     avg_eval_loss = total_eval_loss / len(dataloader_val)
