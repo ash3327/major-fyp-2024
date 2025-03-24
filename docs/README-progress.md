@@ -173,12 +173,19 @@ The module scripts are under `scripts/fake_data/`.
 The training script (infoNCE loss) is under `training/contrastive/`.
 * `train_contrastive_fake_data.py`
 
-| Version | Batch size | Num iters per epoch | Time per epoch | Speed |
-|---|---|---|---|---|
+If marked with an asterisk (\*), the model is trained on 3060 Ti.
+| Version | Batch size | Num iters per epoch | Time per epoch | Speed | Updates |
+|---|---|---|---|---|---|
 | v1-1 | 256 | 10000 | 28s | 1.4it/s |
 | v1-2 | 256 | 256000 | 1h 14m 51s | 4.53s/it |
 | v1-3 | 256 | 25600 | 7m 40s | 4.73s/it | 
 | v1-4 | 256 | 25600 | 1m | 1.4it/s |
+| v1-5* | 256 | 25600 | 36s | 2.75it/s | 
+| v2-1* | 256 | 25600 | 42s | 2.46it/s | Deeper MLP with BatchNorm (copied from version from last semester)
+| v2-2* | 256 | 25600 | 39s | 2.53it/s | With dropout and shallower MLP (3 layers)
+
+#### Results
+![alt text](<螢幕擷取畫面 2025-03-23 211544.png>)
 
 ## SMPL augmentations
 Installation Steps:

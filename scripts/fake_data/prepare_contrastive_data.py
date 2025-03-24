@@ -105,7 +105,10 @@ def generate_positive_pair(variance_base=variance_diff, variance_aug=variance_si
     joints_aug -= joints_aug[0]
     
     # Apply random scaling (0–5x) per axis
-    scale = np.random.uniform(scale_range[0], scale_range[1], size=3)
+    binary_choice = np.random.choice([0, 1], size=3)  # Binary choice for each axis
+    scale = np.where(binary_choice == 0, 
+                     np.random.uniform(low=scale_range[0], high=1),  # Resample in (low, 1)
+                     np.random.uniform(low=1, high=scale_range[1]))  # Resample in (1, high)
     joints_aug *= scale  # Independent scaling for x, y, z
     
     return joints_base, joints_aug

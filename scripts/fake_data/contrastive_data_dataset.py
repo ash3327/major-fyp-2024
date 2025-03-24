@@ -22,4 +22,5 @@ class HandPoseContrastiveDataset(Dataset):
     
     def __getitem__(self, idx):
         joints_base, joints_aug = generate_positive_pair(vpow=self.vpow, scale_range=self.scale_range)
+        # shape: (21, 3)
         return torch.from_numpy(joints_base).float(), torch.from_numpy(joints_aug).float()
