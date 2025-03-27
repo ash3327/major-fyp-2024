@@ -51,7 +51,7 @@ model = HandEncoder().to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=base_learning_rate)
 # scheduler = CosineAnnealingLR(optimizer, T_max=10)
 # scheduler = StepLR(optimizer, step_size=30, gamma=0.1)
-scheduler = ReduceLROnPlateau(optimizer, patience=20)
+scheduler = ReduceLROnPlateau(optimizer, patience=500)
 
 # Initialize TensorBoard writer
 os.makedirs(train_path_root, exist_ok=True)
