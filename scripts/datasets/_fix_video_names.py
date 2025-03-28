@@ -2,13 +2,16 @@
 python scripts/datasets/_fix_video_names.py -d <dataset_name> -s <split_name>
 """
 
+import sys
+sys.path.append('.')
+
 import os
 import numpy as np
 from tqdm import tqdm
 
 import argparse
 
-from prepare_dataset import get_info
+from .prepare_dataset import get_info
 
 def fix_npy_features(data_dir, dataset, subfolders, output_dir):
     """

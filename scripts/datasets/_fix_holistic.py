@@ -7,14 +7,17 @@ updates the hand landmarks, and saves the .npy file back.
 """
 
 import os
+import sys
+sys.path.append('.')
+
 import cv2
 import numpy as np
 import argparse
 from tqdm import tqdm
 
-from prepare_dataset import get_info
+from .prepare_dataset import get_info
 
-from feature_extractor_holistic import extract_features_from_image as holistic_extract_features
+from .feature_extractor_holistic import extract_features_from_image as holistic_extract_features
 
 def load_image(identifier, data_dir, dataset, subfolder, is_video=False):
     """

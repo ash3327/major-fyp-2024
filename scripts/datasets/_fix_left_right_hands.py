@@ -2,13 +2,16 @@
 python scripts/datasets/_fix_left_right_hands.py -d <dataset_name> -s <split_name>
 """
 
+import sys
+sys.path.append('.')
+
 import os
 import numpy as np
 from tqdm import tqdm
 
 import argparse
 
-from prepare_dataset import get_info
+from .prepare_dataset import get_info
 
 def fix_npy_features(data_dir, dataset, subfolders, output_dir):
     """
@@ -37,9 +40,14 @@ def fix_npy_features(data_dir, dataset, subfolders, output_dir):
                             hand1, hand2 = np.copy(features[3]['hands'][0]), np.copy(features[3]['hands'][1])
                             b1, b2 = (body[9] != 0).all(), (body[10] != 0).all()
                             flag = True
-                            if features[2] == 2 and b1 and b2:
-                                if np.linalg.norm(body[9]-hand1[0,:2]) > np.linalg.norm(body[9]-hand2[0,:2]):
+                            if features[2] == 2:
+                                if b1 and b2:
+                                    if np.linalg.norm(body[9]-hand1[0,:2]) > np.linalg.norm(body[9]-hand2[0,:2]):
+                                        features[3]['hands'][0],features[3]['hands'][1] = hand2, hand1
+                                elif hand1[0,0] < hand2[0,0]: # default: left hand is the hand on the left.
                                     features[3]['hands'][0],features[3]['hands'][1] = hand2, hand1
+                                else:
+                                    flag = False
                             elif features[2] == 1:
                                 hand1, hand2 = (hand1, hand2) if (hand2 == 0).all() else (hand2, hand1)
                                 if b1 and b2:

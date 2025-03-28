@@ -2,15 +2,18 @@
 python scripts/datasets/prepare_dataset.py <dataset_name> [--holistic]
 # only use --holistic if the dataset is guaranteed to contain the entire body and two hands, otherwise detection can be screwed up.
 """
+import sys
+sys.path.append('.')
 
 import argparse
-from feature_extractor import extract_features
-from feature_extractor_holistic import extract_features as extract_features_holistic
+from .feature_extractor import extract_features
+from .feature_extractor_holistic import extract_features as extract_features_holistic
 
 def get_info(dataset):
     data_dir = "data/raw"
     output_dir = "data/kpts"
     is_video = False
+    others = dict()
     match dataset:
         case 'asl_alphabet':
             print('Fetching ASL Alphabet dataset...')
@@ -56,7 +59,11 @@ def get_info(dataset):
             dataset = 'ph2014-handshape'
             subfolders = dict(
                 test="test/images",
-                train="train"
+                train="train/danish_nz_ph2014"
+            )
+            others['annotations'] = dict(
+                test="test/3359-ph2014-MS-handshape-annotations.txt",
+                train="train/1miohands-v2-trainingalignment.txt"
             )
             dyn = False
         case 'lsa64' | 'lsa64_raw':
@@ -94,12 +101,13 @@ def get_info(dataset):
             is_video = True
         case _:
             raise Exception("Such dataset is not defined within `prepare_dataset.py`.")
-    return data_dir, dataset, subfolders, output_dir, dyn, is_video
+    return data_dir, dataset, subfolders, output_dir, dyn, is_video, others
 
 def fetch_dataset(dataset, skip=False, holistic=False):
     data_dir, dataset, subfolders, output_dir, dyn, is_video, *rest = info = get_info(dataset)
     extract_features(*info, skip=skip)
     if holistic:
+        from ._fix_holistic import fix_dataset
         fix_dataset(data_dir, dataset, subfolders, output_dir, is_video=is_video)
 
 if __name__ == '__main__':

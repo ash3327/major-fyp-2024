@@ -40,12 +40,23 @@
     2. `pip install -r requirements.txt` 
 * **Data Architecture:**
   * All data are stored within the directory `data/raw` and the processed data are stored under `data/kpts`.
-  * 
+  * Download the datasets according to [this document](/docs/README-folders-datasets.md).
 
 ### Data Extraction
 
-* **Code**:  `python prepare_dataset.py <dataset_name>`.
-* **Steps**:
-    1. 
+* For the following datasets, perform `python scripts/datasets/prepare_dataset.py <dataset_name>`, where `<dataset_name>` is one of the followings:
+  * Static: `lexset` (`synthetic-asl-alphabet`), `senz3d` (`senz3d_dataset`), `handshape` (`ph2014-handshape`).
+* Fixing: `python scripts/datasets/_fix_holistic.py -d <dataset_name> -s <split_name>` if there are two hands within the video guaranteeed.
+* Fixing: `python scripts/datasets/_fix_left_right_hands.py -d <dataset_name> -s <split_name>`
+* Verification: `python scripts/datasets/dataset_loader.py -d <dataset_name> -s <split_name>`
+
+## Training
+
+### Folder Architecture
+
+- Dataset preparation: under `scripts/datasets`.
+- Dataset for hand-only contrastive training: under `scripts/fake_data` and `scripts/hand_only_supervised`.
+- Unsupervised contrastive training (InfoNCE loss) (v3): `python training/contrastive/train_contrastive_fake_data.py`.
+- 
 
 
