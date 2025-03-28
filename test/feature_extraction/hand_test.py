@@ -3,7 +3,7 @@ import numpy as np
 import sys
 sys.path.append('.')
 
-from feature_extractor import extract_features_from_clipped_region, get_image
+from scripts.datasets.feature_extractor import extract_features_from_clipped_region, get_image
 
 def extract_keypoints(frame):
     """
