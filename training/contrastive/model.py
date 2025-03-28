@@ -1,4 +1,5 @@
 # model.py
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -75,3 +76,19 @@ class HandEncoder(nn.Module):
         x = x.view(x.size(0), -1)  # Flatten input to [batch_size, input_size]
         embeddings = self.fc(x)    # Pass through the sequential layers
         return embeddings  # L2 normalize embeddings
+    
+def load_model(model, path, device='cuda'):
+    """
+    Load a saved model state from a .pth file.
+    
+    Args:
+        model: The model instance (e.g., HandEncoder).
+        path (str): Path to the .pth file.
+        device (str): Device to load the model onto.
+    """
+    if os.path.exists(path):
+        model.load_state_dict(torch.load(path, map_location=device))
+        print(f"Model loaded from {path}")
+    else:
+        print(f"No model found at {path}, starting from scratch")
+    return model
