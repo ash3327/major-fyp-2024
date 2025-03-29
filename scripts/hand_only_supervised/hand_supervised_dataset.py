@@ -13,7 +13,7 @@ class LabelledHandDataset(Dataset):
     """
     NOTE: Currently only handles static hand, one-hand datasets including lexset, senz3d and handshape.
     """
-    def __init__(self, dataset_name, split=None):
+    def __init__(self, dataset_name, split=None, augment=None):
         """
         Dataset class to extract labels and hand landmarks from .npy files.
 
@@ -40,6 +40,9 @@ class LabelledHandDataset(Dataset):
         self.annotations = None
         self._load_annotation_list()
         self._get_labels_from_annotated_doc(infodict)
+
+        self.augment = augment
+
         self.load_data(infodict)
 
     def _load_annotation_list(self):
@@ -180,13 +183,13 @@ class LabelledHandDataset(Dataset):
         elif num_hands == 1:
             # Add the non-zero hand
             if np.any(hands[0]):
-                self.data.append((label_idx, hands[0]))
+                self.data.append((label_idx, hands[0]-hands[0][0]))
             elif np.any(hands[1]):
-                self.data.append((label_idx, hands[1]))
+                self.data.append((label_idx, hands[1]-hands[1][0]))
         elif num_hands == 2:
             # Add both hands as separate samples with the same label
-            self.data.append((label_idx, hands[0]))
-            self.data.append((label_idx, hands[1]))
+            self.data.append((label_idx, hands[0]-hands[0][0]))
+            self.data.append((label_idx, hands[1]-hands[1][0]))
 
     def __len__(self):
         """
@@ -210,6 +213,8 @@ class LabelledHandDataset(Dataset):
         """
         label_idx, hand_landmarks = self.data[idx]
         hand_landmarks = torch.from_numpy(hand_landmarks).float()
+        if self.augment:
+            hand_landmarks = self.augment(hand_landmarks)
         return label_idx, hand_landmarks
 
     def get_label_map(self):

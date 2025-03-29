@@ -1,17 +1,19 @@
-"""
-This file should be executed at root of the project.
-"""
-
 import sys
 sys.path.append('.')
 
 import torch
+import numpy as np
 from matplotlib import pyplot as plt
 from scripts.fake_data.contrastive_data_dataset import HandPoseContrastiveDataset
+from scripts.hand_only_supervised.hand_supervised_dataset import LabelledHandDataset
+from training.contrastive.augments import augment as augment_hand
 
-batch_size = 256
-num_samples = 10000
-num_epochs = 100
+"""
+Acknowledgements: This visualization script is generated with the help of Grok.
+"""
+# Parameters
+num_samples = 1000  # Number of samples to generate or load
+vis_batch_size = 3  # Number of samples to visualize from each dataset
 
 # Mediapipe hand gesture connections for drawing the hand skeleton
 connections = [
@@ -22,20 +24,18 @@ connections = [
     (0, 17), (17, 18), (18, 19), (19, 20)  # Pinky
 ]
 
+# Function to plot a 3D hand pose
 def plot_3d_hand(ax, joints, color='b', label=None):
     """
     Plot a single 3D hand pose on the given axis.
-
+    
     Args:
         ax: Matplotlib 3D axis object.
-        joints: Numpy array [21, 3] of joint positions (x, y, z coordinates for 21 hand joints).
-        color: Color for the hand plot (e.g., 'b' for blue, 'r' for red).
-        label: Label for the legend (e.g., 'Anchor' or 'Augmented Positive').
+        joints: Numpy array [21, 3] of joint positions (x, y, z coordinates).
+        color: Color for the plot (e.g., 'b' for blue).
+        label: Label for the legend.
     """
-    # Plot the 21 joints as scatter points
     ax.scatter(joints[:, 0], joints[:, 1], joints[:, 2], c=color, marker='o', label=label)
-    
-    # Draw lines between joints to form the hand skeleton
     for connection in connections:
         start, end = connection
         ax.plot(
@@ -45,56 +45,117 @@ def plot_3d_hand(ax, joints, color='b', label=None):
             color=color
         )
 
-def visualize_batch(dataset, batch_size=5):
+# Function to compute statistics
+def compute_statistics(dataset, dataset_name):
     """
-    Visualize a batch of anchor and augmented positive hand poses side by side.
-
+    Compute min, max, mean, and std of joint positions in the dataset.
+    
     Args:
-        dataset: Instance of HandPoseContrastiveDataset.
-        batch_size: Number of hand pose pairs to visualize (default is 5).
+        dataset: Dataset object (either HandPoseContrastiveDataset or LabelledHandDataset).
+        dataset_name: Name of the dataset for printing.
     """
-    # Create a DataLoader to fetch a batch of data
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
-    joints_base, joints_aug = next(iter(dataloader))  # Get one batch of anchor and augmented poses
+    if isinstance(dataset, HandPoseContrastiveDataset):
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=100, shuffle=False)
+        all_joints = []
+        for joints_base, joints_aug in dataloader:
+            all_joints.append(joints_base.numpy())
+            all_joints.append(joints_aug.numpy())
+        all_joints = np.concatenate(all_joints, axis=0)
+    elif isinstance(dataset, LabelledHandDataset):
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=100, shuffle=False)
+        all_joints = []
+        for _, joints in dataloader:
+            all_joints.append(joints.numpy())
+        all_joints = np.concatenate(all_joints, axis=0)
+    else:
+        raise ValueError("Unknown dataset type")
+
+    # Flatten to [N, 3] where N is total number of joints across samples
+    all_joints = all_joints.reshape(-1, 3)
     
-    # Convert PyTorch tensors to NumPy arrays for plotting
-    joints_base = joints_base.numpy()  # Shape: [batch_size, 21, 3]
-    joints_aug = joints_aug.numpy()    # Shape: [batch_size, 21, 3]
+    stats = {
+        'min': np.min(all_joints, axis=0),
+        'max': np.max(all_joints, axis=0),
+        'mean': np.mean(all_joints, axis=0),
+        'std': np.std(all_joints, axis=0)
+    }
     
-    # Set up the figure with subplots (each row has an anchor and its augmented positive)
-    fig = plt.figure(figsize=(6, 3 * batch_size))
+    print(f"Statistics for {dataset_name}:")
+    print(f"  Min (x, y, z): {stats['min']}")
+    print(f"  Max (x, y, z): {stats['max']}")
+    print(f"  Mean (x, y, z): {stats['mean']}")
+    print(f"  Std (x, y, z): {stats['std']}")
+    print()
+
+# Function to visualize both datasets side by side in one figure
+def visualize_both_datasets_side_by_side(dataset_contrastive, dataset_labelled, batch_size=3):
+    """
+    Visualize samples from both datasets side by side within the same figure.
     
-    # Loop through the batch and create side-by-side 3D plots
+    Args:
+        dataset_contrastive: HandPoseContrastiveDataset instance.
+        dataset_labelled: LabelledHandDataset instance.
+        batch_size: Number of samples to visualize from each dataset.
+    """
+    # Load batches from both datasets
+    dataloader_contrastive = torch.utils.data.DataLoader(dataset_contrastive, batch_size=batch_size, shuffle=True)
+    dataloader_labelled = torch.utils.data.DataLoader(dataset_labelled, batch_size=batch_size, shuffle=True)
+    
+    joints_base, joints_aug = next(iter(dataloader_contrastive))
+    labels, joints_labelled = next(iter(dataloader_labelled))
+    
+    joints_base = joints_base.numpy()
+    joints_aug = joints_aug.numpy()
+    joints_labelled = joints_labelled.numpy()
+    labels = labels.numpy()
+    
+    # Create a single figure with 3 columns: Anchor, Augmented Positive, Labelled
+    fig = plt.figure(figsize=(9, 3 * batch_size))
+    
     for i in range(batch_size):
-        # Anchor plot (left subplot)
-        ax1 = fig.add_subplot(batch_size, 2, 2 * i + 1, projection='3d')
+        # Anchor (Contrastive Dataset)
+        ax1 = fig.add_subplot(batch_size, 3, 3 * i + 1, projection='3d')
         plot_3d_hand(ax1, joints_base[i], color='b', label='Anchor')
-        ax1.set_title(f'Anchor {i+1}')
+        ax1.set_title(f'Contrastive Anchor {i+1}')
         ax1.set_xlabel('X')
         ax1.set_ylabel('Y')
         ax1.set_zlabel('Z')
         ax1.legend()
         
-        # Augmented positive plot (right subplot)
-        ax2 = fig.add_subplot(batch_size, 2, 2 * i + 2, projection='3d')
+        # Augmented Positive (Contrastive Dataset)
+        ax2 = fig.add_subplot(batch_size, 3, 3 * i + 2, projection='3d')
         plot_3d_hand(ax2, joints_aug[i], color='r', label='Augmented Positive')
-        ax2.set_title(f'Augmented Positive {i+1}')
+        ax2.set_title(f'Contrastive Augmented {i+1}')
         ax2.set_xlabel('X')
         ax2.set_ylabel('Y')
         ax2.set_zlabel('Z')
         ax2.legend()
+        
+        # Labelled Sample (Labelled Dataset)
+        ax3 = fig.add_subplot(batch_size, 3, 3 * i + 3, projection='3d')
+        plot_3d_hand(ax3, joints_labelled[i], color='g', label=f'Label: {labels[i]}')
+        ax3.set_title(f'Labelled Sample {i+1}')
+        ax3.set_xlabel('X')
+        ax3.set_ylabel('Y')
+        ax3.set_zlabel('Z')
+        ax3.legend()
     
-    # Adjust layout to prevent overlap and display the plot
-    plt.tight_layout()
+    plt.suptitle('Comparison of HandPoseContrastiveDataset and LabelledHandDataset')
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
     plt.show()
 
 if __name__ == "__main__":
-    # Parameters from your query
-    num_samples = 1000
-    vis_batch_size = 3  # Number of pairs to visualize (adjust as needed)
+    # Initialize datasets
+    augment = augment_hand
+    dataset_contrastive = HandPoseContrastiveDataset(num_samples=num_samples, augment=augment)
+    # dataset_labelled = LabelledHandDataset(dataset_name='lexset', split='train')
+    # dataset_labelled = LabelledHandDataset(dataset_name='senz3d')
+    dataset_labelled = LabelledHandDataset(dataset_name='handshape', split='test', augment=augment)
     
-    # Initialize the dataset (assuming rh_model, variance_diff, variance_sim are defined in your module)
-    dataset = HandPoseContrastiveDataset(num_samples=num_samples)
+    # Compute and print statistics
+    compute_statistics(dataset_contrastive, "HandPoseContrastiveDataset")
+    compute_statistics(dataset_labelled, "LabelledHandDataset")
     
-    # Visualize the batch
-    visualize_batch(dataset, batch_size=vis_batch_size)
+    # Visualize samples side by side in one figure
+    print("Visualizing both datasets side by side:")
+    visualize_both_datasets_side_by_side(dataset_contrastive, dataset_labelled, batch_size=vis_batch_size)
