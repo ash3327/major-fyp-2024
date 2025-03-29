@@ -212,9 +212,9 @@ class LabelledHandDataset(Dataset):
                    hand_landmarks is a torch.Tensor of shape (21, 3).
         """
         label_idx, hand_landmarks = self.data[idx]
-        hand_landmarks = torch.from_numpy(hand_landmarks).float()
         if self.augment:
             hand_landmarks = self.augment(hand_landmarks)
+        hand_landmarks = torch.from_numpy(hand_landmarks).float()
         return label_idx, hand_landmarks
 
     def get_label_map(self):

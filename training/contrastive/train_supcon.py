@@ -18,6 +18,8 @@ from torch.utils.tensorboard import SummaryWriter
 
 from scripts.fake_data.contrastive_data_dataset import HandPoseContrastiveDataset
 from scripts.hand_only_supervised.hand_supervised_dataset import LabelledHandDataset
+from training.contrastive.augments import augment as augment_hand
+
 from model import HandEncoder
 from losses import info_nce_loss, supcon_loss
 from evals import extract_embeddings, evaluate_knn
@@ -33,7 +35,7 @@ train_path_root = f'runs/hand_contrastive_learning/v{version_id}/{current_time}'
 
 # Hyperparameters
 batch_size = 256
-num_samples_unsup = 100 * batch_size
+num_samples_unsup = 50 * batch_size
 num_samples_sup = 100 * batch_size
 num_epochs = 2000
 base_learning_rate = 0.01  # Base LR
@@ -46,10 +48,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Initialize datasets and dataloaders
 # Unsupervised dataset
-dataset_unsup = HandPoseContrastiveDataset(num_samples=num_samples_unsup)
+dataset_unsup = HandPoseContrastiveDataset(num_samples=num_samples_unsup, augment=augment_hand)
 dataloader_unsup = DataLoader(dataset_unsup, batch_size=batch_size, shuffle=True)
 # Labelled dataset (e.g., senz3d)
-dataset_sup = LabelledHandDataset(dataset_name='lexset', split='train')
+dataset_sup = LabelledHandDataset(dataset_name='lexset', split='train', augment=augment_hand)
 dataloader_sup = DataLoader(dataset_sup, batch_size=batch_size, shuffle=True)
 # Test dataset
 dataset_test = LabelledHandDataset(dataset_name='lexset', split='test')
@@ -60,7 +62,7 @@ model = HandEncoder().to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=base_learning_rate)
 # scheduler = CosineAnnealingLR(optimizer, T_max=10)
 # scheduler = StepLR(optimizer, step_size=30, gamma=0.1)
-scheduler = ReduceLROnPlateau(optimizer, patience=20)
+scheduler = ReduceLROnPlateau(optimizer, patience=200)
 
 # Initialize TensorBoard writer
 os.makedirs(train_path_root, exist_ok=True)
@@ -82,11 +84,14 @@ best_loss = float('inf')
 for epoch in range(num_epochs):
     model.train()
     total_train_loss = 0.0
+    total_supcon_loss = 0.0
+    total_unsup_loss = 0.0
     sup_iter = iter(dataloader_sup)  # Iterator for labelled data
     unsup_iter = iter(dataloader_unsup)  # Iterator for unlabelled data
 
+    dataset_size = max(len(dataloader_sup), len(dataloader_unsup))
     # Alternate between supervised and unsupervised batches
-    for i in tqdm(range(max(len(dataloader_sup), len(dataloader_unsup))),
+    for i in tqdm(range(dataset_size),
                   desc=f"Epoch {epoch+1}/{num_epochs} - Training"):
         # Supervised batch (if available)
         try:
@@ -95,6 +100,7 @@ for epoch in range(num_epochs):
             features = model(joints)  # [B, D]
             features = features.unsqueeze(1)  # [B, 1, D]
             loss = supcon_loss(features, labels, device=device)
+            total_supcon_loss += loss.item()
         except StopIteration:
             loss = 0.0  # Skip if no more labelled data
 
@@ -105,6 +111,7 @@ for epoch in range(num_epochs):
             features = model(joints)  # [2B, D]
             unsup_loss = info_nce_loss(features, device=device)
             loss = loss + unsup_loss if loss != 0.0 else unsup_loss
+            total_unsup_loss += unsup_loss.item()
         except StopIteration:
             pass  # Continue with supervised loss if no more unlabelled data
 
@@ -114,10 +121,14 @@ for epoch in range(num_epochs):
         optimizer.step()
         total_train_loss += loss.item()
 
-    avg_train_loss = total_train_loss / max(len(dataloader_sup), len(dataloader_unsup))
+    avg_train_loss = total_train_loss / dataset_size
+    avg_supcon_loss = total_supcon_loss / len(dataloader_sup)
+    avg_unsup_loss = total_unsup_loss / len(dataloader_unsup)
 
     # Log metrics
     writer.add_scalar('Loss/train', avg_train_loss, epoch)
+    writer.add_scalar('Loss/train-supcon', avg_supcon_loss, epoch)
+    writer.add_scalar('Loss/train-unsup', avg_unsup_loss, epoch)
     writer.add_scalar('Learning Rate', scheduler.get_last_lr()[0], epoch)
 
     # Save models
