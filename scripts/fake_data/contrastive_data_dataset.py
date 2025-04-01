@@ -19,6 +19,7 @@ class HandPoseContrastiveDataset(Dataset):
         self.num_samples = num_samples
         self.pairs = np.load(npy_file)  # Shape: [N, 2, 21, 3]
         self.augment = augment
+        self.base_augment = base_augment
         self.fixed = False
         
         # Print dataset statistics

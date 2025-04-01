@@ -12,6 +12,7 @@ sys.path.append('.')  # Ensure imports work from the project root
 
 import os
 import torch
+import numpy as np
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
@@ -53,7 +54,7 @@ eval_interval = 10  # Evaluate every 10 epochs
 k_neighbors = 5    # Number of neighbors for k-NN
 from_epoch = 2000# 2000
 
-aug_pair = lambda x: augment_handpair(x, max_angle=np.pi*2)
+aug_pair = lambda *x: augment_handpair(*x, max_angle=np.pi*2)
 aug = lambda x: augment_hand(x, max_angle=np.pi/3)
 
 # Device configuration
@@ -128,16 +129,16 @@ for epoch in range(start_epoch, start_epoch+num_epochs):
         except StopIteration:
             loss = 0.0  # Skip if no more labelled data
 
-        # # Unsupervised batch (if available)
-        # try:
-        #     joints_base, joints_aug = next(unsup_iter)
-        #     joints = torch.cat([joints_base, joints_aug], dim=0).to(device)
-        #     features = model(joints)  # [2B, D]
-        #     unsup_loss = info_nce_loss(features, device=device)
-        #     loss = loss + unsup_loss if loss != 0.0 else unsup_loss
-        #     total_unsup_loss += unsup_loss.item()
-        # except StopIteration:
-        #     pass  # Continue with supervised loss if no more unlabelled data
+        # Unsupervised batch (if available)
+        try:
+            joints_base, joints_aug = next(unsup_iter)
+            joints = torch.cat([joints_base, joints_aug], dim=0).to(device)
+            features = model(joints)  # [2B, D]
+            unsup_loss = info_nce_loss(features, device=device)
+            loss = loss + unsup_loss if loss != 0.0 else unsup_loss
+            total_unsup_loss += unsup_loss.item()
+        except StopIteration:
+            pass  # Continue with supervised loss if no more unlabelled data
 
         # Backpropagation
         optimizer.zero_grad()
