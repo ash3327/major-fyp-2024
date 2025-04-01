@@ -5,7 +5,7 @@ from torch.utils.data import Dataset
 
 class HandPoseContrastiveDataset(Dataset):
     """Dataset for loading pre-generated hand pose pairs with fixed orientation."""
-    def __init__(self, num_samples=10000, npy_file='data/kpts/fake/fixed_orientation_pairs.npy', augment=None, **kwargs):
+    def __init__(self, num_samples=10000, npy_file='data/kpts/fake/fixed_orientation_pairs.npy', augment=None, base_augment=None, **kwargs):
         """
         Initialize the dataset.
         
@@ -46,6 +46,8 @@ class HandPoseContrastiveDataset(Dataset):
         joints_aug = joints_aug - joints_aug[0]
         
         # Apply augmentation if provided
+        if self.base_augment:
+            joints_base, joints_aug = self.base_augment(joints_base,joints_aug)
         if self.augment:
             joints_base = self.augment(joints_base)
             joints_aug = self.augment(joints_aug)

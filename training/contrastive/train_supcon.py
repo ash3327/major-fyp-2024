@@ -18,7 +18,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from scripts.fake_data.contrastive_data_dataset import HandPoseContrastiveDataset
 from scripts.hand_only_supervised.hand_supervised_dataset import LabelledHandDataset
-from training.contrastive.augments import augment as augment_hand
+from training.contrastive.augments import augment as augment_hand, augment_pair as augment_handpair
 
 from model import HandEncoder
 from losses import info_nce_loss, supcon_loss
@@ -29,34 +29,42 @@ from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR, ReduceLROnPlatea
 import math
 
 # Train info
-version_id = 3
+# 
+version_id = 4
 current_time = datetime.now().strftime('%Y%m%d%H%M%S')
 train_path_root = f'runs/hand_contrastive_learning/v{version_id}/{current_time}'
 
 model_checkpoint_path = 'runs/hand_contrastive_learning/v3/20250329170512/checkpoints/best.pth'
 model_checkpoint_path = 'runs/hand_contrastive_learning/v3/20250329195018/checkpoints/best.pth'
 model_checkpoint_path = 'runs/hand_contrastive_learning/v3/20250329225929/checkpoints/best.pth'
-from_epoch = 10419
+start_epoch = 10419
+model_checkpoint_path = 'runs/hand_contrastive_learning/v3/20250329165146/checkpoints/best.pth'
+model_checkpoint_path = None
+model_checkpoint_path = 'runs/hand_contrastive_learning/v4/20250401111649/checkpoints/best.pth'
 
 # Hyperparameters
 batch_size = 256
 num_samples_unsup = 50 * batch_size
 num_samples_sup = 100 * batch_size
-num_epochs = 20000
+num_epochs = 10000 #2000
 base_learning_rate = 0.01  # Base LR
 warmup_epochs = 10  # Warmup period
 eval_interval = 10  # Evaluate every 10 epochs
 k_neighbors = 5    # Number of neighbors for k-NN
+from_epoch = 2000# 2000
+
+aug_pair = lambda x: augment_handpair(x, max_angle=np.pi*2)
+aug = lambda x: augment_hand(x, max_angle=np.pi/3)
 
 # Device configuration
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Initialize datasets and dataloaders
 # Unsupervised dataset
-dataset_unsup = HandPoseContrastiveDataset(num_samples=num_samples_unsup, augment=augment_hand)
+dataset_unsup = HandPoseContrastiveDataset(num_samples=num_samples_unsup, augment=aug, base_augment=aug_pair)
 dataloader_unsup = DataLoader(dataset_unsup, batch_size=batch_size, shuffle=True)
 # Labelled dataset (e.g., senz3d)
-dataset_sup = LabelledHandDataset(dataset_name='lexset', split='train', augment=augment_hand)
+dataset_sup = LabelledHandDataset(dataset_name='lexset', split='train', augment=aug)
 dataloader_sup = DataLoader(dataset_sup, batch_size=batch_size, shuffle=True)
 # Test dataset
 dataset_test = LabelledHandDataset(dataset_name='lexset', split='test')
@@ -177,5 +185,6 @@ for epoch in range(start_epoch, start_epoch+num_epochs):
 print(f"Training completed. Model checkpoints saved at {model_save_path_root}.")
 if model_checkpoint_path:
     print(f"This model was loaded from {model_checkpoint_path}.")
+    
 # Clean up
 writer.close()
