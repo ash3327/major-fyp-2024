@@ -33,11 +33,16 @@ version_id = 3
 current_time = datetime.now().strftime('%Y%m%d%H%M%S')
 train_path_root = f'runs/hand_contrastive_learning/v{version_id}/{current_time}'
 
+model_checkpoint_path = 'runs/hand_contrastive_learning/v3/20250329170512/checkpoints/best.pth'
+model_checkpoint_path = 'runs/hand_contrastive_learning/v3/20250329195018/checkpoints/best.pth'
+model_checkpoint_path = 'runs/hand_contrastive_learning/v3/20250329225929/checkpoints/best.pth'
+from_epoch = 10419
+
 # Hyperparameters
 batch_size = 256
 num_samples_unsup = 50 * batch_size
 num_samples_sup = 100 * batch_size
-num_epochs = 2000
+num_epochs = 20000
 base_learning_rate = 0.01  # Base LR
 warmup_epochs = 10  # Warmup period
 eval_interval = 10  # Evaluate every 10 epochs
@@ -59,10 +64,21 @@ dataloader_test = DataLoader(dataset_test, batch_size=batch_size, shuffle=False)
 
 # Initialize model and optimizer
 model = HandEncoder().to(device)
+
+# Load model from file
+start_epoch = 0
+if model_checkpoint_path:
+    if os.path.exists(model_checkpoint_path):
+        model.load_state_dict(torch.load(model_checkpoint_path, map_location=device))
+        print(f"Model loaded from {model_checkpoint_path}")
+        start_epoch = from_epoch
+    else:
+        print(f"Model file not found at {model_checkpoint_path}")
+
 optimizer = torch.optim.Adam(model.parameters(), lr=base_learning_rate)
 # scheduler = CosineAnnealingLR(optimizer, T_max=10)
 # scheduler = StepLR(optimizer, step_size=30, gamma=0.1)
-scheduler = ReduceLROnPlateau(optimizer, patience=200)
+scheduler = ReduceLROnPlateau(optimizer, patience=1000)
 
 # Initialize TensorBoard writer
 os.makedirs(train_path_root, exist_ok=True)
@@ -81,7 +97,7 @@ os.makedirs('models', exist_ok=True)
 best_loss = float('inf')
 
 # Training loop
-for epoch in range(num_epochs):
+for epoch in range(start_epoch, start_epoch+num_epochs):
     model.train()
     total_train_loss = 0.0
     total_supcon_loss = 0.0
@@ -104,16 +120,16 @@ for epoch in range(num_epochs):
         except StopIteration:
             loss = 0.0  # Skip if no more labelled data
 
-        # Unsupervised batch (if available)
-        try:
-            joints_base, joints_aug = next(unsup_iter)
-            joints = torch.cat([joints_base, joints_aug], dim=0).to(device)
-            features = model(joints)  # [2B, D]
-            unsup_loss = info_nce_loss(features, device=device)
-            loss = loss + unsup_loss if loss != 0.0 else unsup_loss
-            total_unsup_loss += unsup_loss.item()
-        except StopIteration:
-            pass  # Continue with supervised loss if no more unlabelled data
+        # # Unsupervised batch (if available)
+        # try:
+        #     joints_base, joints_aug = next(unsup_iter)
+        #     joints = torch.cat([joints_base, joints_aug], dim=0).to(device)
+        #     features = model(joints)  # [2B, D]
+        #     unsup_loss = info_nce_loss(features, device=device)
+        #     loss = loss + unsup_loss if loss != 0.0 else unsup_loss
+        #     total_unsup_loss += unsup_loss.item()
+        # except StopIteration:
+        #     pass  # Continue with supervised loss if no more unlabelled data
 
         # Backpropagation
         optimizer.zero_grad()
@@ -145,7 +161,7 @@ for epoch in range(num_epochs):
     # Evaluation with k-NN
     if (epoch + 1) % eval_interval == 0:
         print(f"Evaluating on test set at epoch {epoch+1} using k-NN (k={k_neighbors})")
-        
+
         # Extract embeddings
         train_embeddings, train_labels = extract_embeddings(model, dataloader_sup, device)
         test_embeddings, test_labels = extract_embeddings(model, dataloader_test, device)
@@ -158,5 +174,8 @@ for epoch in range(num_epochs):
         writer.add_scalar('F1/test', f1, epoch)
         print(f"Test Accuracy: {accuracy:.4f}, Test F1: {f1:.4f}")
 
+print(f"Training completed. Model checkpoints saved at {model_save_path_root}.")
+if model_checkpoint_path:
+    print(f"This model was loaded from {model_checkpoint_path}.")
 # Clean up
 writer.close()

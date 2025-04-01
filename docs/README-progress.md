@@ -184,6 +184,8 @@ If marked with an asterisk (\*), the model is trained on 3060 Ti.
 | v2-1* | 256 | 25600 | 42s | 2.46it/s | Deeper MLP with BatchNorm (copied from version from last semester)
 | v2-2* | 256 | 25600 | 39s | 2.53it/s | With dropout and shallower MLP (3 layers)
 | v2-3* | 256 | 25600 | 46s | 2.15it/s | 20250324120143: Updated InfoNCE loss calculation.
+| v3 | 256|12800 unsupervised, 24300 supervised (lexset)||3.71it/s| SupCon
+| v4 | 256|12800 unsupervised, 24300 supervised (lexset)||29it/s| Fake data is pre-generated
 
 #### Results
 ![alt text](<螢幕擷取畫面 2025-03-23 211544.png>)

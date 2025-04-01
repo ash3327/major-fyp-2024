@@ -24,7 +24,7 @@
 - **Triplet Loss** | FaceNet: A unified embedding for face recognition and clustering (2015) [https://doi.org/10.1109/CVPR.2015.7298682]
 - **MOCO-v2** | Improved Baselines with Momentum Contrastive Learning (2020) [https://arxiv.org/abs/2003.04297]
 - **SwAV** | Unsupervised Learning of Visual Features by Contrasting Cluster Assignments (2021) [https://arxiv.org/abs/2006.09882]
-- Supervised Contrastive Learning (2021) [https://arxiv.org/abs/2004.11362]
+- **SupCon** | Supervised Contrastive Learning (2021) [https://arxiv.org/abs/2004.11362]
 - **Selectively Hard Triplets Mining** |Selectively Hard Negative Mining for Alleviating Gradient Vanishing in Image-Text Matching (2023) [https://arxiv.org/abs/2303.00181]
 - **CLIP-MOE** | CLIP-MoE: Towards Building Mixture of Experts for CLIP with Diversified Multiplet Upcycling (2024) [https://arxiv.org/abs/2409.19291]
 - **Survey** | A Survey on Contrastive Self-supervised Learning (2021) [https://arxiv.org/abs/2011.00362]
