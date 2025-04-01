@@ -57,5 +57,11 @@
 - Dataset preparation: under `scripts/datasets`.
 - Dataset for hand-only contrastive training: under `scripts/fake_data` and `scripts/hand_only_supervised`.
 - Unsupervised contrastive training (InfoNCE loss) (v3): `python training/contrastive/train_contrastive_fake_data.py`.
-- 
+
+
+## What's NEW
+
+- Pre-generation of contrastive data:
+  - `scripts/fake_data/prepare_fake_data_npy.py`, `training/contrastive/train_supcon.py`, `augments.py`.
+- Think of a good augmentation and contrastive learning technique.
 
