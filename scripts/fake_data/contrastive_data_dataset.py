@@ -1,59 +1,99 @@
-from torch.utils.data import Dataset
+import os
+import numpy as np
 import torch
-
-from .prepare_contrastive_data import generate_positive_pair
+from torch.utils.data import Dataset
 
 class HandPoseContrastiveDataset(Dataset):
-    def __init__(self, num_samples, vpow=1, scale_range=(0, 5), augment=None):
+    """Dataset for loading pre-generated hand pose pairs with fixed orientation."""
+    def __init__(self, num_samples=10000, npy_file='data/kpts/fake/fixed_orientation_pairs.npy', augment=None, base_augment=None, **kwargs):
         """
-        Dataset for on-the-fly generation of positive pairs.
+        Initialize the dataset.
         
         Args:
-            num_samples: Total number of pairs.
-            vpow: Power parameter for pose variance.
-            scale_range: Scaling range for augmentation (0-5x).
+            npy_file (str): Path to the .npy file containing pre-generated pairs.
+            augment (callable, optional): Augmentation function to apply to the poses.
         """
+        if not os.path.exists(npy_file):
+            raise FileNotFoundError(f"Could not find {npy_file}")
+            
         self.num_samples = num_samples
-        self.vpow = vpow
-        self.scale_range = scale_range
+        self.pairs = np.load(npy_file)  # Shape: [N, 2, 21, 3]
         self.augment = augment
+        self.fixed = False
+        
+        # Print dataset statistics
+        print(f"\nDataset Statistics:")
+        print(f"Number of pairs: {len(self.pairs)}")
+        print(f"Min values (x,y,z): {self.pairs.min(axis=(0,1,2))}")
+        print(f"Max values (x,y,z): {self.pairs.max(axis=(0,1,2))}")
+        print(f"Mean values (x,y,z): {self.pairs.mean(axis=(0,1,2))}")
+        print(f"Std values (x,y,z): {self.pairs.std(axis=(0,1,2))}")
     
     def __len__(self):
         return self.num_samples
     
     def __getitem__(self, idx):
-        joints_base, joints_aug = generate_positive_pair(vpow=self.vpow, scale_range=self.scale_range)
-        """
-        Before adjustments:
-
-        Statistics for HandPoseContrastiveDataset:
-            Min (x, y, z): [   -0.14282    -0.13709    -0.15487]
-            Max (x, y, z): [    0.12503     0.12755      0.1392]
-            Mean (x, y, z): [  -0.001927   0.0086811   -0.016303]
-            Std (x, y, z): [    0.04153    0.042865    0.044661]
-
-            Statistics for LabelledHandDataset: # lexset
-            Min (x, y, z): [   -0.83551          -1     -1.4672]
-            Max (x, y, z): [     0.8914     0.96627      1.1815]
-            Mean (x, y, z): [ 0.00096391       -0.21    -0.10805]
-            Std (x, y, z): [    0.11838     0.15705     0.16907]
-
-            Statistics for LabelledHandDataset: # senz3d
-            Min (x, y, z): [   -0.32398    -0.81078     -1.4202]
-            Max (x, y, z): [    0.45164     0.33794     0.26407]
-            Mean (x, y, z): [   0.034734     -0.2311    -0.17816]
-            Std (x, y, z): [   0.081709     0.13831     0.11482]
-
-            Statistics for LabelledHandDataset: # handshape
-            Min (x, y, z): [   -0.86802    -0.52049    -0.84314]
-            Max (x, y, z): [    0.95333           1      0.2794]
-            Mean (x, y, z): [   0.066712    -0.13533    -0.14399]
-            Std (x, y, z): [    0.12579     0.11963      0.1062]
-        """
-        joints_base, joints_aug = joints_base * 2.5, joints_aug * 2.5
-        # scale to range [-0.1, 0.1]
-        # shape: (21, 3)
+        if self.fixed:
+            idx = idx % self.num_samples
+        else:
+            res = len(self.pairs)//self.num_samples
+            idx = ((idx % self.num_samples) + self.num_samples*np.random.random_integers(0,res)) % len(self.pairs)
+        
+        joints_base, joints_aug = self.pairs[idx]  # Each is shape [21, 3]
+        
+        # Center at wrist (in case it's not already done)
+        joints_base = joints_base - joints_base[0]
+        joints_aug = joints_aug - joints_aug[0]
+        
+        # Apply augmentation if provided
+        if self.base_augment:
+            joints_base, joints_aug = self.base_augment(joints_base,joints_aug)
         if self.augment:
-            joints_base = self.augment(joints_base, scale_range=self.scale_range)
-            joints_aug = self.augment(joints_aug, scale_range=self.scale_range)
+            joints_base = self.augment(joints_base)
+            joints_aug = self.augment(joints_aug)
+        
         return torch.from_numpy(joints_base).float(), torch.from_numpy(joints_aug).float()
+
+if __name__ == '__main__':
+    # Test the dataset
+    from torch.utils.data import DataLoader
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D
+    from prepare_fake_data_npy import plot_3d_hand
+    
+    # Initialize dataset
+    dataset = HandPoseContrastiveDataset()
+    dataloader = DataLoader(dataset, batch_size=32, shuffle=False)
+    
+    # Test dataloader
+    for joints_base, joints_aug in dataloader:
+        print("Batch shapes:")
+        print(f"Base joints: {joints_base.shape}")
+        print(f"Augmented joints: {joints_aug.shape}")
+        break
+    
+    # Visualize some samples
+    fig = plt.figure(figsize=(20, 12))
+    for i in range(5):
+        joints_base, joints_aug = dataset[i]
+        
+        # Plot base pose
+        ax1 = fig.add_subplot(5, 2, i*2 + 1, projection='3d')
+        plot_3d_hand(ax1, joints_base.numpy(), color='b', label='Base')
+        ax1.set_title(f'Sample {i+1} - Base')
+        ax1.set_xlabel('X')
+        ax1.set_ylabel('Y')
+        ax1.set_zlabel('Z')
+        ax1.legend()
+        
+        # Plot augmented pose
+        ax2 = fig.add_subplot(5, 2, i*2 + 2, projection='3d')
+        plot_3d_hand(ax2, joints_aug.numpy(), color='r', label='Augmented')
+        ax2.set_title(f'Sample {i+1} - Augmented')
+        ax2.set_xlabel('X')
+        ax2.set_ylabel('Y')
+        ax2.set_zlabel('Z')
+        ax2.legend()
+    
+    plt.tight_layout()
+    plt.show()
