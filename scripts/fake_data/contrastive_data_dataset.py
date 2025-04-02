@@ -4,97 +4,71 @@ import torch
 from torch.utils.data import Dataset
 
 class HandPoseContrastiveDataset(Dataset):
-    """Dataset for loading pre-generated hand pose pairs with fixed orientation."""
-    def __init__(self, num_samples=10000, npy_file='data/kpts/fake/fixed_orientation_pairs.npy', augment=None, base_augment=None, **kwargs):
+    """
+    Dataset for loading pre-generated groups of hand pose augmentations.
+    Each group contains N slight variations of the same base gesture,
+    all in a canonical orientation.
+
+    Adapts indexing logic from HandPoseContrastiveDataset, allowing for
+    an epoch size (`num_samples`) potentially different from the total
+    number of gestures available.
+    """
+    def __init__(self, num_samples=10000, npy_file='data/kpts/fake/augmented_gesture_groups_32.npy', **kwargs):
         """
-        Initialize the dataset.
-        
         Args:
-            npy_file (str): Path to the .npy file containing pre-generated pairs.
-            augment (callable, optional): Augmentation function to apply to the poses.
+            npy_file (str): Path to the .npy file.
+                            Expected shape: [N_Gestures, N_Augmentations, 21, 3]
+            num_samples (int, optional): The effective number of samples per epoch.
+                                         If None, defaults to the total number of
+                                         unique gestures in the npy file.
+            fixed_indexing (bool): If True, use simple idx % total_gestures.
+                                   If False (default), use the random offset logic.
         """
         if not os.path.exists(npy_file):
             raise FileNotFoundError(f"Could not find {npy_file}")
-            
-        self.num_samples = num_samples
-        self.pairs = np.load(npy_file)  # Shape: [N, 2, 21, 3]
-        self.augment = augment
-        self.base_augment = base_augment
-        self.fixed = False
-        
-        # Print dataset statistics
-        print(f"\nDataset Statistics:")
-        print(f"Number of pairs: {len(self.pairs)}")
-        print(f"Min values (x,y,z): {self.pairs.min(axis=(0,1,2))}")
-        print(f"Max values (x,y,z): {self.pairs.max(axis=(0,1,2))}")
-        print(f"Mean values (x,y,z): {self.pairs.mean(axis=(0,1,2))}")
-        print(f"Std values (x,y,z): {self.pairs.std(axis=(0,1,2))}")
-    
-    def __len__(self):
-        return self.num_samples
-    
-    def __getitem__(self, idx):
-        if self.fixed:
-            idx = idx % self.num_samples
-        else:
-            res = len(self.pairs)//self.num_samples
-            idx = ((idx % self.num_samples) + self.num_samples*np.random.random_integers(0,res)) % len(self.pairs)
-        
-        joints_base, joints_aug = self.pairs[idx]  # Each is shape [21, 3]
-        
-        # Center at wrist (in case it's not already done)
-        joints_base = joints_base - joints_base[0]
-        joints_aug = joints_aug - joints_aug[0]
-        
-        # Apply augmentation if provided
-        if self.base_augment:
-            joints_base, joints_aug = self.base_augment(joints_base,joints_aug)
-        if self.augment:
-            joints_base = self.augment(joints_base)
-            joints_aug = self.augment(joints_aug)
-        
-        return torch.from_numpy(joints_base).float(), torch.from_numpy(joints_aug).float()
 
-if __name__ == '__main__':
-    # Test the dataset
-    from torch.utils.data import DataLoader
-    import matplotlib.pyplot as plt
-    from mpl_toolkits.mplot3d import Axes3D
-    from prepare_fake_data_npy import plot_3d_hand
-    
-    # Initialize dataset
-    dataset = HandPoseContrastiveDataset()
-    dataloader = DataLoader(dataset, batch_size=32, shuffle=False)
-    
-    # Test dataloader
-    for joints_base, joints_aug in dataloader:
-        print("Batch shapes:")
-        print(f"Base joints: {joints_base.shape}")
-        print(f"Augmented joints: {joints_aug.shape}")
-        break
-    
-    # Visualize some samples
-    fig = plt.figure(figsize=(20, 12))
-    for i in range(5):
-        joints_base, joints_aug = dataset[i]
-        
-        # Plot base pose
-        ax1 = fig.add_subplot(5, 2, i*2 + 1, projection='3d')
-        plot_3d_hand(ax1, joints_base.numpy(), color='b', label='Base')
-        ax1.set_title(f'Sample {i+1} - Base')
-        ax1.set_xlabel('X')
-        ax1.set_ylabel('Y')
-        ax1.set_zlabel('Z')
-        ax1.legend()
-        
-        # Plot augmented pose
-        ax2 = fig.add_subplot(5, 2, i*2 + 2, projection='3d')
-        plot_3d_hand(ax2, joints_aug.numpy(), color='r', label='Augmented')
-        ax2.set_title(f'Sample {i+1} - Augmented')
-        ax2.set_xlabel('X')
-        ax2.set_ylabel('Y')
-        ax2.set_zlabel('Z')
-        ax2.legend()
-    
-    plt.tight_layout()
-    plt.show()
+        print(f"Loading augmented gesture groups from {npy_file}...")
+        self.gesture_groups = np.load(npy_file) # Shape: [N_Gestures, N_Augs, 21, 3]
+        self.total_gestures = self.gesture_groups.shape[0]
+        self.num_augs_per_gesture = self.gesture_groups.shape[1]
+
+        if num_samples is None:
+            self.num_samples = self.total_gestures
+            print(f"`num_samples` not provided, setting epoch size to total gestures: {self.total_gestures}")
+        else:
+            self.num_samples = min(num_samples, self.total_gestures)
+            print(f"Dataset epoch size set to `num_samples`: {self.num_samples}")
+
+        print(f"\nAugmented Gesture Dataset Statistics:")
+        print(f"Total unique gestures in file: {self.total_gestures}")
+        print(f"Number of augmentations per gesture: {self.num_augs_per_gesture}")
+        print(f"Loaded data shape: {self.gesture_groups.shape}")
+        # Note: Augmentations (rotation, scaling) are applied dynamically in collate_fn
+        # Stats below are for the canonical poses stored in the file
+        flat_data = self.gesture_groups.reshape(-1, 21, 3)
+        print(f"Min values (x,y,z): {flat_data.min(axis=(0,1))}")
+        print(f"Max values (x,y,z): {flat_data.max(axis=(0,1))}")
+        print(f"Mean values (x,y,z): {flat_data.mean(axis=(0,1))}")
+        print(f"Std values (x,y,z): {flat_data.std(axis=(0,1))}")
+
+    def __len__(self):
+        """Returns the defined number of samples per epoch."""
+        return self.num_samples
+
+    def __getitem__(self, idx):
+        """
+        Returns the group of augmentations for a selected gesture index.
+        The index selection depends on `self.fixed`.
+        """
+        # Random offset indexing logic adapted from HandPoseContrastiveDataset
+        assert self.num_samples > 0, "num_samples cannot be zero for non-fixed indexing."
+
+        # Calculate how many times the epoch size fits into the total gestures
+        res = self.total_gestures // self.num_samples
+        idx = (idx + self.num_samples*np.random.random_integers(0,res)) % self.total_gestures
+
+        # Retrieve the corresponding gesture group
+        gesture_group = self.gesture_groups[idx] # Shape: [N_Augs, 21, 3]
+
+        # Return as numpy array. Tensor conversion and augmentation happen in collate_fn.
+        return gesture_group

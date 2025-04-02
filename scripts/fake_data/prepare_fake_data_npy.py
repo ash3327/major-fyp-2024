@@ -21,11 +21,11 @@ rh_model = mano.load(model_path=model_path,
 
 # Keypoint mapping (same as in prepare_contrastive_data.py)
 mmap = [
-    16, 15, 14, 13, 0,  # thumb
-    1, 4, 10, 7,        # index
-    2, 5, 11, 8,        # middle
-    3, 6, 12, 9,        # ring
-    17, 18, 19, 20      # pinky
+    0, 13, 14, 15, 16,  # thumb
+    1, 2, 3, 17,        # index
+    4, 5, 6, 18,        # middle
+    10, 11, 12, 19,        # ring
+    7, 8, 9, 20      # pinky
 ]
 
 # Variance parameters (adjusted for fixed orientation)

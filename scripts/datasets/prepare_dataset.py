@@ -6,8 +6,6 @@ import sys
 sys.path.append('.')
 
 import argparse
-from .feature_extractor import extract_features
-from .feature_extractor_holistic import extract_features as extract_features_holistic
 
 def get_info(dataset):
     data_dir = "data/raw"
@@ -104,6 +102,9 @@ def get_info(dataset):
     return data_dir, dataset, subfolders, output_dir, dyn, is_video, others
 
 def fetch_dataset(dataset, skip=False, holistic=False):
+    from .feature_extractor import extract_features
+    from .feature_extractor_holistic import extract_features as extract_features_holistic
+
     data_dir, dataset, subfolders, output_dir, dyn, is_video, *rest = info = get_info(dataset)
     extract_features(*info, skip=skip)
     if holistic:

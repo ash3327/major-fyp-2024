@@ -62,6 +62,9 @@
 ## What's NEW
 
 - Pre-generation of contrastive data:
-  - `scripts/fake_data/prepare_fake_data_npy.py`, `training/contrastive/train_supcon.py`, `augments.py`.
+  - `scripts/fake_data/prepare_fake_data_npy.py`, `training/contrastive/train_supcon_1.py`, `augments.py`, `contrastive_data_dataset_3.py`.
+  - `scripts/fake_data/prepare_fake_data_npy_2.py`, `training/contrastive/train_supcon.py`, `augments.py`, `contrastive_data_dataset.py`.
+    - Separate rotation and class augmentations and batch them into the SAME infoNCE pass so as to allow the model to learn the two info together.
 - Think of a good augmentation and contrastive learning technique.
+- UPDATE: Spotted big problem in previous script for generating fake hands (noted: wrong association of landmark ids).
 
