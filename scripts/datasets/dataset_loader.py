@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import argparse
 from tqdm import tqdm
 
-from .prepare_dataset import get_info
+from scripts.datasets.prepare_dataset import get_info
 from mpl_toolkits.mplot3d import Axes3D
 
 #-----------
@@ -176,7 +176,7 @@ def parse_dataset(dataset, split, show3d=False):
         'hands_dataset': [(1, 2)],
         'ph2014-handshape': [(1, 1)],
         'lsa64_raw': [(1, 2)],
-        'IPN_Hand': [(1, 2)]
+        'IPN_Hand': [(1, 1)]
     }
     actual_cnts = dict()
     expected_cnts = expected_cnts[dataset]

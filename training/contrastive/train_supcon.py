@@ -40,10 +40,14 @@ version_id = 1
 current_time = datetime.now().strftime('%Y%m%d%H%M%S')
 train_path_root = f'runs/hand_contrastive_learning_structured/v{version_id}/{current_time}'
 
+model_checkpoint_path = 'runs/hand_contrastive_learning/v4/20250401140023/checkpoints/best.pth'#None
+start_epoch = 0
 model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250402190449/checkpoints/best.pth'
 start_epoch = 1000
 model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250402210020/checkpoints/best.pth'
 start_epoch = 11000
+model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250403104741/checkpoints/best.pth'
+start_epoch = 13000
 
 # hyperparameters
 batch_size = 32
@@ -76,7 +80,8 @@ def structured_collate_fn(batch_list):
         raise ValueError(f"List length ({len(batch_list)}) must match grid_size ({grid_size})")
 
     aug_indices = np.random.randint(0, n_aug_pregenerated, size=grid_size)
-    rotations = [generate_random_rotation_object() for _ in range(grid_size)]
+    batch_rotation = generate_random_rotation_object(max_angle=2*np.pi)
+    rotations = [batch_rotation * generate_random_rotation_object(max_angle=np.pi/6) for _ in range(grid_size)]
     scalings = [generate_random_scaling_vector() for _ in range(grid_size)]
     output_batch = torch.zeros(grid_size, grid_size, 21, 3)
 
@@ -109,7 +114,7 @@ def info_nce_loss_from_matrix(similarity_matrix, positive_mask, temperature):
 
 if __name__ == '__main__':
     aug_pair = lambda *x: augment_handpair(*x, max_angle=np.pi*2)
-    aug = lambda x: augment_hand(x, max_angle=np.pi/3)
+    aug = lambda x: augment_hand(x, max_angle=np.pi/6)
 
     # initialize datasets and dataloaders
     # supervised dataset

@@ -2,8 +2,7 @@ import torch
 import numpy as np
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.neighbors import NearestNeighbors
-
-def evaluate_knn(train_embeddings, train_labels, test_embeddings, test_labels, k=5):
+def evaluate_knn(train_embeddings, train_labels, test_embeddings, test_labels, k=5, have_class_outputs=False):
     """
     Evaluate the model using k-NN with cosine similarity.
     
@@ -15,7 +14,8 @@ def evaluate_knn(train_embeddings, train_labels, test_embeddings, test_labels, k
         k (int): Number of nearest neighbors to consider (default: 5).
     
     Returns:
-        tuple: (accuracy, f1) - Accuracy and weighted F1 score as floats.
+        tuple: (accuracy, f1, per_class_accuracy, per_class_f1) - 
+               Accuracy, weighted F1 score, per-class accuracy, and per-class F1 score as floats.
     """
     # Convert PyTorch tensors to NumPy arrays
     train_embeddings = train_embeddings.cpu().numpy()
@@ -40,9 +40,27 @@ def evaluate_knn(train_embeddings, train_labels, test_embeddings, test_labels, k
     accuracy = accuracy_score(test_labels, preds)
     f1 = f1_score(test_labels, preds, average='weighted')
     
-    return accuracy, f1
+    if not have_class_outputs:
+        return accuracy, f1
+    
+    # Compute per-class accuracy and F1 score
+    unique_classes = np.unique(test_labels)
+    per_class_accuracy = {}
+    per_class_f1 = {}
+    for cls in unique_classes:
+        cls_indices = test_labels == cls
+        cls_preds = preds[cls_indices]
+        cls_labels = test_labels[cls_indices]
+        per_class_accuracy[cls] = np.mean(cls_preds == cls_labels)
+        per_class_f1[cls] = f1_score(cls_labels, cls_preds, average='weighted')
+        
+    return accuracy, f1, dict(
+        per_class_accuracy=per_class_accuracy, 
+        per_class_f1=per_class_f1,
+        preds=preds
+    )
 
-def extract_embeddings(model, dataloader, device):
+def extract_embeddings(model, dataloader, device, output_joints=False):
     """
     Extract embeddings from a dataloader using the model.
     
@@ -57,6 +75,7 @@ def extract_embeddings(model, dataloader, device):
     model.eval()
     embeddings = []
     labels = []
+    joints = []
     
     with torch.no_grad():
         for batch_labels, batch_joints in dataloader:
@@ -65,7 +84,12 @@ def extract_embeddings(model, dataloader, device):
             feats = model(batch_joints)  # [batch_size, embedding_dim]
             embeddings.append(feats)
             labels.append(batch_labels)
+            if output_joints:
+                joints.append(batch_joints)
     
     embeddings = torch.cat(embeddings, dim=0)
     labels = torch.cat(labels, dim=0)
+    if output_joints:
+        joints = torch.cat(joints, dim=0)
+        return embeddings, labels, joints
     return embeddings, labels

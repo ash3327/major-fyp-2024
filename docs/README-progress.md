@@ -222,3 +222,8 @@ git clone https://github.com/vchoutas/smplify-x
 
 ### Relevant Ideas
 MANO and SMPL are two useful methods for generating realistic gesture landmarks.
+
+
+PCA, TSNE and UMAP for contrastive supcon+unsupervised: 
+![alt text](image-24.png)
+![alt text](image-25.png)

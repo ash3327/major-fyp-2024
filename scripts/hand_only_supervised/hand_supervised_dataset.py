@@ -30,7 +30,11 @@ class LabelledHandDataset(Dataset):
         self.data_dir = data_dir
         self.dataset_name = dataset
         self.subfolders = subfolders
+
         self.max_num_hands = max_num_hands
+        if dataset == 'synthetic-asl-alphabet':
+            self.max_num_hands = 1
+
         splits = list(subfolders.keys())
         if self.split is None and len(splits) == 1:
             self.split = splits[0]

@@ -50,3 +50,13 @@ dash
 # mano @ git+https://github.com/otaheri/MANO
 chumpy @ git+https://github.com/mattloper/chumpy
 pyglet<2
+
+# umap
+umap-learn
+
+# jupyter notebook matplotlib
+# ipympl
+# PyQt5
+# PySide2
+plotly
+nbformat>=4.2.0

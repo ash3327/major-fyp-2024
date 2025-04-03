@@ -61,12 +61,14 @@ def augment_pair(joints_base, joints_aug, scale_range=(0, 5), max_angle=np.pi*2)
     
     return rotated_base, rotated_aug
 
-def generate_random_rotation_object():
-    """Generates a random scipy Rotation object."""
-    quat = np.random.randn(4) # Interesting way for generating random quaternion learnt from gemini
-    # Note for self: SO(3) sampling, fulfills property that w+ai+bj+ck satisfies w^2+a^2+b^2+c^2 = 1
-    # Original formulation: cos(t/2)+sin(t/2)(ai+bj+ck) with a^2+b^2+c^2=1 (conventional sampling)
-    quat /= np.linalg.norm(quat)
+def generate_random_rotation_object(max_angle=np.pi):
+    """Generates a random scipy Rotation object with a maximum rotation angle."""    
+    axis = np.random.randn(3)  # Random axis
+    axis /= np.linalg.norm(axis)  # Normalize to unit vector
+    
+    angle = np.random.uniform(-max_angle, max_angle)  # Random angle within the range
+    quat = np.concatenate([np.sin(angle / 2) * axis, [np.cos(angle / 2)]])  # Quaternion representation
+    
     return R.from_quat(quat)
 
 def generate_random_scaling_vector(scale_range=(0.7, 1.3), n_dims=3):
