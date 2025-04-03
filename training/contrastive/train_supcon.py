@@ -40,21 +40,30 @@ version_id = 1
 current_time = datetime.now().strftime('%Y%m%d%H%M%S')
 train_path_root = f'runs/hand_contrastive_learning_structured/v{version_id}/{current_time}'
 
-model_checkpoint_path = None
-start_epoch = 0
+model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250402190449/checkpoints/best.pth'
+start_epoch = 1000
+model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250402210020/checkpoints/best.pth'
+start_epoch = 11000
 
 # hyperparameters
 batch_size = 32
 grid_size = 32
 embedding_dim = 128
 learning_rate = 0.01#1e-4
-num_epochs = 1000  # Adjust as needed
+num_epochs = 10000  # Adjust as needed
 temperature = 0.1
 n_aug_pregenerated = 32
 eval_interval = 10  # Evaluate every 10 epochs
 k_neighbors = 5  # Number of neighbors for k-NN
 num_samples_unsup = 50 * batch_size
 num_samples_sup = 100 * batch_size
+patience = 1000
+
+# 202504031040et
+# added back empty landmarks
+patience = 500
+num_epochs = 2000
+num_samples_unsup = 10 * batch_size
 
 # device configuration
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -105,7 +114,8 @@ if __name__ == '__main__':
     # initialize datasets and dataloaders
     # supervised dataset
     dataset_sup = LabelledHandDataset(dataset_name='lexset', split='train', augment=aug)
-    dataloader_sup = DataLoader(dataset_sup, batch_size=batch_size, shuffle=True)
+    dataloader_sup = DataLoader(dataset_sup, batch_size=batch_size, shuffle=True, 
+                                    drop_last=True)
 
     # unsupervised dataset with structured augmentation
     dataset_unsup = HandPoseContrastiveDataset(num_samples=num_samples_unsup, npy_file=f'data/kpts/fake/augmented_gesture_groups_{n_aug_pregenerated}.npy')
@@ -136,7 +146,7 @@ if __name__ == '__main__':
             print(f"Model file not found at {model_checkpoint_path}")
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
-    scheduler = ReduceLROnPlateau(optimizer, patience=1000)
+    scheduler = ReduceLROnPlateau(optimizer, patience=patience)
 
     # initialize TensorBoard writer
     os.makedirs(train_path_root, exist_ok=True)

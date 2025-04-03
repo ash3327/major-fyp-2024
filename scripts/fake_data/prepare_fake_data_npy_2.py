@@ -51,7 +51,7 @@ variance_aug = dict(
 vpow = 1 # Keep if used before
 
 # --- Generation Parameters ---
-N_GESTURES = 500#00  # Total number of unique base gestures to generate (adjust)
+N_GESTURES = 100000  # Total number of unique base gestures to generate (adjust)
 N_AUGMENTATIONS_PER_GESTURE = 32 # Number of slight variations per gesture
 OUTPUT_DIR = 'data/kpts/fake/'
 # Use a distinct filename
