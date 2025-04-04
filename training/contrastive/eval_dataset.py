@@ -19,6 +19,8 @@ from model import HandEncoder
 # Configuration
 model_checkpoint_path = 'runs/hand_contrastive_learning/v4/20250401140023/checkpoints/best.pth'
 model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250402210020/checkpoints/best.pth'
+model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250403104741/checkpoints/best.pth'
+
 batch_size = 256
 k_neighbors = 5  # Number of neighbors for k-NN
 
@@ -43,6 +45,15 @@ else:
 # Evaluation
 print("Evaluating the model using k-NN...")
 model.eval()
+
+# class DoNothing:
+#     def eval(self):
+#         pass
+#     def forward(self, x):
+#         return x
+#     def __call__(self, x):
+#         return x.view(x.shape[0],-1)
+# model = DoNothing()
 
 # Extract embeddings
 train_embeddings, train_labels = extract_embeddings(model, dataloader_sup, device)

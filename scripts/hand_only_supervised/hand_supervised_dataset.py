@@ -13,7 +13,7 @@ class LabelledHandDataset(Dataset):
     """
     NOTE: Currently only handles static hand, one-hand datasets including lexset, senz3d and handshape.
     """
-    def __init__(self, dataset_name, split=None, augment=None, max_num_hands=2):
+    def __init__(self, dataset_name, split=None, augment=None, max_num_hands=2, ignore_flat=True, normalize_to_wrist=True):
         """
         Dataset class to extract labels and hand landmarks from .npy files.
 
@@ -34,6 +34,9 @@ class LabelledHandDataset(Dataset):
         self.max_num_hands = max_num_hands
         if dataset == 'synthetic-asl-alphabet':
             self.max_num_hands = 1
+
+        self.ignore_flat = ignore_flat
+        self.normalize_to_wrist = normalize_to_wrist
 
         splits = list(subfolders.keys())
         if self.split is None and len(splits) == 1:
@@ -183,19 +186,21 @@ class LabelledHandDataset(Dataset):
             hands (np.ndarray): Array of shape (2, 21, 3) containing hand landmarks.
             num_hands (int): Number of hands (0, 1, or 2).
         """
+        if self.ignore_flat and np.all(hands[:,2] == 0):
+            return # skip flat handmarks
         if num_hands == 0:
-            self.data.append((label_idx, hands[0]-hands[0][0])) # Do not skip samples with no hands
+            self.data.append((label_idx, hands[0])) # Do not skip samples with no hands
         elif num_hands == 1:
             # Add the non-zero hand
             if np.any(hands[0]):
-                self.data.append((label_idx, hands[0]-hands[0][0]))
+                self.data.append((label_idx, hands[0]))
             elif np.any(hands[1]):
-                self.data.append((label_idx, hands[1]-hands[1][0]))
+                self.data.append((label_idx, hands[1]))
         elif num_hands == 2:
             # Add both hands as separate samples with the same label
-            self.data.append((label_idx, hands[0]-hands[0][0]))
+            self.data.append((label_idx, hands[0]))
             if self.max_num_hands > 1:
-                self.data.append((label_idx, hands[1]-hands[1][0]))
+                self.data.append((label_idx, hands[1]))
 
     def __len__(self):
         """
@@ -218,6 +223,8 @@ class LabelledHandDataset(Dataset):
                    hand_landmarks is a torch.Tensor of shape (21, 3).
         """
         label_idx, hand_landmarks = self.data[idx]
+        if self.normalize_to_wrist:
+            hand_landmarks -= hand_landmarks[0]
         if self.augment and np.any(hand_landmarks):
             hand_landmarks = self.augment(hand_landmarks)
         hand_landmarks = torch.from_numpy(hand_landmarks).float()

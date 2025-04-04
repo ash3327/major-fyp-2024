@@ -26,6 +26,7 @@ while cap.isOpened():
     if results.multi_hand_landmarks:
         for hand_landmarks in results.multi_hand_landmarks:
             mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+        print(results.multi_handedness)
 
     # Display the frame
     cv2.imshow('Hand Detection', frame)

@@ -57,7 +57,7 @@ def compute_statistics(dataset, dataset_name):
     if isinstance(dataset, HandPoseContrastiveDataset):
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=100, shuffle=False)
         all_joints = []
-        for joints_base, joints_aug in dataloader:
+        for joints_base, joints_aug, *_ in dataloader:
             all_joints.append(joints_base.numpy())
             all_joints.append(joints_aug.numpy())
         all_joints = np.concatenate(all_joints, axis=0)
@@ -101,7 +101,7 @@ def visualize_both_datasets_side_by_side(dataset_contrastive, dataset_labelled, 
     dataloader_contrastive = torch.utils.data.DataLoader(dataset_contrastive, batch_size=batch_size, shuffle=True)
     dataloader_labelled = torch.utils.data.DataLoader(dataset_labelled, batch_size=batch_size, shuffle=True)
     
-    joints_base, joints_aug = next(iter(dataloader_contrastive))
+    joints_base, joints_aug, *_ = next(iter(dataloader_contrastive))
     labels, joints_labelled = next(iter(dataloader_labelled))
     
     joints_base = joints_base.numpy()
@@ -147,10 +147,10 @@ def visualize_both_datasets_side_by_side(dataset_contrastive, dataset_labelled, 
 if __name__ == "__main__":
     # Initialize datasets
     augment = augment_hand
-    dataset_contrastive = HandPoseContrastiveDataset(num_samples=num_samples, augment=augment)
+    dataset_contrastive = HandPoseContrastiveDataset(num_samples=num_samples)
     # dataset_labelled = LabelledHandDataset(dataset_name='lexset', split='train')
     # dataset_labelled = LabelledHandDataset(dataset_name='senz3d')
-    dataset_labelled = LabelledHandDataset(dataset_name='handshape', split='test', augment=augment)
+    dataset_labelled = LabelledHandDataset(dataset_name='handshape', split='test')
     
     # Compute and print statistics
     compute_statistics(dataset_contrastive, "HandPoseContrastiveDataset")

@@ -281,9 +281,9 @@ def transform_landmarks(landmarks, bbox, image_shape, normalize=True):
         return landmarks
     xmin, ymin, xmax, ymax = bbox
     lmkshape = landmarks['hands'].shape[2]
-    scale = [xmax - xmin, ymax - ymin, 1][:lmkshape]
+    scale = [xmax - xmin, ymax - ymin, xmax - xmin][:lmkshape]
     offset = [xmin, ymin, 0][:lmkshape]
-    screen_size = [image_shape[1], image_shape[0], 1][:lmkshape]
+    screen_size = [image_shape[1], image_shape[0], image_shape[1]][:lmkshape]
     if not normalize:
         screen_size = np.array(screen_size)# * scale
     # if 'pose' in landmarks:

@@ -67,7 +67,41 @@
   - `scripts/fake_data/prepare_fake_data_npy_2.py`, `training/contrastive/train_supcon.py`, `augments.py`, `contrastive_data_dataset.py`.
     - Separate rotation and class augmentations and batch them into the SAME infoNCE pass so as to allow the model to learn the two info together.
     - 20250402210020: Rotation 
-    - 
+  - Baseline: Directly use landmarks to evaluate: (none)
+    - Lexset: Test Accuracy: 0.9000
+Test F1 Score: 0.8930
+Class accu: {0: 0.91, 1: 0.95, 2: 0.97, 3: 0.82, 4: 0.95, 5: 0.96, 6: 0.96, 7: 0.96, 8: 0.95, 9: 0.94, 10: 0.94, 11: 0.94, 12: 0.93, 13: 0.93, 14: 0.96, 15: 0.93, 16: 0.95, 17: 0.96, 18: 0.94, 19: 0.96, 20: 0.91, 21: 0.97, 22: 0.94, 23: 0.87, 24: 0.91, 25: 0.89, 26: 0.0}
+Class f1: {0: 0.9528795811518325, 1: 0.9743589743589743, 2: 0.9847715736040609, 3: 0.9010989010989011, 4: 0.9743589743589743, 5: 0.9795918367346939, 6: 0.9795918367346939, 7: 0.9795918367346939, 8: 0.9743589743589743, 9: 0.9690721649484536, 10: 0.9690721649484536, 11: 0.9690721649484536, 12: 0.9637305699481865, 13: 0.9637305699481865, 14: 0.9795918367346939, 15: 0.9637305699481865, 16: 0.9743589743589743, 17: 0.9795918367346939, 18: 0.9690721649484536, 19: 0.9795918367346939, 20: 0.9528795811518325, 21: 0.9847715736040609, 22: 0.9690721649484536, 23: 0.9304812834224598, 24: 0.9528795811518325, 25: 0.9417989417989417, 26: 0.0}
+  - model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250403104741/checkpoints/best.pth'
+Test Accuracy: 0.8967
+Test F1 Score: 0.8971
+Class accu: {0: 0.9, 1: 0.96, 2: 0.96, 3: 0.79, 4: 0.89, 5: 0.96, 6: 0.98, 7: 0.98, 8: 0.78, 9: 0.83, 10: 0.93, 11: 0.92, 12: 0.89, 13: 0.92, 14: 0.96, 15: 0.88, 16: 0.75, 17: 0.87, 18: 0.91, 19: 0.93, 20: 0.9, 21: 0.98, 22: 0.96, 23: 0.78, 24: 0.72, 25: 0.89, 26: 0.99}
+Class f1: {0: 0.9473684210526315, 1: 0.9795918367346939, 2: 0.9795918367346939, 3: 0.8826815642458101, 4: 0.9417989417989417, 5: 0.9795918367346939, 6: 0.98989898989899, 7: 0.98989898989899, 8: 0.8764044943820225, 9: 0.907103825136612, 10: 0.9637305699481865, 11: 0.9583333333333335, 12: 0.9417989417989417, 13: 0.9583333333333335, 14: 0.9795918367346939, 15: 0.9361702127659575, 16: 0.8571428571428571, 17: 0.9304812834224598, 18: 0.9528795811518325, 19: 0.9637305699481865, 20: 0.9473684210526315, 21: 0.98989898989899, 22: 0.9795918367346939, 23: 0.8764044943820225, 24: 0.8372093023255814, 25: 0.9417989417989417, 26: 0.9949748743718593}
 - Think of a good augmentation and contrastive learning technique.
 - UPDATE: Spotted big problem in previous script for generating fake hands (noted: wrong association of landmark ids).
+- `scripts/fake_data/prepare_fake_data_npy_3.py`, `training/contrastive/train_supcon.py`, `augments.py`, `contrastive_data_dataset.py`.
 
+- Checking unsupervised and supervised dataset hand formulation: python training/contrastive/test_contrastive_fake_data.py
+![alt text](imgs/image.png)
+
+
+## MANO features
+
+![alt text](imgs/image-1.png)
+![alt text](imgs/image-2.png)
+```
+assume z up, this z have nothing to do with the actual coords
+0-2: index finger node, rotate (xy) away from thumb, rotate (xz) left/right towards thumb, rotate front/back
+3-5: index finger node 2, rotate xy, rotate left/right, rotate forward
+6-8: index finger node 3, rotate xy, rotate left/right, rotate forward, 
+
+9-17, same but for middle finger
+18-26, same but pinky
+27-35, same but second last finger
+36-44, same but thumb
+
+2,5,8
+```
+
+- Problem: Actually the handshapes generated SOMETIMES DO NOT MODEL ALL POSSIBLE STRANGE HANDSHAPES.
+- Limitations in hard handshapes.

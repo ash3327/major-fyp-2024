@@ -7,13 +7,20 @@ import matplotlib.pyplot as plt
 
 model_path = 'model/mano'
 n_comps = 45
-size = 2
+size = 3
 node_size = 10
 
+pose_fb_var = 2
+fb_fingers = {i for i in range(9*4) if i % 9 in {2,5,8}}
+fb_fingers.add(36)
+pose_non_fb_var = .3
 variance_new = dict(
-    betas=.5,
-    pose=.5,
+    betas=2,
+    pose=np.array([pose_fb_var if i in fb_fingers else pose_non_fb_var for i in range(45)],dtype=np.float32), # front and back
     global_orient=0
+)
+bias = dict(
+    pose=np.array([1.5 if i == 36 else .5 if i in fb_fingers else 0 for i in range(45)],dtype=np.float32)
 )
 # variance_new = dict(
 #     betas=.3,
@@ -32,8 +39,12 @@ rh_model = mano.load(model_path=model_path,
                      batch_size=batch_size,
                      flat_hand_mean=False)
 
-betas = torch.rand(batch_size, 10) * variance['betas']
-pose = torch.rand(batch_size, n_comps) * variance['pose']
+betas = (torch.rand(batch_size, 10)*2-1) * variance['betas']
+pose = torch.randn(batch_size, n_comps) * variance['pose'] * 0
+pose[:, list(fb_fingers)] = torch.rand(batch_size, len(fb_fingers))**2 * variance['pose'][list(fb_fingers)]
+pose -= torch.ones(batch_size, n_comps) * bias['pose']
+
+
 global_orient = torch.rand(batch_size, 3) * variance['global_orient']
 transl = torch.zeros(batch_size, 3)
 
@@ -44,7 +55,6 @@ output = rh_model(betas=betas,
                   flat_hand_mean=True,
                   return_verts=True,
                   return_tips=True)
-
 
 # Keypoint mapping (same as in prepare_contrastive_data.py)
 mmap = [
@@ -79,6 +89,7 @@ for i, ax in enumerate(axes.flat):
     
     # Apply keypoint mapping
     joint = joints[i]
+    joint[1:3] = (joint[0:2]+joint[2:4]).copy()/2
     ax.scatter(joint[:, 0], joint[:, 1], joint[:, 2], s=5)
     
     # Draw connections

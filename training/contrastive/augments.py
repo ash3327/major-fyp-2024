@@ -71,13 +71,15 @@ def generate_random_rotation_object(max_angle=np.pi):
     
     return R.from_quat(quat)
 
-def generate_random_scaling_vector(scale_range=(0.7, 1.3), n_dims=3):
+def generate_random_scaling_vector(scale_range=(0, 2), n_dims=3):
     """Generates a random scaling vector."""
-    # Simple uniform scaling for now, can be made axis-independent
-    # scale_factor = np.random.uniform(scale_range[0], scale_range[1])
-    # return np.full(n_dims, scale_factor)
-    # Or independent scaling per axis:
-    return np.random.uniform(scale_range[0], scale_range[1], size=n_dims)
+    bin = np.random.choice([0, 1], size=n_dims)
+    scaling_vector = np.where(
+        bin == 0,
+        np.random.uniform(low=scale_range[0], high=1, size=n_dims),
+        np.random.uniform(low=1, high=scale_range[1], size=n_dims)
+    )
+    return scaling_vector
 
 def apply_transform(joints, rotation_obj, scaling_vector):
     """
@@ -100,3 +102,9 @@ def apply_transform(joints, rotation_obj, scaling_vector):
 
     # Return as torch tensor
     return torch.from_numpy(scaled_joints).float()
+
+def normalize(joints):
+    # shape: [21,3]
+    jmin, jmax = torch.min(joints, dim=0).values, torch.max(joints, dim=0).values
+    joints = (joints-jmin)/(jmax-jmin)*2-1
+    return joints

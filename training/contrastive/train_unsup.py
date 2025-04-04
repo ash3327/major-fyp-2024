@@ -20,11 +20,12 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 import torch.nn.functional as F
 from datetime import datetime
+from copy import deepcopy
 
 from scripts.fake_data.contrastive_data_dataset import HandPoseContrastiveDataset
 from scripts.hand_only_supervised.hand_supervised_dataset import LabelledHandDataset
 from training.contrastive.augments import augment as augment_hand, augment_pair as augment_handpair
-from training.contrastive.augments import generate_random_rotation_object, generate_random_scaling_vector, apply_transform  # Make sure path is correct
+from training.contrastive.augments import generate_random_rotation_object, generate_random_scaling_vector, apply_transform, normalize
 
 from training.contrastive.model import HandEncoder
 from training.contrastive.losses import info_nce_loss, supcon_loss
@@ -51,14 +52,14 @@ model_checkpoint_path = None
 start_epoch = 0
 
 # hyperparameters
-batch_size = 32
-grid_size = 32
+batch_size = 256
+grid_size = 4
+n_aug_pregenerated = 32
 embedding_dim = 128
 initial_lr = 0.01
 learning_rate = 0.01#1e-4
 num_epochs = 10000  # Adjust as needed
 temperature = 0.1
-n_aug_pregenerated = 32
 eval_interval = 10  # Evaluate every 10 epochs
 k_neighbors = 5  # Number of neighbors for k-NN
 num_samples_unsup = 50 * batch_size
@@ -83,27 +84,55 @@ lr_jump_epoch = 500
 # device configuration
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+def structured_collate_fn_sup(batch_list):
+    """
+    Custom collate function for supervised data to match unsupervised format.
+    Ignores labels and creates a grid of augmentations.
+    """
+    # if len(batch_list) != grid_size:
+    #     raise ValueError(f"List length ({len(batch_list)}) must match grid_size ({grid_size})")
+    
+    # Extract only joints from (label, joints) tuples
+    joints_list = [item[1] for item in batch_list]
+    output_batch = torch.zeros(len(batch_list), grid_size, 21, 3)
+    
+    # Create rotation and scaling parameters
+    batch_rotation = generate_random_rotation_object(max_angle=np.pi)
+    rotations = [batch_rotation * generate_random_rotation_object(max_angle=np.pi/6) 
+                 for _ in range(grid_size)]
+    scalings = [generate_random_scaling_vector() for _ in range(grid_size)]
+
+    # Fill the grid
+    for i in range(len(batch_list)):
+        base_pose = joints_list[i].numpy()
+        
+        for j in range(grid_size):
+            rotation_j = rotations[j]
+            scaling_j = scalings[j]
+            transformed_pose = apply_transform(base_pose, rotation_j, scaling_j)
+            transformed_pose = normalize(transformed_pose)
+            output_batch[i, j] = transformed_pose
+
+    return output_batch.to(device)
+
 def structured_collate_fn(batch_list):
     """
     Custom collate function to create the structured grid batch.
     """
-    if len(batch_list) != grid_size:
-        raise ValueError(f"List length ({len(batch_list)}) must match grid_size ({grid_size})")
-
-    aug_indices = np.random.randint(0, n_aug_pregenerated, size=grid_size)
     batch_rotation = generate_random_rotation_object(max_angle=np.pi)
     rotations = [batch_rotation * generate_random_rotation_object(max_angle=np.pi/6) for _ in range(grid_size)]
     scalings = [generate_random_scaling_vector() for _ in range(grid_size)]
-    output_batch = torch.zeros(grid_size, grid_size, 21, 3)
+    output_batch = torch.zeros(len(batch_list), grid_size, 21, 3)
 
-    for i in range(grid_size):
+    for i in range(len(batch_list)):
         gesture_group_np = batch_list[i]
-        base_pose_for_row_i = gesture_group_np[aug_indices[i]]
 
         for j in range(grid_size):
             rotation_j = rotations[j]
             scaling_j = scalings[j]
-            transformed_pose = apply_transform(base_pose_for_row_i, rotation_j, scaling_j)
+            rand_idx = np.random.randint(0, n_aug_pregenerated)
+            transformed_pose = apply_transform(gesture_group_np[rand_idx], rotation_j, scaling_j)
+            transformed_pose = normalize(transformed_pose)
             output_batch[i, j] = transformed_pose
 
     return output_batch.to(device)
@@ -130,7 +159,14 @@ if __name__ == '__main__':
     # initialize datasets and dataloaders
     # supervised dataset
     dataset_sup = LabelledHandDataset(dataset_name='lexset', split='train', augment=aug)
-    dataloader_sup = DataLoader(dataset_sup, batch_size=batch_size, shuffle=True, 
+    dataloader_sup = DataLoader(
+        dataset_sup, 
+        batch_size=batch_size,  # Use grid_size instead of batch_size
+        shuffle=True,
+        collate_fn=structured_collate_fn_sup,
+        drop_last=True
+    )
+    dataloader_sup_eval = DataLoader(dataset_sup, batch_size=batch_size, shuffle=True, 
                                     drop_last=True)
 
     # unsupervised dataset with structured augmentation
@@ -196,20 +232,25 @@ if __name__ == '__main__':
         dataset_size = max(len(dataloader_sup), len(dataloader_unsup))
         for i in tqdm(range(dataset_size),
                         desc=f"Epoch {epoch+1}/{num_epochs} - Training"):
-            # supervised batch (if available)
-            if do_sup:
-                try:
-                    labels, joints = next(sup_iter)
-                    joints, labels = joints.to(device), labels.to(device)
-                    features = model(joints)  # [B, D]
-                    features = features.unsqueeze(1)  # [B, 1, D]
-                    loss_supcon = supcon_loss(features, labels, device=device)
-                    total_supcon_loss += loss_supcon.item()
-                    loss = loss_supcon
-                except StopIteration:
-                    loss = 0.0
-            else:
-                loss_supcon = 0.0
+            loss = 0.0
+            
+            # Treat supervised data as unsupervised
+            try:
+                structured_batch_sup = next(sup_iter)
+                h, w = structured_batch_sup.shape[0], structured_batch_sup.shape[1]
+                n_samples = h * w
+                flat_input = structured_batch_sup.view(n_samples, -1)
+                embeddings = model(flat_input)
+                embeddings_norm = F.normalize(embeddings, p=2, dim=1)
+                similarity_matrix = torch.matmul(embeddings_norm, embeddings_norm.T)
+                unsupervised_labels = torch.arange(h).repeat_interleave(w).to(device)
+                mask = torch.eq(unsupervised_labels.unsqueeze(0), unsupervised_labels.unsqueeze(1))
+                mask = mask.fill_diagonal_(False)
+                loss_sup = info_nce_loss_from_matrix(similarity_matrix, mask, temperature)
+                total_supcon_loss += loss_sup.item()
+            except StopIteration:
+                loss_sup = 0.0
+            # loss_sup = 0.0
 
             # unsupervised batch (if available)
             try:
@@ -225,10 +266,10 @@ if __name__ == '__main__':
                 mask = mask.fill_diagonal_(False)
                 loss_unsup = info_nce_loss_from_matrix(similarity_matrix, mask, temperature)
                 total_unsup_loss += loss_unsup.item()
-                loss = loss + loss_unsup if loss_supcon != 0.0 else loss_unsup
+                loss = loss + loss_unsup if loss_sup != 0.0 else loss_unsup
             except StopIteration:
                 loss_unsup = 0.0
-                if loss_supcon == 0.0:
+                if loss_sup == 0.0:
                     loss = loss_unsup
 
             if loss == 0.0:
@@ -275,7 +316,7 @@ if __name__ == '__main__':
             print(f"Evaluating on test set at epoch {epoch+1} using k-NN (k={k_neighbors})")
 
             # extract embeddings
-            train_embeddings, train_labels = extract_embeddings(model, dataloader_sup, device)
+            train_embeddings, train_labels = extract_embeddings(model, dataloader_sup_eval, device)
             test_embeddings, test_labels = extract_embeddings(model, dataloader_test, device)
 
             # perform k-NN evaluation

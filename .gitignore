@@ -23,6 +23,7 @@ images/
 /data/kpts/
 /temp/*
 /runs/*
+/outputs/*
 
 # libraries
 /MANO/
