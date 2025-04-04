@@ -2,6 +2,9 @@ import torch
 import numpy as np
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.neighbors import NearestNeighbors
+
+from tqdm import tqdm
+
 def evaluate_knn(train_embeddings, train_labels, test_embeddings, test_labels, k=5, have_class_outputs=False):
     """
     Evaluate the model using k-NN with cosine similarity.
@@ -78,7 +81,7 @@ def extract_embeddings(model, dataloader, device, output_joints=False):
     joints = []
     
     with torch.no_grad():
-        for batch_labels, batch_joints in dataloader:
+        for batch_labels, batch_joints in tqdm(dataloader):
             batch_joints = batch_joints.to(device)
             batch_labels = batch_labels.to(device)
             feats = model(batch_joints)  # [batch_size, embedding_dim]

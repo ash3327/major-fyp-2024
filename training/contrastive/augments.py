@@ -105,6 +105,8 @@ def apply_transform(joints, rotation_obj, scaling_vector):
 
 def normalize(joints):
     # shape: [21,3]
+    if not isinstance(joints, torch.Tensor):
+        joints = torch.from_numpy(joints).float()
     jmin, jmax = torch.min(joints, dim=0).values, torch.max(joints, dim=0).values
     joints = (joints-jmin)/(jmax-jmin)*2-1
     return joints

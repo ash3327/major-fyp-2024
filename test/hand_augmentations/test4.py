@@ -22,7 +22,7 @@ def plot_hand_joints_and_mesh(ax, joints, vertices, base_joints, connections, th
     colors = ['blue', 'yellow', 'red']
     cmap = LinearSegmentedColormap.from_list("custom", colors, N=100)
 
-    joints[1] = (joints[0]+joints[2])/2
+    joints[1:3] = (joints[0:2]+joints[2:4]).copy()/2
     
     # Draw connections
     for start, end in connections:

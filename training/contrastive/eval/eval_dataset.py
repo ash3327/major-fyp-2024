@@ -13,8 +13,8 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from scripts.hand_only_supervised.hand_supervised_dataset import LabelledHandDataset
-from evals import extract_embeddings, evaluate_knn
-from model import HandEncoder
+from training.contrastive.evals import extract_embeddings, evaluate_knn
+from training.contrastive.model import HandEncoder
 
 # Configuration
 model_checkpoint_path = 'runs/hand_contrastive_learning/v4/20250401140023/checkpoints/best.pth'
@@ -54,6 +54,17 @@ model.eval()
 #     def __call__(self, x):
 #         return x.view(x.shape[0],-1)
 # model = DoNothing()
+
+from training.contrastive.preprocess import get_6dof
+
+class Do6DoF:
+    def eval(self):
+        pass
+    def forward(self, x):
+        return x.view(x.shape[0],-1)
+    def __call__(self, x):
+        return torch.stack([get_6dof(sample) for sample in x], dim=0).view(x.shape[0], -1)
+model = Do6DoF()
 
 # Extract embeddings
 train_embeddings, train_labels = extract_embeddings(model, dataloader_sup, device)

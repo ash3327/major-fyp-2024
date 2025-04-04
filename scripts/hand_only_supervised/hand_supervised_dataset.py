@@ -186,20 +186,23 @@ class LabelledHandDataset(Dataset):
             hands (np.ndarray): Array of shape (2, 21, 3) containing hand landmarks.
             num_hands (int): Number of hands (0, 1, or 2).
         """
-        if self.ignore_flat and np.all(hands[:,2] == 0):
-            return # skip flat handmarks
+        if self.ignore_flat and np.all(np.isin(hands[:, :, 2], [0, -1])):
+            return  # skip flat handmarks
         if num_hands == 0:
-            self.data.append((label_idx, hands[0])) # Do not skip samples with no hands
+            self.data.append((label_idx, hands[0]))  # Do not skip samples with no hands
         elif num_hands == 1:
             # Add the non-zero hand
-            if np.any(hands[0]):
+            if np.any(hands[0]) and not np.all(np.isin(hands[0, :, 2], [0, -1])):
                 self.data.append((label_idx, hands[0]))
-            elif np.any(hands[1]):
+            elif np.any(hands[1]) and not np.all(np.isin(hands[1, :, 2], [0, -1])):
                 self.data.append((label_idx, hands[1]))
         elif num_hands == 2:
             # Add both hands as separate samples with the same label
-            self.data.append((label_idx, hands[0]))
-            if self.max_num_hands > 1:
+            flag = False
+            if not np.all(np.isin(hands[0, :, 2], [0, -1])):
+                self.data.append((label_idx, hands[0]))
+                flag = True
+            if (self.max_num_hands > 1 or not flag) and not np.all(np.isin(hands[1, :, 2], [0, -1])):
                 self.data.append((label_idx, hands[1]))
 
     def __len__(self):

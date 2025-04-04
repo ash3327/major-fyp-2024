@@ -27,7 +27,7 @@ from scripts.hand_only_supervised.hand_supervised_dataset import LabelledHandDat
 from training.contrastive.augments import augment as augment_hand, augment_pair as augment_handpair
 from training.contrastive.augments import generate_random_rotation_object, generate_random_scaling_vector, apply_transform, normalize
 
-from training.contrastive.model import HandEncoder
+from training.contrastive.model import HandEncoder, HandEncoder_6DOF
 from training.contrastive.losses import info_nce_loss, supcon_loss
 from training.contrastive.evals import extract_embeddings, evaluate_knn
 
@@ -185,7 +185,7 @@ if __name__ == '__main__':
     dataloader_test = DataLoader(dataset_test, batch_size=batch_size, shuffle=False)
 
     # initialize model and optimizer
-    model = HandEncoder(input_size=21*3, embedding_size=embedding_dim).to(device)
+    model = HandEncoder_6DOF(embedding_size=embedding_dim).to(device)
 
     # load model from file
     if model_checkpoint_path:
@@ -203,6 +203,9 @@ if __name__ == '__main__':
     # initialize TensorBoard writer
     os.makedirs(train_path_root, exist_ok=True)
     writer = SummaryWriter(os.path.join(train_path_root,'logs'))
+
+    # Log model class name
+    writer.add_text('Model', f'Model class: {model.__class__.__name__}', 0)
 
     # model save paths
     os.makedirs(train_path_root, exist_ok=True)
@@ -222,6 +225,13 @@ if __name__ == '__main__':
         param_group['lr'] = initial_lr
 
     for epoch in range(start_epoch, start_epoch+num_epochs):
+        # =================== Profiling ===================
+        # import cProfile
+        # import pstats
+        # # Profile using cProfile
+        # profiler = cProfile.Profile()
+        # profiler.enable()
+        # =================== Training ===================
         model.train()
         total_train_loss = 0.0
         total_supcon_loss = 0.0
@@ -326,6 +336,15 @@ if __name__ == '__main__':
             writer.add_scalar('Accuracy/test', accuracy, epoch)
             writer.add_scalar('F1/test', f1, epoch)
             print(f"Test Accuracy: {accuracy:.4f}, Test F1: {f1:.4f}")
+
+        # == Profiling ==
+        profiler.disable()
+
+        # # Print results sorted by cumulative time
+        # stats = pstats.Stats(profiler)
+        # stats.sort_stats('cumulative')
+        # stats.print_stats(30)  # Show top 30 results
+        # exit(0)
 
     print(f"Training completed. Model checkpoints saved at {model_save_path_root}.")
     if model_checkpoint_path:

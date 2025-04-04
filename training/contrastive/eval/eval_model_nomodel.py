@@ -13,8 +13,8 @@ from scipy.spatial.distance import cdist
 import argparse
 
 from scripts.hand_only_supervised.hand_supervised_dataset import LabelledHandDataset
-from model import HandEncoder
-from evals import extract_embeddings
+from training.contrastive.evals import extract_embeddings, evaluate_knn
+from training.contrastive.model import HandEncoder
 
 def save_plot(fig, output_dir, filename):
     """Helper function to save a plot to a file."""
@@ -144,21 +144,30 @@ if __name__ == '__main__':
     dataset_name = args.dataset
     split = args.split
 
-    model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250402191732/checkpoints/best.pth'
-    model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250402210020/checkpoints/best.pth'
-    model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250403104741/checkpoints/best.pth'
+    # model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250402191732/checkpoints/best.pth'
+    # model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250402210020/checkpoints/best.pth'
+    # model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250403104741/checkpoints/best.pth'
 
-    ckpt_id = model_checkpoint_path.rsplit("/checkpoints/", 1)[0].rsplit('/', 1)[1]
+    # ckpt_id = model_checkpoint_path.rsplit("/checkpoints/", 1)[0].rsplit('/', 1)[1]
     batch_size = 256
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     dataset = LabelledHandDataset(dataset_name=dataset_name, split=split)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
-    model = HandEncoder().to(device)
-    if os.path.exists(model_checkpoint_path):
-        model.load_state_dict(torch.load(model_checkpoint_path, map_location=device))
-        print(f"Model loaded from {model_checkpoint_path}")
-    else:
-        raise FileNotFoundError(f"Model checkpoint not found at {model_checkpoint_path}")
+    # model = HandEncoder().to(device)
+    # if os.path.exists(model_checkpoint_path):
+    #     model.load_state_dict(torch.load(model_checkpoint_path, map_location=device))
+    #     print(f"Model loaded from {model_checkpoint_path}")
+    # else:
+    #     raise FileNotFoundError(f"Model checkpoint not found at {model_checkpoint_path}")
+    class DoNothing:
+        def eval(self):
+            pass
+        def forward(self, x):
+            return x
+        def __call__(self, x):
+            return x.view(x.shape[0],-1)
+
+    model = DoNothing()
     embeddings, labels = extract_embeddings(model, dataloader, device)
     embeddings = embeddings.cpu().numpy()
     labels = labels.cpu().numpy()

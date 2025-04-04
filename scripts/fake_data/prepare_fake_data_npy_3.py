@@ -129,6 +129,7 @@ def generate_one_gesture_group(n_augmentations=N_AUGMENTATIONS_PER_GESTURE, vpow
         
         joints_aug = output_aug.joints.detach().cpu().numpy().squeeze()[mmap]
         joints_aug = joints_aug[:, [1, 0, 2]] - joints_aug[0:1, [1, 0, 2]]
+        joints_aug[1:3] = (joints_aug[0:2]+joints_aug[2:4]).copy()/2
         joints_aug *= SCALE_FACTOR
         gesture_variants[i] = joints_aug
     
