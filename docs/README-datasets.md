@@ -54,6 +54,8 @@
     * Word Error Rate (WER)
 
 #### Hand Gesture Datasets
+- **SHREC’21** | SHREC 2021 Gesture Benchmark [https://univr-vips.github.io/Shrec21/]
+    - Landmarks
 - **HANDS** | HANDS: an RGB-D dataset of static hand-gestures for human-robot interaction (2021) [https://data.mendeley.com/datasets/ndrczc35bt/1]
     - Paper: [https://doi.org/10.1016/j.dib.2021.106791]
     - RGB-D (depth) dataset, raw format

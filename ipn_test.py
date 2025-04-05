@@ -119,7 +119,7 @@ def load_sequence_features(video_name, start_frame, end_frame):
     return features[start_frame:end_frame]
 
 # Get a sample sequence from training set
-sample_seq = train_annot.iloc[0]
+sample_seq = train_annot.iloc[17]
 features = load_sequence_features(sample_seq['video_name'], 
                                 sample_seq['start_frame'], 
                                 sample_seq['end_frame'])
@@ -142,12 +142,17 @@ features = load_sequence_features(sample_seq['video_name'],
 #     plt.tight_layout()
 #     plt.show()
 # print(np.all(features == 0, axis=1))
+empty_frames = []
+
 for i, frame in enumerate(features):
     hands = frame[3]['hands']
     if np.all(hands == 0):
-        print(f"Frame {i}: Hands are empty.")
-    else:
-        print(f"Frame {i}: Hands are not empty.")
+        empty_frames.append(i)
+
+print()
+print(f"File: {sample_seq['video_name']}")
+print(f"Number of empty frames: {len(empty_frames)}")
+print(f"Empty frames: {empty_frames}")
 
 def animate_sequence(features, sample_seq):
     """Create an interactive animation of hand poses."""

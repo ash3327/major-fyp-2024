@@ -221,7 +221,7 @@ def main1():
         num_samples=1,
         npy_file='data/kpts/fake/augmented_gesture_groups_32.npy'
     )
-    dataset = LabelledHandDataset(dataset_name='lexset', split='test')
+    # dataset = LabelledHandDataset(dataset_name='lexset', split='test')
     dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
     if isinstance(dataset, LabelledHandDataset):
         _, joints_base = next(iter(dataloader))

@@ -1,23 +1,15 @@
-import torch
-import torch.nn.functional as F
+import os
+import sys
 import math
 import numpy as np
-import sys
-import os
+import torch
+import torch.nn.functional as F
 from scipy.spatial.transform import Rotation
 
-# Define hand topology
-fingers = np.array(
-    [
-        [0, 1,  2,  3,  4 ],    # Thumb
-        [0, 5,  6,  7,  8 ],    # Index
-        [0, 9,  10, 11, 12],    # Middle
-        [0, 13, 14, 15, 16],    # Ring
-        [0, 17, 18, 19, 20]     # Pinky
-    ]
-)
-wrist_face = [0, 5, 9, 13, 17]  # Palm face
-palm_nodes = {0,1,5,9,13,17}
+sys.path.append('.')
+
+# hand topology
+from training.contrastive.topology import fingers, wrist_face, palm_nodes
 
 def compute_face_normal_batch(joints, nodes):
     """Compute normal vector for a batch of faces."""
@@ -104,9 +96,12 @@ def extract_orientations(joints, batched=False):
                 normal_dot_to_wrist = np.sum(normal_batch * direction_to_wrist_batch, axis=-1)
                 normal_batch[normal_dot_to_wrist < 0] *= -1
 
-            R_batch = get_rotation_matrix_batch(direction_batch, normal_batch)
+            R_batch = get_rotation_matrix_batch(direction_batch, normal_batch) # [B, 3, 3]
             try:
-                orientations_batch[:, base_node] = Rotation.from_matrix(R_batch).as_quat()
+                null_entries = np.any(np.all(R_batch == 0, axis=2), axis=1)
+                R_batch[null_entries] = np.eye(3)[np.newaxis]
+                orientations_batch[:, base_node] = Rotation.from_matrix(R_batch).as_quat() # [B, 4]
+                orientations_batch[null_entries] = np.zeros((1,4)) # [B, 4]
             except np.linalg.LinAlgError as e:
                 print(joints_np)
                 raise ValueError(f"Invalid rotation matrix for node {base_node}: {e}")
@@ -128,25 +123,19 @@ def extract_orientations(joints, batched=False):
     else:
         return torch.from_numpy(relative_orientations_batch).float()
 
-def get_6dof(joints, batched=True):
+def get_6dof(joints:torch.Tensor, batched=True):
     """
     Get 6D representation of hand joints.
     Input: joints [B, 21, 3] or [21, 3] as numpy array or torch tensor
     Output: 6D representation [B, 21, 6] or [21, 6] as torch tensor
     """
-    if isinstance(joints, torch.Tensor):
-        joints_np = joints.cpu().numpy()
-    else:
-        joints_np = joints
-
-    orientations = extract_orientations(joints, batched=batched)
-
+    orientations = extract_orientations(joints, batched=batched).to(joints.device)
     if orientations.ndim == 3:
-        return torch.cat([torch.from_numpy(joints_np).float(), orientations[:, :, :3]], dim=-1)
+        return torch.cat([joints, orientations[:, :, :3]], dim=-1)
     else:
-        return torch.cat([torch.from_numpy(joints_np).float(), orientations[:, :3]], dim=-1)
+        return torch.cat([joints, orientations[:, :3]], dim=-1)
 
-def get_3dof(joints, batched=True):
+def get_3dof(joints:torch.Tensor, batched=True):
     feats = extract_orientations(joints, batched=batched)
     if feats.ndim == 3:
         return feats[:, :, :3]

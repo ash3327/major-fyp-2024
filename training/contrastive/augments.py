@@ -61,24 +61,33 @@ def augment_pair(joints_base, joints_aug, scale_range=(0, 5), max_angle=np.pi*2)
     
     return rotated_base, rotated_aug
 
-def generate_random_rotation_object(max_angle=np.pi):
+def generate_random_rotation_object(batch_size=None, max_angle=np.pi):
     """Generates a random scipy Rotation object with a maximum rotation angle."""    
-    axis = np.random.randn(3)  # Random axis
-    axis /= np.linalg.norm(axis)  # Normalize to unit vector
+    _bs = batch_size if batch_size is not None else 1
+    axes = np.random.randn(_bs, 3)  # Random axis
+    axes /= np.linalg.norm(axes, axis=1, keepdims=True)  # Normalize to unit vector
     
-    angle = np.random.uniform(-max_angle, max_angle)  # Random angle within the range
-    quat = np.concatenate([np.sin(angle / 2) * axis, [np.cos(angle / 2)]])  # Quaternion representation
+    angle = np.random.uniform(-max_angle, max_angle, size=(_bs,))  # Random angle within the range # [B]
+    quats = np.concatenate([
+        np.sin(angle / 2)[:, np.newaxis] * axes, # [B, 1] x [B, 3]
+        np.cos(angle / 2)[:, np.newaxis] # [B, 1]
+    ], axis=1)  # Quaternion representation [B, 4]
     
-    return R.from_quat(quat)
+    if batch_size is None:
+        quats = quats[0]
+    return R.from_quat(quats)
 
-def generate_random_scaling_vector(scale_range=(0, 2), n_dims=3):
+def generate_random_scaling_vector(batch_size=None, scale_range=(0, 2), n_dims=3):
     """Generates a random scaling vector."""
-    bin = np.random.choice([0, 1], size=n_dims)
+    _bs = batch_size if batch_size is not None else 1
+    bin = np.random.choice([0, 1], size=(_bs, n_dims))
     scaling_vector = np.where(
         bin == 0,
-        np.random.uniform(low=scale_range[0], high=1, size=n_dims),
-        np.random.uniform(low=1, high=scale_range[1], size=n_dims)
-    )
+        np.random.uniform(low=scale_range[0], high=1, size=(_bs, n_dims)),
+        np.random.uniform(low=1, high=scale_range[1], size=(_bs, n_dims))
+    ) # [B, 3]
+    if batch_size is None:
+        return scaling_vector[0]
     return scaling_vector
 
 def apply_transform(joints, rotation_obj, scaling_vector):
@@ -110,3 +119,13 @@ def normalize(joints):
     jmin, jmax = torch.min(joints, dim=0).values, torch.max(joints, dim=0).values
     joints = (joints-jmin)/(jmax-jmin)*2-1
     return joints
+
+def vectorized_apply_transform(poses_batch, rotation, scaling):
+    """Vectorized transformation for a batch of poses."""
+    # poses_batch: [B, 21, 3]
+    # Apply scaling
+    scaled = poses_batch * scaling.view(1, 1, 3)
+    scaled = scaled.view(-1, 3)
+    # Apply rotation
+    rotated = torch.from_numpy(rotation.apply(scaled.numpy()))
+    return rotated.view(-1, 21, 3)

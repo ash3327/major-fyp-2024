@@ -26,9 +26,10 @@ from scripts.hand_only_supervised.hand_supervised_dataset import LabelledHandDat
 from training.contrastive.augments import augment as augment_hand, augment_pair as augment_handpair
 from training.contrastive.augments import generate_random_rotation_object, generate_random_scaling_vector, \
     apply_transform, normalize, vectorized_apply_transform
+from training.contrastive import topology
 
 from training.contrastive.model import HandEncoder, HandEncoder_6DOF
-from training.contrastive.model_gat import HandEncoderGAT3dof
+from training.contrastive.model_gat import HandEncoderGAT3dof, HandEncoderGAT6dof, graph_transform
 from training.contrastive.losses import info_nce_loss, supcon_loss
 from training.contrastive.evals import extract_embeddings, evaluate_knn
 
@@ -82,8 +83,12 @@ patience = 500
 do_sup = False
 lr_jump_epoch = 500
 
+# GAT 202504051632
+eval_interval = 1
+
 # device configuration
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+pre_transform = graph_transform
 
 def structured_collate_fn_sup(batch_list):
     """Optimized collate function for supervised data."""
@@ -108,6 +113,8 @@ def structured_collate_fn_sup(batch_list):
     for j, (rotation_j, scaling_j) in enumerate(zip(rotations, scalings)):
         output_batch[:, j] = vectorized_apply_transform(joints_batch, rotation_j, scaling_j)
     
+    # shape: [B, grid_size, 21, 3]
+    output_batch = output_batch.view(-1, 21, 3)  # Flatten grid size
     return output_batch
 
 def structured_collate_fn(batch_list):
@@ -135,6 +142,8 @@ def structured_collate_fn(batch_list):
     for j, (rotation_j, scaling_j) in enumerate(zip(rotations, scalings)):
         output_batch[:, j] = vectorized_apply_transform(poses_batch, rotation_j, scaling_j)
     
+    # shape: [B, grid_size, 21, 3]
+    output_batch = output_batch.view(-1, 21, 3)  # Flatten grid size
     return output_batch
 
 # InfoNCE Helper Function
@@ -182,10 +191,14 @@ if __name__ == '__main__':
 
     # test dataset
     dataset_test = LabelledHandDataset(dataset_name='lexset', split='test')
-    dataloader_test = DataLoader(dataset_test, batch_size=batch_size, shuffle=False)
+    dataloader_test = DataLoader(dataset_test, 
+                                 batch_size=batch_size, 
+                                 shuffle=False)
 
     # initialize model and optimizer
-    model = HandEncoder_6DOF(embedding_size=embedding_dim).to(device)
+    # model = HandEncoder_6DOF(embedding_size=embedding_dim).to(device)
+    model = HandEncoderGAT3dof(embedding_size=embedding_dim).to(device)
+    # model = HandEncoderGAT6dof(embedding_size=embedding_dim, fn=pre_transform).to(device)
 
     # load model from file
     if model_checkpoint_path:
@@ -249,9 +262,9 @@ if __name__ == '__main__':
             # Treat supervised data as unsupervised
             try:
                 structured_batch_sup = next(sup_iter)
-                h, w = structured_batch_sup.shape[0], structured_batch_sup.shape[1]
+                h, w = batch_size, grid_size
                 n_samples = h * w
-                flat_input = structured_batch_sup.view(n_samples, -1)
+                flat_input = structured_batch_sup#.view(n_samples, -1)
                 embeddings = model(flat_input)
                 embeddings_norm = F.normalize(embeddings, p=2, dim=1)
                 similarity_matrix = torch.matmul(embeddings_norm, embeddings_norm.T)
@@ -266,9 +279,9 @@ if __name__ == '__main__':
             # unsupervised batch (if available)
             try:
                 structured_batch = next(unsup_iter)
-                h, w = structured_batch.shape[0], structured_batch.shape[1]
+                h, w = batch_size, grid_size
                 n_samples = h * w
-                flat_input = structured_batch.view(n_samples, -1)
+                flat_input = structured_batch#.view(n_samples, -1)
                 embeddings = model(flat_input)
                 embeddings_norm = F.normalize(embeddings, p=2, dim=1)
                 similarity_matrix = torch.matmul(embeddings_norm, embeddings_norm.T)

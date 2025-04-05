@@ -6,6 +6,7 @@ Monitor with TensorBoard:
     tensorboard --logdir runs/hand_contrastive_learning_structured/v1
 """
 
+# train_supcon_structured.py
 import sys
 sys.path.append('.')  # Ensure imports work from the project root
 
@@ -19,16 +20,15 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 import torch.nn.functional as F
 from datetime import datetime
-from copy import deepcopy
 
 from scripts.fake_data.contrastive_data_dataset import HandPoseContrastiveDataset
 from scripts.hand_only_supervised.hand_supervised_dataset import LabelledHandDataset
 from training.contrastive.augments import augment as augment_hand, augment_pair as augment_handpair
-from training.contrastive.augments import generate_random_rotation_object, generate_random_scaling_vector, \
-    apply_transform, normalize, vectorized_apply_transform
+from training.contrastive.augments import generate_random_rotation_object, generate_random_scaling_vector, apply_transform, vectorized_apply_transform  # Make sure path is correct
 
 from training.contrastive.model import HandEncoder, HandEncoder_6DOF
-from training.contrastive.model_gat import HandEncoderGAT3dof
+from training.contrastive.model_gat import HandEncoderGAT3dof, HandEncoderGAT6dof, graph_transform
+from training.contrastive.model_gcn import HandEncoderGCN3dof, HandEncoderGCN6dof
 from training.contrastive.losses import info_nce_loss, supcon_loss
 from training.contrastive.evals import extract_embeddings, evaluate_knn
 
@@ -79,36 +79,20 @@ initial_lr = 0.01
 learning_rate = 1e-3
 num_epochs = 5000
 patience = 500
-do_sup = False
+do_sup = True
+do_unsup = False
 lr_jump_epoch = 500
+
+# GAT 202504051632
+initial_lr = 1e-3#1e-4
+eval_interval = 1
+do_sup = True
+do_unsup = False
+eval_interval = 2
+check_profile = False
 
 # device configuration
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-def structured_collate_fn_sup(batch_list):
-    """Optimized collate function for supervised data."""
-    # Extract joints and convert to tensor in one go
-    joints_batch = torch.stack([item[1] for item in batch_list])  # [B, 21, 3]
-    B = len(batch_list)
-    
-    # Pre-compute transformations
-    batch_rotation = generate_random_rotation_object(max_angle=np.pi)
-    rotations = [batch_rotation * generate_random_rotation_object(max_angle=np.pi/6) 
-                 for _ in range(grid_size)]
-    scalings = torch.stack([torch.from_numpy(generate_random_scaling_vector()) 
-                          for _ in range(grid_size)])  # [grid_size, 3]
-    
-    # Normalize all poses at once
-    joints_batch = F.normalize(joints_batch.view(B, -1), dim=1).view(B, 21, 3)
-    
-    # Pre-allocate output tensor on device
-    output_batch = torch.zeros(B, grid_size, 21, 3, device=device)
-    
-    # Apply transformations in parallel for each grid position
-    for j, (rotation_j, scaling_j) in enumerate(zip(rotations, scalings)):
-        output_batch[:, j] = vectorized_apply_transform(joints_batch, rotation_j, scaling_j)
-    
-    return output_batch
 
 def structured_collate_fn(batch_list):
     """Optimized collate function for unsupervised data."""
@@ -135,6 +119,8 @@ def structured_collate_fn(batch_list):
     for j, (rotation_j, scaling_j) in enumerate(zip(rotations, scalings)):
         output_batch[:, j] = vectorized_apply_transform(poses_batch, rotation_j, scaling_j)
     
+    # shape: [B, grid_size, 21, 3]
+    output_batch = output_batch.view(-1, 21, 3)  # Flatten grid size
     return output_batch
 
 # InfoNCE Helper Function
@@ -153,20 +139,18 @@ def info_nce_loss_from_matrix(similarity_matrix, positive_mask, temperature):
     return loss
 
 if __name__ == '__main__':
-    aug_pair = lambda *x: augment_handpair(*x, max_angle=np.pi*2)
-    aug = lambda x: augment_hand(x, max_angle=np.pi/6)
+    large_angle = np.pi*2
+    small_angle = np.pi/6
+    large_angle = 0
+    small_angle = 0
+    extra_text = "No augmentation"
+    aug_pair = lambda *x: augment_handpair(*x, max_angle=large_angle)
+    aug = lambda x: augment_hand(x, max_angle=small_angle)
 
     # initialize datasets and dataloaders
     # supervised dataset
     dataset_sup = LabelledHandDataset(dataset_name='lexset', split='train', augment=aug)
-    dataloader_sup = DataLoader(
-        dataset_sup, 
-        batch_size=batch_size,  # Use grid_size instead of batch_size
-        shuffle=True,
-        collate_fn=structured_collate_fn_sup,
-        drop_last=True
-    )
-    dataloader_sup_eval = DataLoader(dataset_sup, batch_size=batch_size, shuffle=True, 
+    dataloader_sup = DataLoader(dataset_sup, batch_size=batch_size, shuffle=True, 
                                     drop_last=True)
 
     # unsupervised dataset with structured augmentation
@@ -185,7 +169,9 @@ if __name__ == '__main__':
     dataloader_test = DataLoader(dataset_test, batch_size=batch_size, shuffle=False)
 
     # initialize model and optimizer
-    model = HandEncoder_6DOF(embedding_size=embedding_dim).to(device)
+    model = HandEncoder(embedding_size=embedding_dim).to(device)
+    # model = HandEncoderGAT3dof(embedding_size=embedding_dim).to(device)
+    # model = HandEncoderGCN3dof(embedding_size=embedding_dim).to(device)
 
     # load model from file
     if model_checkpoint_path:
@@ -203,9 +189,7 @@ if __name__ == '__main__':
     # initialize TensorBoard writer
     os.makedirs(train_path_root, exist_ok=True)
     writer = SummaryWriter(os.path.join(train_path_root,'logs'))
-
-    # Log model class name
-    writer.add_text('Model', f'Model class: {model.__class__.__name__}', 0)
+    writer.add_text('Model', f'Model class: {model.__class__.__name__} (train_supcon_gat) [dosup={do_sup}, dounsup={do_unsup}] {extra_text}', 0)
 
     # model save paths
     os.makedirs(train_path_root, exist_ok=True)
@@ -226,11 +210,12 @@ if __name__ == '__main__':
 
     for epoch in range(start_epoch, start_epoch+num_epochs):
         # =================== Profiling ===================
-        # import cProfile
-        # import pstats
-        # # Profile using cProfile
-        # profiler = cProfile.Profile()
-        # profiler.enable()
+        if check_profile:
+            import cProfile
+            import pstats
+            # Profile using cProfile
+            profiler = cProfile.Profile()
+            profiler.enable()
         # =================== Training ===================
         model.train()
         total_train_loss = 0.0
@@ -239,49 +224,50 @@ if __name__ == '__main__':
         sup_iter = iter(dataloader_sup)  # Iterator for labelled data
         unsup_iter = iter(dataloader_unsup)  # Iterator for unlabelled data
 
-        dataset_size = max(len(dataloader_sup), len(dataloader_unsup))
+        dataset_size = 0
+        if do_sup:
+            dataset_size = len(dataloader_sup)
+        if do_unsup:
+            dataset_size = max(dataset_size, len(dataloader_unsup))
         for i in tqdm(range(dataset_size),
                         desc=f"Epoch {epoch+1}/{num_epochs} - Training"):
             loss = 0.0
-            loss_sup = 0.0
+            loss_supcon = 0.0
             loss_unsup = 0.0
-            
-            # Treat supervised data as unsupervised
-            try:
-                structured_batch_sup = next(sup_iter)
-                h, w = structured_batch_sup.shape[0], structured_batch_sup.shape[1]
-                n_samples = h * w
-                flat_input = structured_batch_sup.view(n_samples, -1)
-                embeddings = model(flat_input)
-                embeddings_norm = F.normalize(embeddings, p=2, dim=1)
-                similarity_matrix = torch.matmul(embeddings_norm, embeddings_norm.T)
-                unsupervised_labels = torch.arange(h).repeat_interleave(w).to(device)
-                mask = torch.eq(unsupervised_labels.unsqueeze(0), unsupervised_labels.unsqueeze(1))
-                mask = mask.fill_diagonal_(False)
-                loss_sup = info_nce_loss_from_matrix(similarity_matrix, mask, temperature)
-                total_supcon_loss += loss_sup.item()
-            except StopIteration:
-                loss_sup = 0.0
+
+            # supervised batch (if available)
+            if do_sup:
+                try:
+                    labels, joints = next(sup_iter)
+                    joints, labels = joints.to(device), labels.to(device)
+                    features = model(joints)  # [B, D]
+                    features = features.unsqueeze(1)  # [B, 1, D]
+                    loss_supcon = supcon_loss(features, labels, device=device)
+                    total_supcon_loss += loss_supcon.item()
+                    loss = loss_supcon
+                except StopIteration:
+                    loss = 0.0
 
             # unsupervised batch (if available)
-            try:
-                structured_batch = next(unsup_iter)
-                h, w = structured_batch.shape[0], structured_batch.shape[1]
-                n_samples = h * w
-                flat_input = structured_batch.view(n_samples, -1)
-                embeddings = model(flat_input)
-                embeddings_norm = F.normalize(embeddings, p=2, dim=1)
-                similarity_matrix = torch.matmul(embeddings_norm, embeddings_norm.T)
-                unsupervised_labels = torch.arange(h).repeat_interleave(w).to(device)
-                mask = torch.eq(unsupervised_labels.unsqueeze(0), unsupervised_labels.unsqueeze(1))
-                mask = mask.fill_diagonal_(False)
-                loss_unsup = info_nce_loss_from_matrix(similarity_matrix, mask, temperature)
-                total_unsup_loss += loss_unsup.item()
-                loss = loss + loss_unsup if loss_sup != 0.0 else loss_unsup
-            except StopIteration:
-                loss_unsup = 0.0
-                if loss_sup == 0.0:
-                    loss = loss_unsup
+            if do_unsup:
+                try:
+                    structured_batch = next(unsup_iter)
+                    h, w = batch_size, grid_size
+                    n_samples = h * w
+                    flat_input = structured_batch.view(n_samples, -1)
+                    embeddings = model(flat_input)
+                    embeddings_norm = F.normalize(embeddings, p=2, dim=1)
+                    similarity_matrix = torch.matmul(embeddings_norm, embeddings_norm.T)
+                    unsupervised_labels = torch.arange(h).repeat_interleave(w).to(device)
+                    mask = torch.eq(unsupervised_labels.unsqueeze(0), unsupervised_labels.unsqueeze(1))
+                    mask = mask.fill_diagonal_(False)
+                    loss_unsup = info_nce_loss_from_matrix(similarity_matrix, mask, temperature)
+                    total_unsup_loss += loss_unsup.item()
+                    loss = loss + loss_unsup if loss_supcon != 0.0 else loss_unsup
+                except StopIteration:
+                    loss_unsup = 0.0
+                    if loss_supcon == 0.0:
+                        loss = loss_unsup
 
             if loss == 0.0:
                 continue
@@ -327,7 +313,7 @@ if __name__ == '__main__':
             print(f"Evaluating on test set at epoch {epoch+1} using k-NN (k={k_neighbors})")
 
             # extract embeddings
-            train_embeddings, train_labels = extract_embeddings(model, dataloader_sup_eval, device)
+            train_embeddings, train_labels = extract_embeddings(model, dataloader_sup, device)
             test_embeddings, test_labels = extract_embeddings(model, dataloader_test, device)
 
             # perform k-NN evaluation
@@ -339,13 +325,14 @@ if __name__ == '__main__':
             print(f"Test Accuracy: {accuracy:.4f}, Test F1: {f1:.4f}")
 
         # == Profiling ==
-        # profiler.disable()
+        if check_profile:
+            profiler.disable()
 
-        # # Print results sorted by cumulative time
-        # stats = pstats.Stats(profiler)
-        # stats.sort_stats('cumulative')
-        # stats.print_stats(30)  # Show top 30 results
-        # exit(0)
+            # Print results sorted by cumulative time
+            stats = pstats.Stats(profiler)
+            stats.sort_stats('cumulative')
+            stats.print_stats(30)  # Show top 30 results
+            exit(0)
 
     print(f"Training completed. Model checkpoints saved at {model_save_path_root}.")
     if model_checkpoint_path:

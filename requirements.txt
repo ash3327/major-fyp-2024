@@ -24,6 +24,7 @@ torchaudio
 
     # efficientnet
     efficientnet-pytorch
+    torch_geometric
 
 # tensorflow (Compatible on Windows)
 tensorflow==2.10
