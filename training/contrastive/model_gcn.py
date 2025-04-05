@@ -35,7 +35,8 @@ class HandEncoderGCN3dof(nn.Module):
             leaky_slope=0.01,
             pooling_method: str = 'mean',
             edge_index=None,
-            fn=graph_transform
+            fn=graph_transform,
+            do_pool=False
         ):
         """
         edge_index: [2, num edges] storing the graph connectivity
@@ -50,6 +51,8 @@ class HandEncoderGCN3dof(nn.Module):
         # --- params ---
         self.output_graph_features = False
         self.fn = fn
+        self.do_pool = do_pool
+        self.num_landmarks = 21
 
         self.node_in_channels = node_in_channels
         self.hidden_channels = hidden_channels
@@ -90,6 +93,8 @@ class HandEncoderGCN3dof(nn.Module):
 
         # MLP head
         mlp_in_dim = hidden_channels
+        if not self.do_pool:
+            mlp_in_dim *= self.num_landmarks   
         self.mlp_head = nn.Sequential(
             nn.Linear(mlp_in_dim, hidden_channels),
             nn.BatchNorm1d(hidden_channels),
@@ -123,7 +128,10 @@ class HandEncoderGCN3dof(nn.Module):
 
         # Pooling
         features = x
-        pooled_x = self.pool(x, batch=data.batch) # this would make it back
+        if self.do_pool:
+            pooled_x = self.pool(x, batch=data.batch) # this would make it back [B*G*N,D] -> [B*G,D]
+        else:
+            pooled_x = x.view(-1,self.hidden_dim) # [B*G*N,D] -> [B*G,N*D]
 
         # MLP head
         embedding = self.mlp_head(pooled_x) # [B*G, D]

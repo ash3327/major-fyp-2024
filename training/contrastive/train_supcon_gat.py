@@ -85,11 +85,13 @@ lr_jump_epoch = 500
 
 # GAT 202504051632
 initial_lr = 1e-3#1e-4
+learning_rate = 1e-4
 eval_interval = 1
 do_sup = True
 do_unsup = False
 eval_interval = 2
 check_profile = False
+do_pool = False
 
 # device configuration
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -143,7 +145,7 @@ if __name__ == '__main__':
     small_angle = np.pi/6
     large_angle = 0
     small_angle = 0
-    extra_text = "No augmentation"
+    extra_text = "No augmentation, No pool, 4->3 layers"
     aug_pair = lambda *x: augment_handpair(*x, max_angle=large_angle)
     aug = lambda x: augment_hand(x, max_angle=small_angle)
 
@@ -169,8 +171,8 @@ if __name__ == '__main__':
     dataloader_test = DataLoader(dataset_test, batch_size=batch_size, shuffle=False)
 
     # initialize model and optimizer
-    model = HandEncoder(embedding_size=embedding_dim).to(device)
-    # model = HandEncoderGAT3dof(embedding_size=embedding_dim).to(device)
+    # model = HandEncoder(embedding_size=embedding_dim).to(device)
+    model = HandEncoderGAT3dof(embedding_size=embedding_dim, do_pool=do_pool).to(device)
     # model = HandEncoderGCN3dof(embedding_size=embedding_dim).to(device)
 
     # load model from file

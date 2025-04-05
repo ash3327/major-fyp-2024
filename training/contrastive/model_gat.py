@@ -28,14 +28,15 @@ class HandEncoderGAT3dof(nn.Module):
             self, 
             node_in_channels=3, 
             hidden_channels=64, 
-            num_layers=4,
+            num_layers=3,
             num_heads=4,
             embedding_size=128, 
             dropout_rate=0.3, 
             leaky_slope=0.01,
             pooling_method: str = 'mean',
             edge_index=None,
-            fn=graph_transform
+            fn=graph_transform,
+            do_pool=False
         ):
         """
         edge_index: [2, num edges] storing the graph connectivity
@@ -50,6 +51,8 @@ class HandEncoderGAT3dof(nn.Module):
         # --- params ---
         self.output_graph_features = False
         self.fn = fn
+        self.do_pool = do_pool
+        self.num_landmarks = 21
 
         self.node_in_channels = node_in_channels
         self.hidden_channels = hidden_channels
@@ -96,6 +99,9 @@ class HandEncoderGAT3dof(nn.Module):
 
         # MLP head
         mlp_in_dim = hidden_channels * num_heads
+        if not self.do_pool:
+            mlp_in_dim *= self.num_landmarks       
+        self.hidden_dim = mlp_in_dim      
         self.mlp_head = nn.Sequential(
             nn.Linear(mlp_in_dim, hidden_channels),
             nn.BatchNorm1d(hidden_channels),
@@ -117,7 +123,7 @@ class HandEncoderGAT3dof(nn.Module):
         if self.fn:
             data = data.view(-1, 21, 3)
             data = self.fn(data)
-        x = data.x.view(-1,self.node_in_channels) # Reshape to [B*G,N,3] -> [B*N, 3]
+        x = data.x.view(-1,self.node_in_channels) # Reshape to [B*G,N,3] -> [B*G*N, 3]
         edge_index = torch.tensor(data.edge_index).to(x.device) 
         edge_index = edge_index.view(-1,2).T # [B*G,E,2] -> [B*G*E,2] -> [2, B*G*E]
         # print(data.x.shape,x.shape,len(edge_index),edge_index.shape)
@@ -129,7 +135,10 @@ class HandEncoderGAT3dof(nn.Module):
 
         # Pooling
         features = x
-        pooled_x = self.pool(x, batch=data.batch) # this would make it back
+        if self.do_pool:
+            pooled_x = self.pool(x, batch=data.batch) # this would make it back [B*G*N,D] -> [B*G,D]
+        else:
+            pooled_x = x.view(-1,self.hidden_dim) # [B*G*N,D] -> [B*G,N*D]
 
         # MLP head
         embedding = self.mlp_head(pooled_x) # [B*G, D]
