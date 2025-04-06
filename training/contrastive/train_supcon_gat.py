@@ -92,6 +92,7 @@ do_unsup = False
 eval_interval = 2
 check_profile = False
 do_pool = False
+num_it_per_epoch = num_samples_unsup = 80 * batch_size
 
 # device configuration
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -172,8 +173,8 @@ if __name__ == '__main__':
 
     # initialize model and optimizer
     # model = HandEncoder(embedding_size=embedding_dim).to(device)
-    model = HandEncoderGAT3dof(embedding_size=embedding_dim, do_pool=do_pool).to(device)
-    # model = HandEncoderGCN3dof(embedding_size=embedding_dim).to(device)
+    # model = HandEncoderGAT3dof(embedding_size=embedding_dim).to(device)
+    model = HandEncoderGCN6dof(embedding_size=embedding_dim).to(device)
 
     # load model from file
     if model_checkpoint_path:

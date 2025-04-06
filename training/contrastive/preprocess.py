@@ -55,7 +55,7 @@ def extract_orientations(joints, batched=False):
         raise ValueError(f"Joints should be of shape [B, 21, 3] or [21, 3] instead of {joints_np.shape}")
 
     batch_size = joints_np.shape[0]
-    orientations_batch = np.zeros((batch_size, 21, 4))
+    orientations_batch = np.zeros((batch_size, 21, 4)) # [B,21,4]
 
     # Compute wrist orientation for the batch
     wrist_normal_batch = compute_face_normal_batch(joints_np, wrist_face)
@@ -68,7 +68,10 @@ def extract_orientations(joints, batched=False):
 
     R_wrist_batch = get_rotation_matrix_batch(wrist_direction_batch, wrist_normal_batch)
     try:
-        orientations_batch[:, 0] = Rotation.from_matrix(R_wrist_batch).as_quat()
+        null_entries = np.any(np.all(R_wrist_batch == 0, axis=2), axis=1) # [B]
+        R_wrist_batch[null_entries] = np.eye(3)[np.newaxis]
+        orientations_batch[:, 0] = Rotation.from_matrix(R_wrist_batch).as_quat() # [B, 4]
+        orientations_batch[null_entries,0,:] = np.zeros((1,4)) # [B, 4]
     except np.linalg.LinAlgError as e:
         print(joints_np)
         raise ValueError(f"Invalid rotation matrix for wrist orientation: {e}")
@@ -101,7 +104,7 @@ def extract_orientations(joints, batched=False):
                 null_entries = np.any(np.all(R_batch == 0, axis=2), axis=1)
                 R_batch[null_entries] = np.eye(3)[np.newaxis]
                 orientations_batch[:, base_node] = Rotation.from_matrix(R_batch).as_quat() # [B, 4]
-                orientations_batch[null_entries] = np.zeros((1,4)) # [B, 4]
+                orientations_batch[null_entries,base_node,:] = np.zeros((1,4)) # [B, 4]
             except np.linalg.LinAlgError as e:
                 print(joints_np)
                 raise ValueError(f"Invalid rotation matrix for node {base_node}: {e}")

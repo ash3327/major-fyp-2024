@@ -95,6 +95,7 @@ class HandEncoderGCN3dof(nn.Module):
         mlp_in_dim = hidden_channels
         if not self.do_pool:
             mlp_in_dim *= self.num_landmarks   
+        self.hidden_dim = mlp_in_dim      
         self.mlp_head = nn.Sequential(
             nn.Linear(mlp_in_dim, hidden_channels),
             nn.BatchNorm1d(hidden_channels),
@@ -117,7 +118,7 @@ class HandEncoderGCN3dof(nn.Module):
             data = data.view(-1, 21, 3)
             data = self.fn(data)
         x = data.x.view(-1,self.node_in_channels) # Reshape to [B*G,N,3] -> [B*N, 3]
-        edge_index = torch.tensor(data.edge_index).to(x.device) 
+        edge_index = torch.tensor(np.array(data.edge_index)).to(x.device) 
         edge_index = edge_index.view(-1,2).T # [B*G,E,2] -> [B*G*E,2] -> [2, B*G*E]
         # print(data.x.shape,x.shape,len(edge_index),edge_index.shape)
         # Pass through GAT layers

@@ -15,6 +15,9 @@ import argparse
 from scripts.hand_only_supervised.hand_supervised_dataset import LabelledHandDataset
 from training.contrastive.evals import extract_embeddings, evaluate_knn
 from training.contrastive.model import HandEncoder
+from training.contrastive.model import HandEncoder, HandEncoder_6DOF
+from training.contrastive.model_gat import HandEncoderGAT3dof, HandEncoderGAT6dof, graph_transform
+from training.contrastive.model_gcn import HandEncoderGCN3dof, HandEncoderGCN6dof
 
 def save_plot(fig, output_dir, filename):
     """Helper function to save a plot to a file."""
@@ -47,7 +50,7 @@ def _visualize_2d_embeddings(embeddings_2d, labels, label_to_idx, title, output_
     ax.set_title(title)
     ax.set_xlabel('Component 1')
     ax.set_ylabel('Component 2')
-    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    # ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
     plt.tight_layout()
     ax.grid(True)
     save_plot(fig, output_dir, filename)
@@ -82,13 +85,22 @@ def analyze_clusters(embeddings, labels, label_to_idx, output_dir):
         cluster_embeddings = embeddings[mask]
         cluster_means[label] = np.mean(cluster_embeddings, axis=0)
         distances = cdist([cluster_means[label]], cluster_embeddings)[0]
-        cluster_sizes[label] = {
+        if len(cluster_embeddings) == 0:
+            cluster_sizes[label] = {
+            'count': 0,
+            'avg_distance': np.nan,
+            'std_distance': np.nan,
+            'min_distance': np.nan,
+            'max_distance': np.nan
+            }
+        else:
+            cluster_sizes[label] = {
             'count': len(cluster_embeddings),
-            'avg_distance': np.mean(distances),
-            'std_distance': np.std(distances),
-            'min_distance': np.min(distances),
-            'max_distance': np.max(distances)
-        }
+            'avg_distance': np.nanmean(distances),
+            'std_distance': np.nanstd(distances),
+            'min_distance': np.nanmin(distances),
+            'max_distance': np.nanmax(distances)
+            }
     labels_list = sorted(label_to_idx.keys())
     means_matrix = np.array([cluster_means[label] for label in labels_list])
     distances = cdist(means_matrix, means_matrix)
@@ -124,11 +136,12 @@ def plot_distance_heatmap(distances, labels_list, cluster_sizes, output_dir, use
     ax.set_xticklabels(labels_list, rotation=45, ha='right')
     ax.set_yticks(range(len(labels_list)))
     ax.set_yticklabels(labels_list)
-    for i in range(len(labels_list)):
-        for j in range(len(labels_list)):
-            ax.text(j, i, f'{distances_with_diag[i, j]:.2f}',
-                    ha='center', va='center',
-                    color='white' if distances_with_diag[i, j] > distances_with_diag.mean() else 'black')
+    if len(labels_list) < 20:
+        for i in range(len(labels_list)):
+            for j in range(len(labels_list)):
+                ax.text(j, i, f'{distances_with_diag[i, j]:.2f}',
+                        ha='center', va='center',
+                        color='white' if distances_with_diag[i, j] > distances_with_diag.mean() else 'black')
     ax.set_title(title)
     plt.tight_layout()
     save_plot(fig, output_dir, f"heatmap_{'max' if use_max else 'avg'}.png")
@@ -143,27 +156,78 @@ if __name__ == '__main__':
     # model_checkpoint_path = args.checkpoint
     dataset_name = args.dataset
     split = args.split
-
-    model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250402191732/checkpoints/best.pth'
-    model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250402210020/checkpoints/best.pth'
-    model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250403104741/checkpoints/best.pth'
-
-    ckpt_id = model_checkpoint_path.rsplit("/checkpoints/", 1)[0].rsplit('/', 1)[1]
-    batch_size = 256
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model_checkpoint_path = None
+
+    # === model ===
+    # model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250402191732/checkpoints/best.pth'
+    # model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250402210020/checkpoints/best.pth'
+    # model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250403104741/checkpoints/best.pth'
+    # model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250405195023/checkpoints/best.pth' # supcon, no aug, HandEncoder model.
+    # model = HandEncoder().to(device)
+
+    # model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250405224236/checkpoints/best.pth' # supcon, no aug, HandEncoderGCN3dof model.
+    # model = HandEncoderGCN3dof().to(device=device)
+
+    # model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250406000135/checkpoints/best.pth' # supcon, no aug, HandEncoderGCN3dof model.
+    # model = HandEncoderGCN6dof().to(device=device)
+    
+    # if os.path.exists(model_checkpoint_path):
+    #     model.load_state_dict(torch.load(model_checkpoint_path, map_location=device))
+    #     print(f"Model loaded from {model_checkpoint_path}")
+    # else:
+    #     raise FileNotFoundError(f"Model checkpoint not found at {model_checkpoint_path}")
+    
+
+
+    # == extra info ==
+    if model_checkpoint_path is not None:
+        ckpt_id = model_checkpoint_path.rsplit("/checkpoints/", 1)[0].rsplit('/', 1)[1]
+    batch_size = 256
     dataset = LabelledHandDataset(dataset_name=dataset_name, split=split)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
-    model = HandEncoder().to(device)
-    if os.path.exists(model_checkpoint_path):
-        model.load_state_dict(torch.load(model_checkpoint_path, map_location=device))
-        print(f"Model loaded from {model_checkpoint_path}")
-    else:
-        raise FileNotFoundError(f"Model checkpoint not found at {model_checkpoint_path}")
+    
+    # from training.contrastive.preprocess import get_3dof
+
+    # class Do3DoF:
+    #     def eval(self):
+    #         pass
+    #     def forward(self, x):
+    #         return x.view(x.shape[0],-1)
+    #     def __call__(self, x):
+    #         out = get_3dof(x)
+    #         return out.reshape(out.shape[0], -1)
+    # model = Do3DoF()
+    # ckpt_id = '3dof'
+
+    # from training.contrastive.preprocess import get_6dof
+
+    # class Do6DoF:
+    #     def eval(self):
+    #         pass
+    #     def forward(self, x):
+    #         return x.view(x.shape[0],-1)
+    #     def __call__(self, x):
+    #         out = get_6dof(x)
+    #         return out.reshape(out.shape[0], -1)
+    # model = Do6DoF()
+    # ckpt_id = '6dof'
+
+    class DoNothing:
+        def eval(self):
+            pass
+        def forward(self, x):
+            return x
+        def __call__(self, x):
+            return x.view(x.shape[0],-1)
+    model = DoNothing()
+    ckpt_id = 'none'
+    
     embeddings, labels = extract_embeddings(model, dataloader, device)
     embeddings = embeddings.cpu().numpy()
     labels = labels.cpu().numpy()
 
-    output_dir = f"runs/eval/none/{dataset.dataset_name}-{dataset.split}/"
+    output_dir = f"runs/eval/{ckpt_id}/{dataset.dataset_name}-{dataset.split}/"
     visualize_labelled_pca(embeddings, labels, dataset.label_to_idx, output_dir)
     visualize_labelled_tsne(embeddings, labels, dataset.label_to_idx, output_dir)
     visualize_labelled_umap(embeddings, labels, dataset.label_to_idx, output_dir)

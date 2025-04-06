@@ -20,6 +20,7 @@ from training.contrastive.model import HandEncoder
 model_checkpoint_path = 'runs/hand_contrastive_learning/v4/20250401140023/checkpoints/best.pth'
 model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250402210020/checkpoints/best.pth'
 model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250403104741/checkpoints/best.pth'
+model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250405195023/checkpoints/best.pth' # supcon, no aug, HandEncoder model.
 
 batch_size = 256
 k_neighbors = 5  # Number of neighbors for k-NN
@@ -55,16 +56,16 @@ model.eval()
 #         return x.view(x.shape[0],-1)
 # model = DoNothing()
 
-from training.contrastive.preprocess import get_6dof
+# from training.contrastive.preprocess import get_6dof
 
-class Do6DoF:
-    def eval(self):
-        pass
-    def forward(self, x):
-        return x.view(x.shape[0],-1)
-    def __call__(self, x):
-        return torch.stack([get_6dof(sample) for sample in x], dim=0).view(x.shape[0], -1)
-model = Do6DoF()
+# class Do6DoF:
+#     def eval(self):
+#         pass
+#     def forward(self, x):
+#         return x.view(x.shape[0],-1)
+#     def __call__(self, x):
+#         return torch.stack([get_6dof(sample) for sample in x], dim=0).view(x.shape[0], -1)
+# model = Do6DoF()
 
 # Extract embeddings
 train_embeddings, train_labels = extract_embeddings(model, dataloader_sup, device)
