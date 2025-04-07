@@ -36,7 +36,8 @@ class HandEncoderGAT3dof(nn.Module):
             pooling_method: str = 'mean',
             edge_index=None,
             fn=graph_transform,
-            do_pool=False
+            do_pool=False,
+            do_norm_after_input=False
         ):
         """
         edge_index: [2, num edges] storing the graph connectivity
@@ -52,6 +53,7 @@ class HandEncoderGAT3dof(nn.Module):
         self.output_graph_features = False
         self.fn = fn
         self.do_pool = do_pool
+        self.do_norm_after_input = do_norm_after_input
         self.num_landmarks = 21
 
         self.node_in_channels = node_in_channels
@@ -123,7 +125,13 @@ class HandEncoderGAT3dof(nn.Module):
         if self.fn:
             data = data.view(-1, 21, 3)
             data = self.fn(data)
-        x = data.x.view(-1,self.node_in_channels) # Reshape to [B*G,N,3] -> [B*G*N, 3]
+        x = data.x
+        if self.do_norm_after_input: # [B*G*N,3] or [B*G*N,6]
+            D = x.shape[-1]
+            x = x.view(-1, self.num_landmarks, D) # [B*G,N,D]
+            x1 = F.normalize(x[...,:3].reshape(-1,self.num_landmarks*3), dim=1).view(-1,self.num_landmarks,3)
+            x[...,:3] = x1
+        x = x.view(-1,self.node_in_channels) # Reshape to [B*G,N,3] -> [B*G*N, 3]
         edge_index = torch.tensor(data.edge_index).to(x.device) 
         edge_index = edge_index.view(-1,2).T # [B*G,E,2] -> [B*G*E,2] -> [2, B*G*E]
         # print(data.x.shape,x.shape,len(edge_index),edge_index.shape)

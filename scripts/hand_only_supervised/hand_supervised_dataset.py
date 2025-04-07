@@ -230,7 +230,8 @@ class LabelledHandDataset(Dataset):
             hand_landmarks -= hand_landmarks[0]
         if self.augment and np.any(hand_landmarks):
             hand_landmarks = self.augment(hand_landmarks)
-        hand_landmarks = torch.from_numpy(hand_landmarks).float()
+        if isinstance(hand_landmarks, np.ndarray):
+            hand_landmarks = torch.from_numpy(hand_landmarks).float()
         return label_idx, hand_landmarks
 
     def get_label_map(self):

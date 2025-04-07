@@ -124,7 +124,8 @@ def structured_collate_fn(batch_list):
     # Convert all poses to tensor and normalize in one go
     poses_batch = torch.stack([torch.from_numpy(batch_list[i][rand_indices[i]]) 
                              for i in range(B)])  # [B, 21, 3]
-    
+    poses_batch = F.normalize(poses_batch.view(B, -1), dim=1).view(B, 21, 3)
+
     # Pre-allocate output tensor on device
     output_batch = torch.zeros(B, grid_size, 21, 3, device=device)
     
@@ -156,7 +157,7 @@ if __name__ == '__main__':
     small_angle = np.pi/6
     large_angle = 0
     small_angle = 0
-    extra_text = "Augmentation with linear curriculum scheduling (sup: use sup_aug_schedule: 0..2pi (10k ep), unsup: 0..2pi, 0..pi/6 (1k ep); do_norm_after_output=True), No pool, 4->3 layers"
+    extra_text = "Augmentation with linear curriculum scheduling (sup: use sup_aug_schedule: 0..2pi (10k ep), unsup: 0..2pi, 0..pi/6 (1k ep)), No pool, 4->3 layers"
     def aug_pair(*x):
         global epoch
         return augment_handpair(*x, maxangle=angle_batch_schedule(epoch))
@@ -190,8 +191,8 @@ if __name__ == '__main__':
 
     # initialize model and optimizer
     # model = HandEncoder(embedding_size=embedding_dim).to(device)
-    # model = HandEncoderGAT3dof(embedding_size=embedding_dim, do_norm_after_input=True).to(device)
-    model = HandEncoderGCN6dof(embedding_size=embedding_dim, do_norm_after_input=True).to(device)
+    # model = HandEncoderGAT3dof(embedding_size=embedding_dim).to(device)
+    model = HandEncoderGCN6dof(embedding_size=embedding_dim).to(device)
 
     # load model from file
     if model_checkpoint_path:

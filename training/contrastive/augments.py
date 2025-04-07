@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import torch.nn.functional as F
 from scipy.spatial.transform import Rotation as R
 
 def random_rotate(joints, max_angle=np.pi/3):
@@ -116,8 +117,14 @@ def normalize(joints):
     # shape: [B,21,3]
     if not isinstance(joints, torch.Tensor):
         joints = torch.from_numpy(joints).float()
-    jmin, jmax = torch.min(joints, dim=-2).values[...,torch.newaxis,:], torch.max(joints, dim=-2).values[...,torch.newaxis,:]
-    joints = (joints-jmin)/(jmax-jmin)*2-1
+    dim_is_2 = joints.ndim == 2
+    B = 1 if dim_is_2 else joints.shape[0]
+    joints = F.normalize(joints.view(B, -1), dim=1).view(B, 21, 3)
+    # jmin, jmax = torch.min(joints, dim=-2).values[...,torch.newaxis,:], torch.max(joints, dim=-2).values[...,torch.newaxis,:]
+    # joints = (joints-jmin)/(jmax-jmin)*2-1
+    # joints = joints - joints[...,0,torch.newaxis,:]
+    if dim_is_2:
+        joints = joints.view(21,3)
     return joints
 
 def vectorized_apply_transform(poses_batch, rotation, scaling):
