@@ -25,7 +25,8 @@ class LabelledHandDataset(Dataset):
         self.split = split
         self.data = []  # List of (label_idx, hand_landmarks) tuples
         self.label_to_idx = {}  # Mapping from string labels to integer indices
-
+        self.label_map = None
+        
         data_dir, dataset, subfolders, output_dir, dyn, is_video, infodict, *_ = get_info(self.dataset_name)
         self.data_dir = data_dir
         self.dataset_name = dataset
@@ -241,7 +242,9 @@ class LabelledHandDataset(Dataset):
         Returns:
             dict: Mapping from string labels to integer indices.
         """
-        return {idx: label for label, idx in self.label_to_idx.items()}
+        if self.label_map == None:
+            self.label_map = {idx: label for label, idx in self.label_to_idx.items()}
+        return self.label_map
     
 class CombinedLabelledHandDataset(Dataset):
     """
@@ -255,6 +258,7 @@ class CombinedLabelledHandDataset(Dataset):
         self.total_length = 0
         self.dataset_lengths = []
         self.label_to_idx = {}
+        self.label_map = None
 
         for dataset_name, split in dataset_names.items():
             dataset = LabelledHandDataset(dataset_name=dataset_name, split=split, augment=augment,
@@ -295,8 +299,10 @@ class CombinedLabelledHandDataset(Dataset):
         raise Exception("Index out of bounds")
 
     def get_label_map(self):
-        return {idx: label for label, idx in self.label_to_idx.items()}
-
+        if self.label_map == None:
+            self.label_map = {idx: label for label, idx in self.label_to_idx.items()}
+        return self.label_map
+    
 if __name__ == '__main__':
     # Test the dataset class
     # Load the dataset

@@ -70,10 +70,12 @@ def extract_orientations(joints, batched=False):
     try:
         null_entries = np.any(np.all(R_wrist_batch == 0, axis=2), axis=1) # [B]
         R_wrist_batch[null_entries] = np.eye(3)[np.newaxis]
-        orientations_batch[:, 0] = Rotation.from_matrix(R_wrist_batch).as_quat() # [B, 4]
+        orientations_batch[~null_entries, 0] = Rotation.from_matrix(R_wrist_batch[~null_entries]).as_quat() # [B, 4]
         orientations_batch[null_entries,0,:] = np.zeros((1,4)) # [B, 4]
+        if np.any(null_entries):
+            print("!!!!WRIST ", wrist_direction_batch[null_entries], wrist_normal_batch[null_entries])
     except np.linalg.LinAlgError as e:
-        print(joints_np)
+        print(joints_np, R_wrist_batch, np.linalg.det(R_wrist_batch))
         raise ValueError(f"Invalid rotation matrix for wrist orientation: {e}")
 
     # Compute finger orientations for the batch
@@ -103,10 +105,12 @@ def extract_orientations(joints, batched=False):
             try:
                 null_entries = np.any(np.all(R_batch == 0, axis=2), axis=1)
                 R_batch[null_entries] = np.eye(3)[np.newaxis]
-                orientations_batch[:, base_node] = Rotation.from_matrix(R_batch).as_quat() # [B, 4]
+                orientations_batch[~null_entries, base_node] = Rotation.from_matrix(R_batch[~null_entries]).as_quat() # [B, 4]
                 orientations_batch[null_entries,base_node,:] = np.zeros((1,4)) # [B, 4]
+                if np.any(null_entries):
+                    print("!!!!CNET ", direction_batch[null_entries,base_node], normal_batch[null_entries,base_node], base_node)
             except np.linalg.LinAlgError as e:
-                print(joints_np)
+                print(joints_np, R_wrist_batch, np.linalg.det(R_wrist_batch))
                 raise ValueError(f"Invalid rotation matrix for node {base_node}: {e}")
 
     # Convert to relative orientations (batched)

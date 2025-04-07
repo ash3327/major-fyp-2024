@@ -13,6 +13,7 @@ import os
 import torch
 import numpy as np
 from tqdm import tqdm
+import time
 
 import torch
 from torch.utils.data import DataLoader
@@ -22,7 +23,7 @@ from datetime import datetime
 from copy import deepcopy
 
 from scripts.fake_data.contrastive_data_dataset import HandPoseContrastiveDataset
-from scripts.hand_only_supervised.hand_supervised_dataset import LabelledHandDataset
+from scripts.hand_only_supervised.hand_supervised_dataset import LabelledHandDataset, CombinedLabelledHandDataset
 from training.contrastive.augments import augment as augment_hand, augment_pair as augment_handpair
 from training.contrastive.augments import generate_random_rotation_object, generate_random_scaling_vector, \
     apply_transform, normalize, vectorized_apply_transform
@@ -81,36 +82,53 @@ initial_lr = 0.01
 learning_rate = 1e-3
 num_epochs = 5000
 patience = 500
-do_sup = False
+do_sup = True
+do_unsup = False
 lr_jump_epoch = 500
 
 # GAT 202504051632
+initial_lr = 1e-3#1e-4
+learning_rate = 1e-4
 eval_interval = 1
-
-# Again back to unsup after 202504061614xx
-check_profile = False
 do_sup = True
-do_unsup = True
+do_unsup = False
+eval_interval = 2
+check_profile = False
+do_pool = False
+num_it_per_epoch = num_samples_unsup = 80 * batch_size
+
+# curriculum
+do_sup = True
+do_unsup = True#False
+angle_warmup_epochs = 1000
+angle_sup_warmup_epochs = 10000
+angle_batch_schedule = lambda i: 2*np.pi * (1 if i > angle_warmup_epochs else i/angle_warmup_epochs) # 0 -> 1
+angle_aug_schedule = lambda i: np.pi/6 * (1 if i > angle_warmup_epochs else i/angle_warmup_epochs) # 0 -> 1
+angle_sup_aug_schedule = lambda i: 2*np.pi * (1 if i > angle_sup_warmup_epochs else i/angle_sup_warmup_epochs) # 0 -> 1
+
+# unsup
+max_dataset_size = 100 * batch_size
+
+# CHECK PROFILE
+# check_profile = True
+# max_dataset_size = 20 * batch_size #100 * batch_size
 
 # device configuration
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-pre_transform = graph_transform
+epoch = 0
 
 def structured_collate_fn_sup(batch_list):
     """Optimized collate function for supervised data."""
+    global epoch
     # Extract joints and convert to tensor in one go
     joints_batch = torch.stack([item[1] for item in batch_list])  # [B, 21, 3]
     B = len(batch_list)
     
     # Pre-compute transformations
-    batch_rotation = generate_random_rotation_object(max_angle=np.pi)
-    rotations = [batch_rotation * generate_random_rotation_object(max_angle=np.pi/6) 
-                 for _ in range(grid_size)]
-    scalings = torch.stack([torch.from_numpy(generate_random_scaling_vector()) 
-                          for _ in range(grid_size)])  # [grid_size, 3]
-    
-    # Normalize all poses at once
-    joints_batch = normalize(joints_batch.view(B, 21, 3))
+    batch_rotation = generate_random_rotation_object(max_angle=angle_batch_schedule(epoch))
+    rotations = generate_random_rotation_object(batch_size=grid_size, max_angle=angle_aug_schedule(epoch))
+    rotations = [batch_rotation * r for r in rotations]
+    scalings = torch.from_numpy(generate_random_scaling_vector(batch_size=grid_size)) # [grid_size, 3]
     
     # Pre-allocate output tensor on device
     output_batch = torch.zeros(B, grid_size, 21, 3, device=device)
@@ -128,9 +146,9 @@ def structured_collate_fn(batch_list):
     B = len(batch_list)
     
     # Pre-compute transformations
-    batch_rotation = generate_random_rotation_object(max_angle=np.pi)
-    rotations = [batch_rotation * generate_random_rotation_object(max_angle=np.pi/6) 
-                 for _ in range(grid_size)]
+    batch_rotation = generate_random_rotation_object(max_angle=angle_batch_schedule(epoch))
+    rotations = generate_random_rotation_object(batch_size=grid_size, max_angle=angle_aug_schedule(epoch))
+    rotations = [batch_rotation * r for r in rotations]
     scalings = torch.from_numpy(generate_random_scaling_vector(batch_size=grid_size)) # [grid_size, 3]
     
     # Random indices for all batches at once
@@ -139,7 +157,6 @@ def structured_collate_fn(batch_list):
     # Convert all poses to tensor and normalize in one go
     poses_batch = torch.stack([torch.from_numpy(batch_list[i][rand_indices[i]]) 
                              for i in range(B)])  # [B, 21, 3]
-    poses_batch = normalize(poses_batch.view(B, 21, 3))
     
     # Pre-allocate output tensor on device
     output_batch = torch.zeros(B, grid_size, 21, 3, device=device)
@@ -168,13 +185,30 @@ def info_nce_loss_from_matrix(similarity_matrix, positive_mask, temperature):
     return loss
 
 if __name__ == '__main__':
-    aug_pair = lambda *x: augment_handpair(*x, max_angle=np.pi*2)
-    aug = lambda x: augment_hand(x, max_angle=np.pi/6)
-    extra_text = "No augmentation, No pool, 4->3 layers"
+    extra_text = "[With Lexset, Handshape and Senz3d] Augmentation with linear curriculum scheduling (sup: use sup_aug_schedule: 0..2pi (10k ep), unsup: 0..2pi, 0..pi/6 (1k ep); do_norm_after_output=True), No pool, 4->3 layers"
+    
+    def aug(x):
+        global epoch
+        x = augment_hand(x, max_angle=angle_sup_aug_schedule(epoch))
+        return x
     
     # initialize datasets and dataloaders
     # supervised dataset
-    dataset_sup = LabelledHandDataset(dataset_name='lexset', split='train', augment=aug)
+    # dataset_sup = CombinedLabelledHandDataset(
+    #     dataset_names={
+    #         'lexset': 'train',
+    #         'handshape': 'train',
+    #         'senz3d': 'acquisitions'
+    #     }
+    # )
+    dataset_sup = LabelledHandDataset(dataset_name='lexset', split='train')
+    # dataset_sup = CombinedLabelledHandDataset(
+    #     dataset_names={
+    #         'lexset': 'train',
+    #         'handshape': 'train',
+    #         'senz3d': 'acquisitions'
+    #     }
+    # )
     dataloader_sup = DataLoader(
         dataset_sup, 
         batch_size=batch_size,  # Use grid_size instead of batch_size
@@ -182,7 +216,8 @@ if __name__ == '__main__':
         collate_fn=structured_collate_fn_sup,
         drop_last=True
     )
-    dataloader_sup_eval = DataLoader(dataset_sup, batch_size=batch_size, shuffle=True, 
+    dataset_eval = LabelledHandDataset(dataset_name='lexset', split='train')
+    dataloader_sup_eval = DataLoader(dataset_eval, batch_size=batch_size, shuffle=True, 
                                     drop_last=True)
 
     # unsupervised dataset with structured augmentation
@@ -227,7 +262,7 @@ if __name__ == '__main__':
     writer = SummaryWriter(os.path.join(train_path_root,'logs'))
 
     # Log model class name
-    writer.add_text('Model', f'Model class: {model.__class__.__name__} (train_supcon_gat) [dosup={do_sup}, dounsup={do_unsup}] {extra_text}', 0)
+    writer.add_text('Model', f'[{check_profile}] Model class: {model.__class__.__name__} <{dataset_sup.__class__.__name__}> (train_unsup_gat_curriculum_multi) [dosup={do_sup}, dounsup={do_unsup}] {extra_text}', 0)
 
     # model save paths
     os.makedirs(train_path_root, exist_ok=True)
@@ -262,7 +297,16 @@ if __name__ == '__main__':
         sup_iter = iter(dataloader_sup)  # Iterator for labelled data
         unsup_iter = iter(dataloader_unsup)  # Iterator for unlabelled data
 
-        dataset_size = max(len(dataloader_sup), len(dataloader_unsup))
+        dataset_size = 0
+        if do_sup:
+            dataset_size = len(dataloader_sup)
+        if do_unsup:
+            dataset_size = max(dataset_size, len(dataloader_unsup))
+        dataset_size = min(dataset_size, max_dataset_size//batch_size)
+        
+        total_sup_time = 0.0
+        total_unsup_time = 0.0
+        
         for i in tqdm(range(dataset_size),
                         desc=f"Epoch {epoch+1}/{num_epochs} - Training"):
             loss = 0.0
@@ -271,6 +315,7 @@ if __name__ == '__main__':
             
             # Treat supervised data as unsupervised
             if do_sup:
+                sup_start_time = time.perf_counter()
                 try:
                     structured_batch_sup = next(sup_iter)
                     h, w = batch_size, grid_size
@@ -286,9 +331,12 @@ if __name__ == '__main__':
                     total_supcon_loss += loss_sup.item()
                 except StopIteration:
                     loss_sup = 0.0
+                sup_end_time = time.perf_counter()
+                total_sup_time += (sup_end_time - sup_start_time)
 
             # unsupervised batch (if available)
             if do_unsup:
+                unsup_start_time = time.perf_counter()
                 try:
                     structured_batch = next(unsup_iter)
                     h, w = batch_size, grid_size
@@ -307,6 +355,8 @@ if __name__ == '__main__':
                     loss_unsup = 0.0
                     if loss_sup == 0.0:
                         loss = loss_unsup
+                unsup_end_time = time.perf_counter()
+                total_unsup_time += (unsup_end_time - unsup_start_time)
 
             if loss == 0.0:
                 continue
@@ -326,16 +376,22 @@ if __name__ == '__main__':
         writer.add_scalar('Loss/train-unsup', avg_unsup_loss, epoch)
         writer.add_scalar('Learning Rate', optimizer.param_groups[0]['lr'], epoch)
 
+        # curriculum
+        writer.add_scalar('Curriculum/ang-batch', angle_batch_schedule(epoch), epoch)
+        writer.add_scalar('Curriculum/ang-aug', angle_aug_schedule(epoch), epoch)
+        writer.add_scalar('Curriculum/ang-sup-aug', angle_sup_aug_schedule(epoch), epoch)
+
         # save models
-        if avg_train_loss < best_loss:
-            best_loss = avg_train_loss
-            torch.save(model.state_dict(), best_model_path)
-            print(f"Best model saved with train loss: {best_loss:.4f}")
-            # Optionally save optimizer state
-            # torch.save(optimizer.state_dict(), best_model_path.replace('best.pth', 'optimizer.pth'))
-        torch.save(model.state_dict(), last_model_path)
-        # Optionally save optimizer state for the last model
-        # torch.save(optimizer.state_dict(), last_model_path.replace('last.pth', 'optimizer.pth'))
+        if not check_profile:
+            if avg_train_loss < best_loss:
+                best_loss = avg_train_loss
+                torch.save(model.state_dict(), best_model_path)
+                print(f"Best model saved with train loss: {best_loss:.4f}")
+                # Optionally save optimizer state
+                # torch.save(optimizer.state_dict(), best_model_path.replace('best.pth', 'optimizer.pth'))
+            torch.save(model.state_dict(), last_model_path)
+            # Optionally save optimizer state for the last model
+            # torch.save(optimizer.state_dict(), last_model_path.replace('last.pth', 'optimizer.pth'))
 
         # update scheduler
         if epoch <= lr_jump_epoch:
@@ -365,6 +421,8 @@ if __name__ == '__main__':
 
         # == Profiling ==
         if check_profile:
+            print(f"Sup Time: {total_sup_time}")
+            print(f"Unsup time: {total_unsup_time}")
             profiler.disable()
 
             # Print results sorted by cumulative time
