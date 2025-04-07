@@ -101,7 +101,10 @@ angle_warmup_epochs = 1000
 angle_sup_warmup_epochs = 10000
 angle_batch_schedule = lambda i: 2*np.pi * (1 if i > angle_warmup_epochs else i/angle_warmup_epochs) # 0 -> 1
 angle_aug_schedule = lambda i: np.pi/6 * (1 if i > angle_warmup_epochs else i/angle_warmup_epochs) # 0 -> 1
-angle_sup_aug_schedule = lambda i: 2*np.pi * (1 if i > angle_sup_warmup_epochs else i/angle_warmup_epochs) # 0 -> 1
+angle_sup_aug_schedule = lambda i: 2*np.pi * (1 if i > angle_sup_warmup_epochs else i/angle_sup_warmup_epochs) # 0 -> 1
+
+# unsup
+max_dataset_size = 80 * batch_size
 
 # device configuration
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -156,7 +159,7 @@ if __name__ == '__main__':
     small_angle = np.pi/6
     large_angle = 0
     small_angle = 0
-    extra_text = "Augmentation with linear curriculum scheduling (sup: use sup_aug_schedule: 0..2pi (10k ep), unsup: 0..2pi, 0..pi/6 (1k ep); do_norm_after_output=True), No pool, 4->3 layers"
+    extra_text = "Augmentation with linear curriculum scheduling (sup: use sup_aug_schedule: 0..2pi (10k ep*fixed), unsup: 0..2pi, 0..pi/6 (1k ep); do_norm_after_output=True), No pool, 4->3 layers"
     def aug_pair(*x):
         global epoch
         return augment_handpair(*x, maxangle=angle_batch_schedule(epoch))
@@ -249,6 +252,7 @@ if __name__ == '__main__':
             dataset_size = len(dataloader_sup)
         if do_unsup:
             dataset_size = max(dataset_size, len(dataloader_unsup))
+        dataset_size = min(dataset_size, max_dataset_size)
         for i in tqdm(range(dataset_size),
                         desc=f"Epoch {epoch+1}/{num_epochs} - Training"):
             loss = 0.0

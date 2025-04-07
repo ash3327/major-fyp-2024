@@ -49,14 +49,14 @@ else:
 print("Evaluating the model using k-NN...")
 model.eval()
 
-# class DoNothing:
-#     def eval(self):
-#         pass
-#     def forward(self, x):
-#         return x
-#     def __call__(self, x):
-#         return x.view(x.shape[0],-1)
-# model = DoNothing()
+class DoNothing:
+    def eval(self):
+        pass
+    def forward(self, x):
+        return x
+    def __call__(self, x):
+        return x.view(x.shape[0],-1)
+model = DoNothing()
 
 # from training.contrastive.preprocess import get_6dof
 

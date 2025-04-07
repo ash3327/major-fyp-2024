@@ -243,6 +243,60 @@ class LabelledHandDataset(Dataset):
         """
         return {idx: label for label, idx in self.label_to_idx.items()}
     
+class CombinedLabelledHandDataset(Dataset):
+    """
+    Dataset that combines multiple LabelledHandDataset instances.
+    """
+    def __init__(self, dataset_names:dict[str,str], augment=None, max_num_hands=2, ignore_flat=True, normalize_to_wrist=True):
+        """
+        dataset_names: dict[str, str]
+        """
+        self.datasets = []
+        self.total_length = 0
+        self.dataset_lengths = []
+        self.label_to_idx = {}
+
+        for dataset_name, split in dataset_names.items():
+            dataset = LabelledHandDataset(dataset_name=dataset_name, split=split, augment=augment,
+                                            max_num_hands=max_num_hands, ignore_flat=ignore_flat,
+                                            normalize_to_wrist=normalize_to_wrist)
+            self.datasets.append(dataset)
+            self.dataset_lengths.append(len(dataset))
+            self.total_length += len(dataset)
+            self._update_label_mapping(dataset.label_to_idx)
+
+    def _update_label_mapping(self, dataset_label_to_idx):
+        """
+        Updates the combined label mapping with labels from a new dataset.
+        """
+        for label, idx in dataset_label_to_idx.items():
+            if label not in self.label_to_idx:
+                self.label_to_idx[label] = len(self.label_to_idx)
+
+    def __len__(self):
+        return self.total_length
+
+    def __getitem__(self, idx):
+        if idx < 0 or idx >= self.total_length:
+            raise IndexError
+
+        cumulative_length = 0
+        for i, length in enumerate(self.dataset_lengths):
+            if cumulative_length <= idx < cumulative_length + length:
+                # Get the sample from the correct dataset
+                relative_index = idx - cumulative_length
+                label_idx, hand_landmarks = self.datasets[i][relative_index]
+
+                # Adjust the label index to the combined mapping
+                original_label = self.datasets[i].get_label_map()[label_idx]
+                adjusted_label_idx = self.label_to_idx[original_label]
+                return adjusted_label_idx, hand_landmarks
+            cumulative_length += length
+        raise Exception("Index out of bounds")
+
+    def get_label_map(self):
+        return {idx: label for label, idx in self.label_to_idx.items()}
+
 if __name__ == '__main__':
     # Test the dataset class
     # Load the dataset
