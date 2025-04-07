@@ -109,7 +109,7 @@ def structured_collate_fn_sup(batch_list):
                           for _ in range(grid_size)])  # [grid_size, 3]
     
     # Normalize all poses at once
-    joints_batch = F.normalize(joints_batch.view(B, -1), dim=1).view(B, 21, 3)
+    joints_batch = normalize(joints_batch.view(B, 21, 3))
     
     # Pre-allocate output tensor on device
     output_batch = torch.zeros(B, grid_size, 21, 3, device=device)
@@ -138,7 +138,7 @@ def structured_collate_fn(batch_list):
     # Convert all poses to tensor and normalize in one go
     poses_batch = torch.stack([torch.from_numpy(batch_list[i][rand_indices[i]]) 
                              for i in range(B)])  # [B, 21, 3]
-    poses_batch = F.normalize(poses_batch.view(B, -1), dim=1).view(B, 21, 3)
+    poses_batch = normalize(poses_batch.view(B, 21, 3))
     
     # Pre-allocate output tensor on device
     output_batch = torch.zeros(B, grid_size, 21, 3, device=device)
