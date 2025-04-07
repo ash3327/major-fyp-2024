@@ -14,7 +14,6 @@ import argparse
 
 from scripts.hand_only_supervised.hand_supervised_dataset import LabelledHandDataset
 from training.contrastive.evals import extract_embeddings, evaluate_knn
-from training.contrastive.model import HandEncoder
 from training.contrastive.model import HandEncoder, HandEncoder_6DOF
 from training.contrastive.model_gat import HandEncoderGAT3dof, HandEncoderGAT6dof, graph_transform
 from training.contrastive.model_gcn import HandEncoderGCN3dof, HandEncoderGCN6dof
@@ -170,15 +169,14 @@ if __name__ == '__main__':
     # model = HandEncoderGCN3dof().to(device=device)
 
     # model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250406000135/checkpoints/best.pth' # supcon, no aug, HandEncoderGCN3dof model.
-    # model = HandEncoderGCN6dof().to(device=device)
+    model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250406164630/checkpoints/best.pth' # sup+unsup, linear curriculum scheduling, HandEncoderGCN3dof model.
+    model = HandEncoderGCN6dof().to(device=device)
     
-    # if os.path.exists(model_checkpoint_path):
-    #     model.load_state_dict(torch.load(model_checkpoint_path, map_location=device))
-    #     print(f"Model loaded from {model_checkpoint_path}")
-    # else:
-    #     raise FileNotFoundError(f"Model checkpoint not found at {model_checkpoint_path}")
-    
-
+    if os.path.exists(model_checkpoint_path):
+        model.load_state_dict(torch.load(model_checkpoint_path, map_location=device))
+        print(f"Model loaded from {model_checkpoint_path}")
+    else:
+        raise FileNotFoundError(f"Model checkpoint not found at {model_checkpoint_path}")
 
     # == extra info ==
     if model_checkpoint_path is not None:
@@ -213,15 +211,15 @@ if __name__ == '__main__':
     # model = Do6DoF()
     # ckpt_id = '6dof'
 
-    class DoNothing:
-        def eval(self):
-            pass
-        def forward(self, x):
-            return x
-        def __call__(self, x):
-            return x.view(x.shape[0],-1)
-    model = DoNothing()
-    ckpt_id = 'none'
+    # class DoNothing:
+    #     def eval(self):
+    #         pass
+    #     def forward(self, x):
+    #         return x
+    #     def __call__(self, x):
+    #         return x.view(x.shape[0],-1)
+    # model = DoNothing()
+    # ckpt_id = 'none'
     
     embeddings, labels = extract_embeddings(model, dataloader, device)
     embeddings = embeddings.cpu().numpy()

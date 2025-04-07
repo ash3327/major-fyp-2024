@@ -155,14 +155,14 @@ if __name__ == '__main__':
     small_angle = np.pi/6
     large_angle = 0
     small_angle = 0
-    extra_text = "Augmentation with linear curriculum scheduling, No pool, 4->3 layers"
+    extra_text = "Augmentation with linear curriculum scheduling (sup: use batch_schedule), No pool, 4->3 layers"
     def aug_pair(*x):
         global epoch
         return augment_handpair(*x, maxangle=angle_batch_schedule(epoch))
     # aug_pair = lambda *x: augment_handpair(*x, max_angle=large_angle)
     def aug(x):
         global epoch
-        return augment_hand(x, max_angle=angle_aug_schedule(epoch))
+        return augment_hand(x, max_angle=angle_batch_schedule(epoch))
     # aug = lambda x: augment_hand(x, max_angle=small_angle)
 
     # initialize datasets and dataloaders

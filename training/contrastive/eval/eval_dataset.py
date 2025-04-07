@@ -14,7 +14,9 @@ from tqdm import tqdm
 
 from scripts.hand_only_supervised.hand_supervised_dataset import LabelledHandDataset
 from training.contrastive.evals import extract_embeddings, evaluate_knn
-from training.contrastive.model import HandEncoder
+from training.contrastive.model import HandEncoder, HandEncoder_6DOF
+from training.contrastive.model_gat import HandEncoderGAT3dof, HandEncoderGAT6dof, graph_transform
+from training.contrastive.model_gcn import HandEncoderGCN3dof, HandEncoderGCN6dof
 
 # Configuration
 model_checkpoint_path = 'runs/hand_contrastive_learning/v4/20250401140023/checkpoints/best.pth'

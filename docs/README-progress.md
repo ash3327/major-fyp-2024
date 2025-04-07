@@ -278,6 +278,8 @@ assume z up, this z have nothing to do with the actual coords
 2,5,8
 ```
 
+## Methods
+
 - Problem: Actually the handshapes generated SOMETIMES DO NOT MODEL ALL POSSIBLE STRANGE HANDSHAPES.
 - Limitations in hard handshapes.
 
@@ -323,7 +325,8 @@ Class f1: {0: 0.9894736842105263, 1: 0.9893617021276596, 2: 1.0, 3: 0.9575757575
 * `train_supcon_gat.py` with GAT3dof: 20250405211305 on desktop, all only supcon with lexset train
 * `train_supcon_gat.py` with GCN3dof: 20250405204003 on laptop, all only supcon with lexset train
 
-BASELINES:
+### BASELINES:
+
 * None:
   * handshape:![alt text](../runs/eval/none/ph2014-handshape-test/umap_visualization.png)
 * 3dof:
@@ -331,7 +334,8 @@ BASELINES:
 * 6dof:
   * handshape: ![alt text](../runs/eval/6dof/ph2014-handshape-test/umap_visualization.png)
 
-PRELIMINARY TRAINING (PROOF OF CONVERGENCE):
+### PRELIMINARY TRAINING (PROOF OF CONVERGENCE):
+
 * Train on lexset, supcon, no aug.
 * Hyper-parameter tuning.
 * `train_supcon_gat.py`
@@ -343,4 +347,12 @@ PRELIMINARY TRAINING (PROOF OF CONVERGENCE):
 * 20250405222858: HandEncoderGAT3dof (no pool), desktop, 96.12% lexset test, overfit (test acc goes down), F1 96.5%, 4.5s/ep, ~100ep converge
 * 20250405231456: HandEncoderGAT6dof (no pool), desktop, 97.73% lexset test, F1 97.88%, 4.82s/ep (rose), ~200ep converge
 * 20250406000135: HandEncoderGCN6dof (no pool), laptop, 98.2% lexset test, F1 98.21%, (lime), ~200ep convergence, ~1000ep good.
+
+### PRELIMINARY TRAINING (Curriculum Training):
+
+* `train_supcon_gat_curriculum` [dosup=True, dounsup=True] Augmentation with linear curriculum scheduling, No pool, 4->3 layers
+* 20250406164630: HandEncoderGCN6dof, laptop, max 96.77 (397ep), 
+  * ![alt text](../runs/eval/20250406164630/ph2014-handshape-test/umap_visualization.png)
+* 20250406185135: HandEncoderGAT6dof, desktop, max 96.69 (197ep)
+* 
 
