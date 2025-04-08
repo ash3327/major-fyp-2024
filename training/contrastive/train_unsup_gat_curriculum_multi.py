@@ -143,7 +143,7 @@ def structured_collate_fn_sup(batch_list):
     batch_rotation = generate_random_rotation_object(max_angle=angle_batch_schedule(epoch))
     rotations = generate_random_rotation_object(batch_size=grid_size, max_angle=angle_aug_schedule(epoch))
     rotations = [batch_rotation * r for r in rotations]
-    scalings = torch.from_numpy(generate_random_scaling_vector(batch_size=grid_size), scale_range=scale_range_schedule(epoch)) # [grid_size, 3]
+    scalings = torch.from_numpy(generate_random_scaling_vector(batch_size=grid_size, scale_range=scale_range_schedule(epoch))) # [grid_size, 3]
     
     # Pre-allocate output tensor on device
     output_batch = torch.zeros(B, grid_size, 21, 3, device=device)
@@ -396,8 +396,8 @@ if __name__ == '__main__':
         writer.add_scalar('Curriculum/ang-batch', angle_batch_schedule(epoch), epoch)
         writer.add_scalar('Curriculum/ang-aug', angle_aug_schedule(epoch), epoch)
         writer.add_scalar('Curriculum/ang-sup-aug', angle_sup_aug_schedule(epoch), epoch)
-        writer.add_scalar('Curriculum/scale-aug-batch', scale_range_batch_schedule(epoch), epoch)
-        writer.add_scalar('Curriculum/scale-aug', scale_range_schedule(epoch), epoch)
+        writer.add_scalar('Curriculum/scale-aug-L', scale_range_schedule(epoch)[0], epoch)
+        writer.add_scalar('Curriculum/scale-aug-H', scale_range_schedule(epoch)[1], epoch)
 
         # save models
         if not check_profile:

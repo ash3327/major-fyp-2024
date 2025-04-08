@@ -381,18 +381,18 @@ def extract_features_from_clipped_region(image_rgb, dyn=False, hands=None):
         if features[2] < stor[0]:
             #features[2]
             features[2], features[3]['hands'] = stor
-        elif features[2] == 0:
-            for i, (bbox_hand, yolo_hand) in enumerate(res):
-                if i == 2:
-                    break
-                features[3]['hands'] = features[3]['hands'].astype(float)
-                # yolo_hand_transformed = dict(hands=np.expand_dims(, axis=0)) # need to scale by size
-                # yolo_hand_transformed = transform_landmarks(yolo_hand_transformed, bbox_hand, clipped_img.shape)
-                chei, cwid, _ = clipped_img.shape
-                ihei, iwid, _ = image_rgb.shape
-                features[3]['hands'][i][:,:2] = yolo_hand*[iwid,ihei]/[cwid,chei]
-                features[2] += 1
-                fcount += 1
+        # elif features[2] == 0:
+        #     for i, (bbox_hand, yolo_hand) in enumerate(res):
+        #         if i == 2:
+        #             break
+        #         features[3]['hands'] = features[3]['hands'].astype(float)
+        #         # yolo_hand_transformed = dict(hands=np.expand_dims(, axis=0)) # need to scale by size
+        #         # yolo_hand_transformed = transform_landmarks(yolo_hand_transformed, bbox_hand, clipped_img.shape)
+        #         chei, cwid, _ = clipped_img.shape
+        #         ihei, iwid, _ = image_rgb.shape
+        #         features[3]['hands'][i][:,:2] = yolo_hand*[iwid,ihei]/[cwid,chei]
+        #         features[2] += 1
+        #         fcount += 1
                 # print('\t',i,yolo_hand.dtype,features[3]['hands'][i].dtype)
                 # print(min(yolo_hand[:,0]),max(yolo_hand[:,0]),min(yolo_hand[:,1]),max(yolo_hand[:,1]),cwid,chei,image_rgb.shape)
             # print(features[3]['hands'],res)

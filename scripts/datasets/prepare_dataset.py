@@ -86,7 +86,7 @@ def get_info(dataset):
             subfolders = dict(
                 dev="PHOENIX-2014-T/features/fullFrame-210x260px/dev",
                 test="PHOENIX-2014-T/features/fullFrame-210x260px/test",
-                train="PHOENIX-2014-T/features/fullFrame-210x260px/train"
+                # train="PHOENIX-2014-T/features/fullFrame-210x260px/train"
             )
             dyn = True
         case 'ipn' | 'IPN_Hand':
@@ -101,15 +101,22 @@ def get_info(dataset):
             raise Exception("Such dataset is not defined within `prepare_dataset.py`.")
     return data_dir, dataset, subfolders, output_dir, dyn, is_video, others
 
-def fetch_dataset(dataset, skip=False, holistic=False):
-    from .feature_extractor import extract_features
-    from .feature_extractor_holistic import extract_features as extract_features_holistic
+def fetch_dataset(dataset, skip=False, holistic=False, only_holistic=False):
+    if only_holistic:
+        from scripts.datasets.feature_extractor_holistic import extract_features as extract_features_holistic
+        data_dir, dataset, subfolders, output_dir, dyn, is_video, *rest = info = get_info(dataset)
+        extract_features_holistic(*info, skip=skip)
+    else:
+        from scripts.datasets.feature_extractor import extract_features
+        from scripts.datasets.feature_extractor_holistic import extract_features as extract_features_holistic
 
-    data_dir, dataset, subfolders, output_dir, dyn, is_video, *rest = info = get_info(dataset)
-    extract_features(*info, skip=skip)
-    if holistic:
-        from ._fix_holistic import fix_dataset
-        fix_dataset(data_dir, dataset, subfolders, output_dir, is_video=is_video)
+        data_dir, dataset, subfolders, output_dir, dyn, is_video, *rest = info = get_info(dataset)
+        extract_features(*info, skip=skip)
+        if holistic:
+            from scripts.datasets._fix_holistic import fix_dataset
+            fix_dataset(data_dir, dataset, subfolders, output_dir, is_video=is_video)
+    from scripts.datasets._fix_order import fix_dataset as fix_order
+    fix_order(data_dir, dataset, subfolders, output_dir, is_video=is_video)
 
 if __name__ == '__main__':
     # choices = [
@@ -128,6 +135,7 @@ if __name__ == '__main__':
     parser.add_argument('dataset', type=str, help='Path to the dataset file', default='lexset')
     parser.add_argument('--skip', action='store_true', help='Skip processing if already done.')
     parser.add_argument('--holistic', action='store_true', help='Update the items with holistic ones if missing.')
+    parser.add_argument('--only_holistic', action='store_true', help='Update the items with holistic ones if missing.')
     args = parser.parse_args()
 
-    fetch_dataset(args.dataset, skip=args.skip, holistic=args.holistic)
+    fetch_dataset(args.dataset, skip=args.skip, holistic=args.holistic, only_holistic=args.only_holistic)

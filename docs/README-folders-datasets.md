@@ -131,7 +131,7 @@
       - Each clip has avg 162 frames and 17 words.
       - ![alt text](image-3.png)
 - **LSA64** | [Source](https://facundoq.github.io/datasets/lsa64/) | [Paper](http://sedici.unlp.edu.ar/bitstream/handle/10915/56764/Documento_completo.pdf-PDFA.pdf?sequence=1&isAllowed=y)
-  - **Descriptions**: Argentinian Sign Language, 64 signs, 3200 videos; 1.5 GB; one or both hands.
+  - **Descriptions**: Argentinian Sign Language, 5 repetitions, 10 subjects, 64 signs, 3200 videos; 1.5 GB; one or both hands.
   - **Download**: Download [this version](https://mega.nz/file/kJBDxLSL#zamibF1KPtgQFHn3RM0L1WBuhcBUvo0N0Uec9hczK_M), unzip and put it under `data/raw`.
 - **PHOENIX-Weather 2014-T dataset** | [Source](https://www-i6.informatik.rwth-aachen.de/~koller/RWTH-PHOENIX-2014-T/) | [Paper](https://openaccess.thecvf.com/content_cvpr_2018/html/Camgoz_Neural_Sign_Language_CVPR_2018_paper.html)
   - **Download**:

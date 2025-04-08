@@ -16,48 +16,57 @@ from scripts.datasets.prepare_dataset import get_info
 
 # Cell 2: Load Dataset Information
 # Get dataset info
-data_dir, dataset, subfolders, output_dir, dyn, is_video, infodict, *_ = get_info('IPN_Hand')
+data_dir, dataset, subfolders, output_dir, dyn, is_video, infodict, *_ = get_info('lsa64')
+split = None
 
-# Load metadata
-metadata_path = os.path.join(data_dir, 'IPN_Hand', 'annotations', 'metadata.csv')
-metadata_df = pd.read_csv(metadata_path)
+splits = list(subfolders.keys())
 
-print("Dataset Information:")
-print(f"Data directory: {data_dir}")
-print(f"Is video dataset: {is_video}")
-print(f"\nMetadata shape: {metadata_df.shape}")
-print("\nMetadata columns:")
-print(metadata_df.columns.tolist())
+inpt = split
+if split is None or split not in splits:
+    inpt = input(f"Choose from the splits: {splits}\n>>> ")\
+        if len(splits) > 1 else splits[0]
+
+if inpt in splits:
+    split = inpt
+    print(f"Fetching dataset with split {split}...")
+else:
+    print("Invalid split. Terminating...")
+    exit(1)
+
+dataset = 'lsa64_raw_2'
+kpt_root = os.path.join(output_dir, dataset, split)
 
 # Cell 3: Analyze Annotations
-def read_annotation_file(filepath):
+gesture_dict = {
+    1: "Opaque", 2: "Red", 3: "Green", 4: "Yellow", 5: "Bright", 6: "Light-blue", 7: "Colors", 8: "Pink",
+    9: "Women", 10: "Enemy", 11: "Son", 12: "Man", 13: "Away", 14: "Drawer", 15: "Born", 16: "Learn",
+    17: "Call", 18: "Skimmer", 19: "Bitter", 20: "Sweet milk", 21: "Milk", 22: "Water", 23: "Food", 24: "Argentina",
+    25: "Uruguay", 26: "Country", 27: "Last name", 28: "Where", 29: "Mock", 30: "Birthday", 31: "Breakfast", 32: "Photo",
+    33: "Hungry", 34: "Map", 35: "Coin", 36: "Music", 37: "Ship", 38: "None", 39: "Name", 40: "Patience",
+    41: "Perfume", 42: "Deaf", 43: "Trap", 44: "Rice", 45: "Barbecue", 46: "Candy", 47: "Chewing-gum", 48: "Spaghetti",
+    49: "Yogurt", 50: "Accept", 51: "Thanks", 52: "Shut down", 53: "Appear", 54: "To land", 55: "Catch", 56: "Help",
+    57: "Dance", 58: "Bathe", 59: "Buy", 60: "Copy", 61: "Run", 62: "Realize", 63: "Give", 64: "Find"
+}
+
+def get_annotations():
     annotations = []
-    with open(filepath, 'r') as f:
-        for line in f:
-            video_name, gesture, gesture_id, start_frame, end_frame, duration = line.strip().split(',')
-            annotations.append({
-                'video_name': video_name,
-                'gesture': gesture,
-                'gesture_id': int(gesture_id),
-                'start_frame': int(start_frame),
-                'end_frame': int(end_frame),
-                'duration': int(duration)
-            })
+    for i in range(1,65):
+        for j in range(1,11):
+            for k in range(1,6):
+                annotations.append({
+                    'video_name': f"{i:03d}_{j:03d}_{k:03d}",
+                    'gesture': gesture_dict[i],
+                    'gesture_id': i
+                })
     return pd.DataFrame(annotations)
 
 # Load train and test annotations
-train_annot = read_annotation_file(os.path.join(data_dir, 'IPN_Hand', 'annotations', 'Annot_TrainList.txt'))
-test_annot = read_annotation_file(os.path.join(data_dir, 'IPN_Hand', 'annotations', 'Annot_TestList.txt'))
+annot = get_annotations()
 
-print("Training set statistics:")
-print(f"Number of sequences: {len(train_annot)}")
+print("Set statistics:")
+print(f"Number of sequences: {len(annot)}")
 print("\nGesture distribution:")
-print(train_annot['gesture'].value_counts())
-
-print("\nTest set statistics:")
-print(f"Number of sequences: {len(test_annot)}")
-print("\nGesture distribution:")
-print(test_annot['gesture'].value_counts())
+print(annot['gesture'].value_counts())
 
 # Cell for plot_hand_skeleton function
 def plot_pose(ax, pose):
@@ -65,7 +74,7 @@ def plot_pose(ax, pose):
         ax.scatter(pose[:,0],pose[:,1],pose[:,2])
     else:
         ax.scatter(pose[:,0],pose[:,1],np.zeros_like(pose[:,0]))
-        
+
 def plot_hand_skeleton(ax, joints, color='b', title=None):
     """Plot hand skeleton with connections between joints."""
     # Define connections between joints
@@ -100,35 +109,21 @@ def plot_hand_skeleton(ax, joints, color='b', title=None):
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
-    
-    # Set equal aspect ratio
-    ax.set_box_aspect([1,1,1])
-    
-    # Set axis limits
-    bound = 1
-    ax.set_xlim([-bound, bound])
-    ax.set_ylim([-bound, bound])
-    ax.set_zlim([-bound, bound])
-
-    # Set viewing angle
-    ax.view_init(elev=30, azim=45)
 
 # Cell for visualization
 # Load sample features
-def load_sequence_features(video_name, start_frame, end_frame):
+def load_sequence_features(video_name):
     """Load features for a sequence from the extracted features file."""
-    features_path = os.path.join('data/kpts/IPN_Hand/vid', f"{video_name}.npy")
+    features_path = os.path.join(kpt_root, f"{video_name}.npy")
     if not os.path.exists(features_path):
         return None
     
     features = np.load(features_path, allow_pickle=True)
-    return features[start_frame:end_frame]
+    return features
 
 # Get a sample sequence from training set
-sample_seq = train_annot.iloc[1]#[17]
-features = load_sequence_features(sample_seq['video_name'], 
-                                sample_seq['start_frame'], 
-                                sample_seq['end_frame'])
+sample_seq = annot.iloc[0]
+features = load_sequence_features(sample_seq['video_name'])
 
 # if features is not None:
 #     print(f"Sequence: {sample_seq['video_name']}")
@@ -253,7 +248,7 @@ def animate_sequence(features, sample_seq):
     # Print sequence info
     print(f"Sequence: {sample_seq['video_name']}")
     print(f"Gesture: {sample_seq['gesture']} (ID: {sample_seq['gesture_id']})")
-    print(f"Duration: {sample_seq['duration']} frames")
+    print(f"Duration: {len(features)} frames")
     
     plt.tight_layout()
     plt.show()

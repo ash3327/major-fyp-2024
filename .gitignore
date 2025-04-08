@@ -21,6 +21,7 @@ images/
 # _archive/
 /data/raw/
 /data/kpts/
+/data/kpts_flat/
 /temp/*
 /runs/*
 /outputs/*
