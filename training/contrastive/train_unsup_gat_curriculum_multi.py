@@ -62,7 +62,7 @@ n_aug_pregenerated = 32
 embedding_dim = 128
 initial_lr = 0.01
 learning_rate = 0.01#1e-4
-num_epochs = 10000  # Adjust as needed
+num_epochs = 10000
 temperature = 0.1
 eval_interval = 10  # Evaluate every 10 epochs
 k_neighbors = 5  # Number of neighbors for k-NN
@@ -102,16 +102,29 @@ do_sup = True
 do_unsup = True#False
 angle_warmup_epochs = 1000
 angle_sup_warmup_epochs = 10000
-angle_batch_schedule = lambda i: 2*np.pi * (1 if i > angle_warmup_epochs else i/angle_warmup_epochs) # 0 -> 1
-angle_aug_schedule = lambda i: np.pi/6 * (1 if i > angle_warmup_epochs else i/angle_warmup_epochs) # 0 -> 1
-angle_sup_aug_schedule = lambda i: 2*np.pi * (1 if i > angle_sup_warmup_epochs else i/angle_sup_warmup_epochs) # 0 -> 1
+
 
 # unsup
+max_dataset_size = 100 * batch_size
+max_dataset_size = 200 * batch_size
+angle_warmup_epochs = 1000
+angle_sup_warmup_epochs = 10000
+num_epochs = 10000  # Adjust as needed
+
+
+model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250408010415/checkpoints/best.pth' # not good
+start_epoch = 335
 max_dataset_size = 100 * batch_size
 
 # CHECK PROFILE
 # check_profile = True
 # max_dataset_size = 20 * batch_size #100 * batch_size
+
+
+# -- Curriculum --
+angle_batch_schedule = lambda i: 2*np.pi * (1 if i > angle_warmup_epochs else i/angle_warmup_epochs) # 0 -> 1
+angle_aug_schedule = lambda i: np.pi/6 * (1 if i > angle_warmup_epochs else i/angle_warmup_epochs) # 0 -> 1
+angle_sup_aug_schedule = lambda i: 2*np.pi * (1 if i > angle_sup_warmup_epochs else i/angle_sup_warmup_epochs) # 0 -> 1
 
 # device configuration
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -194,14 +207,14 @@ if __name__ == '__main__':
     
     # initialize datasets and dataloaders
     # supervised dataset
-    # dataset_sup = CombinedLabelledHandDataset(
-    #     dataset_names={
-    #         'lexset': 'train',
-    #         'handshape': 'train',
-    #         'senz3d': 'acquisitions'
-    #     }
-    # )
-    dataset_sup = LabelledHandDataset(dataset_name='lexset', split='train')
+    dataset_sup = CombinedLabelledHandDataset(
+        dataset_names={
+            'lexset': 'train',
+            'handshape': 'train',
+            'senz3d': 'acquisitions'
+        }
+    )
+    # dataset_sup = LabelledHandDataset(dataset_name='lexset', split='train')
     # dataset_sup = CombinedLabelledHandDataset(
     #     dataset_names={
     #         'lexset': 'train',
@@ -216,6 +229,7 @@ if __name__ == '__main__':
         collate_fn=structured_collate_fn_sup,
         drop_last=True
     )
+
     dataset_eval = LabelledHandDataset(dataset_name='lexset', split='train')
     dataloader_sup_eval = DataLoader(dataset_eval, batch_size=batch_size, shuffle=True, 
                                     drop_last=True)
@@ -242,7 +256,7 @@ if __name__ == '__main__':
     # model = HandEncoderGAT3dof(embedding_size=embedding_dim).to(device)
     # model = HandEncoderGAT6dof(embedding_size=embedding_dim, fn=pre_transform).to(device)
     # model = HandEncoderGAT3dof(embedding_size=embedding_dim, do_norm_after_input=True).to(device)
-    model = HandEncoderGCN6dof(embedding_size=embedding_dim, do_norm_after_input=True).to(device)
+    model = HandEncoderGCN6dof(embedding_size=embedding_dim, do_norm_after_input=False).to(device)
 
     # load model from file
     if model_checkpoint_path:

@@ -78,7 +78,7 @@ def generate_random_rotation_object(batch_size=None, max_angle=np.pi):
         quats = quats[0]
     return R.from_quat(quats)
 
-def generate_random_scaling_vector(batch_size=None, scale_range=(0, 2), n_dims=3):
+def generate_random_scaling_vector(batch_size=None, scale_range=(0, 2), n_dims=3, do_flip=True):
     """Generates a random scaling vector."""
     _bs = batch_size if batch_size is not None else 1
     bin = np.random.choice([0, 1], size=(_bs, n_dims))
@@ -87,6 +87,7 @@ def generate_random_scaling_vector(batch_size=None, scale_range=(0, 2), n_dims=3
         np.random.uniform(low=scale_range[0], high=1, size=(_bs, n_dims)),
         np.random.uniform(low=1, high=scale_range[1], size=(_bs, n_dims))
     ) # [B, 3]
+    scaling_vector[0] *= np.random.choice([-1, 1], size=(n_dims,))
     if batch_size is None:
         return scaling_vector[0]
     return scaling_vector
