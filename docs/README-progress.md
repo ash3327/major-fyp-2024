@@ -361,5 +361,8 @@ Class f1: {0: 0.9894736842105263, 1: 0.9893617021276596, 2: 1.0, 3: 0.9575757575
 * 20250406164630: HandEncoderGCN6dof, laptop, max 96.77 (397ep), 
   * ![alt text](../runs/eval/20250406164630/ph2014-handshape-test/umap_visualization.png)
 * 20250406185135: HandEncoderGAT6dof, desktop, max 96.69 (197ep)
-* 
+* 20250407143513: `Model class: HandEncoderGCN6dof (train_supcon_gat_curriculum) [dosup=True, dounsup=True] Augmentation with linear curriculum scheduling (sup: use sup_aug_schedule: 0..2pi (10k ep*fixed), unsup: 0..2pi, 0..pi/6 (1k ep); do_norm_after_output=True), No pool, 4->3 layers`
+  * ![alt text](image-27.png)
+  * ![alt text](image-28.png)
+  * ![alt text](image-29.png)
 

@@ -37,7 +37,8 @@ class HandEncoderGCN3dof(nn.Module):
             edge_index=None,
             fn=graph_transform,
             do_pool=False,
-            do_norm_after_input=False
+            do_norm_after_input=False,
+            do_norm_before_input=False
         ):
         """
         edge_index: [2, num edges] storing the graph connectivity
@@ -54,6 +55,7 @@ class HandEncoderGCN3dof(nn.Module):
         self.fn = fn
         self.do_pool = do_pool
         self.do_norm_after_input = do_norm_after_input
+        self.do_norm_before_input = do_norm_before_input
         self.num_landmarks = 21
 
         self.node_in_channels = node_in_channels
@@ -150,10 +152,11 @@ class HandEncoderGCN3dof(nn.Module):
         return embedding
     
 class HandEncoderGCN6dof(HandEncoderGCN3dof):
-    def __init__(self, *args, fn=graph_transform, **kwargs):
+    def __init__(self, *args, fn=graph_transform, do_norm_before_input=False, **kwargs):
         kwargs['node_in_channels'] = 6
         kwargs['fn'] = None
         self.fn2 = fn
+        self.do_norm_before_input = do_norm_before_input
         super().__init__(*args, **kwargs)
 
     def forward(self, data):

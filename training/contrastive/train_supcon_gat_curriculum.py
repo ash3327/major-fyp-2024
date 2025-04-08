@@ -194,7 +194,7 @@ if __name__ == '__main__':
     # initialize model and optimizer
     # model = HandEncoder(embedding_size=embedding_dim).to(device)
     # model = HandEncoderGAT3dof(embedding_size=embedding_dim, do_norm_after_input=True).to(device)
-    model = HandEncoderGCN6dof(embedding_size=embedding_dim, do_norm_after_input=True).to(device)
+    model = HandEncoderGCN6dof(embedding_size=embedding_dim, do_norm_after_input=False).to(device)
 
     # load model from file
     if model_checkpoint_path:

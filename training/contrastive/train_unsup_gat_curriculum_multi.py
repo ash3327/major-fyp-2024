@@ -100,15 +100,15 @@ num_it_per_epoch = num_samples_unsup = 80 * batch_size
 # curriculum
 do_sup = True
 do_unsup = True#False
-angle_warmup_epochs = 1000
-angle_sup_warmup_epochs = 10000
+fast_warmup_epochs = 1000
+slow_warmup_epochs = 10000
 
 
 # unsup
 max_dataset_size = 100 * batch_size
 max_dataset_size = 200 * batch_size
-angle_warmup_epochs = 1000
-angle_sup_warmup_epochs = 10000
+fast_warmup_epochs = 1000
+slow_warmup_epochs = 10000
 num_epochs = 10000  # Adjust as needed
 
 
@@ -122,9 +122,11 @@ max_dataset_size = 100 * batch_size
 
 
 # -- Curriculum --
-angle_batch_schedule = lambda i: 2*np.pi * (1 if i > angle_warmup_epochs else i/angle_warmup_epochs) # 0 -> 1
-angle_aug_schedule = lambda i: np.pi/6 * (1 if i > angle_warmup_epochs else i/angle_warmup_epochs) # 0 -> 1
-angle_sup_aug_schedule = lambda i: 2*np.pi * (1 if i > angle_sup_warmup_epochs else i/angle_sup_warmup_epochs) # 0 -> 1
+proportion = lambda i,warmup: (1 if i > warmup else i/warmup)
+angle_batch_schedule = lambda i: 2*np.pi * (1 if i > fast_warmup_epochs else i/fast_warmup_epochs) # 0 -> 1
+angle_aug_schedule = lambda i: np.pi/6 * (1 if i > fast_warmup_epochs else i/fast_warmup_epochs) # 0 -> 1
+angle_sup_aug_schedule = lambda i: 2*np.pi * (1 if i > slow_warmup_epochs else i/slow_warmup_epochs) # 0 -> 1
+scale_range_schedule = lambda i: (1-proportion(i,slow_warmup_epochs),1+4*proportion(i,slow_warmup_epochs)) # 1,1 -> 0,5
 
 # device configuration
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -141,7 +143,7 @@ def structured_collate_fn_sup(batch_list):
     batch_rotation = generate_random_rotation_object(max_angle=angle_batch_schedule(epoch))
     rotations = generate_random_rotation_object(batch_size=grid_size, max_angle=angle_aug_schedule(epoch))
     rotations = [batch_rotation * r for r in rotations]
-    scalings = torch.from_numpy(generate_random_scaling_vector(batch_size=grid_size)) # [grid_size, 3]
+    scalings = torch.from_numpy(generate_random_scaling_vector(batch_size=grid_size), scale_range=scale_range_schedule(epoch)) # [grid_size, 3]
     
     # Pre-allocate output tensor on device
     output_batch = torch.zeros(B, grid_size, 21, 3, device=device)
@@ -162,14 +164,14 @@ def structured_collate_fn(batch_list):
     batch_rotation = generate_random_rotation_object(max_angle=angle_batch_schedule(epoch))
     rotations = generate_random_rotation_object(batch_size=grid_size, max_angle=angle_aug_schedule(epoch))
     rotations = [batch_rotation * r for r in rotations]
-    scalings = torch.from_numpy(generate_random_scaling_vector(batch_size=grid_size)) # [grid_size, 3]
+    scalings = torch.from_numpy(generate_random_scaling_vector(batch_size=grid_size, scale_range=scale_range_schedule(epoch))) # [grid_size, 3]
     
     # Random indices for all batches at once
     rand_indices = torch.randint(0, n_aug_pregenerated, (B,))
     
     # Convert all poses to tensor and normalize in one go
     poses_batch = torch.stack([torch.from_numpy(batch_list[i][rand_indices[i]]) 
-                             for i in range(B)])  # [B, 21, 3]
+                             for i in range(B)])  # [B, G_D, 21, 3] -> [B, ]
     
     # Pre-allocate output tensor on device
     output_batch = torch.zeros(B, grid_size, 21, 3, device=device)
@@ -198,7 +200,7 @@ def info_nce_loss_from_matrix(similarity_matrix, positive_mask, temperature):
     return loss
 
 if __name__ == '__main__':
-    extra_text = "[With Lexset, Handshape and Senz3d] Augmentation with linear curriculum scheduling (sup: use sup_aug_schedule: 0..2pi (10k ep), unsup: 0..2pi, 0..pi/6 (1k ep); do_norm_after_output=True), No pool, 4->3 layers"
+    extra_text = "[With Lexset, Handshape and Senz3d] Augmentation with linear curriculum scheduling (sup: use sup_aug_schedule: 0..2pi (10k ep), unsup: 0..2pi, 0..pi/6 (1k ep); do_norm_after_output=False), No pool, 4->3 layers"
     
     def aug(x):
         global epoch
@@ -394,6 +396,8 @@ if __name__ == '__main__':
         writer.add_scalar('Curriculum/ang-batch', angle_batch_schedule(epoch), epoch)
         writer.add_scalar('Curriculum/ang-aug', angle_aug_schedule(epoch), epoch)
         writer.add_scalar('Curriculum/ang-sup-aug', angle_sup_aug_schedule(epoch), epoch)
+        writer.add_scalar('Curriculum/scale-aug-batch', scale_range_batch_schedule(epoch), epoch)
+        writer.add_scalar('Curriculum/scale-aug', scale_range_schedule(epoch), epoch)
 
         # save models
         if not check_profile:
