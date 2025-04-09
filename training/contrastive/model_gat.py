@@ -23,6 +23,9 @@ from training.contrastive import topology
 def graph_transform(batch_list):
     return Batch.from_data_list([Data(x=batch, edge_index=topology.edge_indices) for batch in batch_list])
 
+def graph_transform_complex(batch_list):
+    return Batch.from_data_list([Data(x=batch, edge_index=topology.more_edge_indices) for batch in batch_list])
+
 class HandEncoderGAT3dof(nn.Module):
     def __init__(
             self, 

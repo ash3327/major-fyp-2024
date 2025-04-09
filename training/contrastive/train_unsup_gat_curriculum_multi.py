@@ -31,7 +31,7 @@ from training.contrastive import topology
 
 from training.contrastive.model import HandEncoder, HandEncoder_6DOF
 from training.contrastive.model_gcn import HandEncoderGCN3dof, HandEncoderGCN6dof
-from training.contrastive.model_gat import HandEncoderGAT3dof, HandEncoderGAT6dof, graph_transform
+from training.contrastive.model_gat import HandEncoderGAT3dof, HandEncoderGAT6dof, graph_transform, graph_transform_complex
 from training.contrastive.losses import info_nce_loss, supcon_loss
 from training.contrastive.evals import extract_embeddings, evaluate_knn
 
@@ -112,14 +112,13 @@ slow_warmup_epochs = 10000
 num_epochs = 10000  # Adjust as needed
 
 
-model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250408010415/checkpoints/best.pth' # not good
-start_epoch = 335
+# model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250408010415/checkpoints/best.pth' # not good
+# start_epoch = 335
 max_dataset_size = 100 * batch_size
 
 # CHECK PROFILE
 # check_profile = True
 # max_dataset_size = 20 * batch_size #100 * batch_size
-
 
 # -- Curriculum --
 proportion = lambda i,warmup: (1 if i > warmup else i/warmup)
@@ -200,7 +199,7 @@ def info_nce_loss_from_matrix(similarity_matrix, positive_mask, temperature):
     return loss
 
 if __name__ == '__main__':
-    extra_text = "[With Lexset, Handshape and Senz3d] Augmentation with linear curriculum scheduling (sup: use sup_aug_schedule: 0..2pi (10k ep), unsup: 0..2pi, 0..pi/6 (1k ep); do_norm_after_output=False), No pool, 4->3 layers"
+    extra_text = "[With Lexset, Handshape and Senz3d] <more complex joints> Augmentation with linear curriculum scheduling (sup: use sup_aug_schedule: 0..2pi (10k ep), unsup: 0..2pi, 0..pi/6 (1k ep); do_norm_after_output=False), No pool, 4->3 layers"
     
     def aug(x):
         global epoch
@@ -257,8 +256,8 @@ if __name__ == '__main__':
     # model = HandEncoder_6DOF(embedding_size=embedding_dim).to(device)
     # model = HandEncoderGAT3dof(embedding_size=embedding_dim).to(device)
     # model = HandEncoderGAT6dof(embedding_size=embedding_dim, fn=pre_transform).to(device)
-    # model = HandEncoderGAT3dof(embedding_size=embedding_dim, do_norm_after_input=True).to(device)
-    model = HandEncoderGCN6dof(embedding_size=embedding_dim, do_norm_after_input=False).to(device)
+    model = HandEncoderGAT3dof(embedding_size=embedding_dim, do_norm_after_input=False, fn=graph_transform_complex).to(device)
+    # model = HandEncoderGCN6dof(embedding_size=embedding_dim, do_norm_after_input=False, fn=graph_transform_complex).to(device)
 
     # load model from file
     if model_checkpoint_path:
@@ -398,6 +397,7 @@ if __name__ == '__main__':
         writer.add_scalar('Curriculum/ang-sup-aug', angle_sup_aug_schedule(epoch), epoch)
         writer.add_scalar('Curriculum/scale-aug-L', scale_range_schedule(epoch)[0], epoch)
         writer.add_scalar('Curriculum/scale-aug-H', scale_range_schedule(epoch)[1], epoch)
+
 
         # save models
         if not check_profile:

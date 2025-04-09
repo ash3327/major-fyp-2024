@@ -169,8 +169,11 @@ if __name__ == '__main__':
     # model = HandEncoderGCN3dof().to(device=device)
 
     # model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250406000135/checkpoints/best.pth' # supcon, no aug, HandEncoderGCN3dof model.
-    model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250406164630/checkpoints/best.pth' # sup+unsup, linear curriculum scheduling, HandEncoderGCN3dof model.
-    model = HandEncoderGCN6dof().to(device=device)
+    # model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250406164630/checkpoints/best.pth' # sup+unsup, linear curriculum scheduling, HandEncoderGCN3dof model.
+    # model = HandEncoderGCN6dof().to(device=device)
+    
+    model_checkpoint_path = 'runs/hand_contrastive_learning_structured/best/20250408122338/checkpoints/last.pth' # unsup all, linear curriculum scheduling, HandEncoderGCN6dof model.
+    model = HandEncoderGCN6dof(do_norm_before_input=False).to(device=device)
     
     if os.path.exists(model_checkpoint_path):
         model.load_state_dict(torch.load(model_checkpoint_path, map_location=device))

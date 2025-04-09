@@ -71,14 +71,40 @@ def load_model(model_checkpoint_name):
 load_model(model_checkpoint_name)
 
 # Pre-processing
+timescale_min = .2
+timescale_max = 2
+
+def aug(sequences, labels):
+    augmented_sequences = []
+    augmented_labels = []
+
+    for seq, label in zip(sequences, labels):
+        original_length = len(seq)
+
+        timescale = random.uniform(timescale_min, timescale_max)
+        target_length = int(original_length * timescale)
+
+        indices = np.linspace(0, original_length - 1, target_length)
+        sampled_indices = np.floor(indices).astype(int)
+        sampled_indices = np.clip(sampled_indices, 0, original_length - 1)
+
+        augmented_sequences.append(seq[sampled_indices])
+        augmented_labels.append(label[sampled_indices])
+
+    return augmented_sequences, augmented_labels
+
 def post_fn(sequences:torch.Tensor, labels, *others):
     B,L,_,_ = sequences.shape
     return sequences.reshape(B,L,-1), labels, *others
 
 # Data
-train_loader = get_dataloader(dataset='ipn', split='train', batch_size=batch_size, post_fn=post_fn)
+train_loader = get_dataloader(dataset='ipn', split='train', batch_size=batch_size, post_fn=post_fn, aug=aug)
 val_loader = get_dataloader(dataset='ipn', split='test', batch_size=batch_size, post_fn=post_fn)
 
+# for sequences, labels in train_loader:
+#     print(sequences.shape, labels.shape)
+
+# exit(0)
 # %%
 # initialize TensorBoard writer
 os.makedirs(train_path_root, exist_ok=True)

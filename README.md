@@ -57,3 +57,7 @@
 - Dataset preparation: under `scripts/datasets`.
 - Dataset for hand-only contrastive training: under `scripts/fake_data` and `scripts/hand_only_supervised`.
 - Unsupervised contrastive training (InfoNCE loss) (v3): `python training/contrastive/train_contrastive_fake_data.py`.
+
+Libraries:
+`git clone https://github.com/Thomas-yx/ResGCNv1.git`
+`pip install -r ResGCNv1/scripts/requirements.txt`
