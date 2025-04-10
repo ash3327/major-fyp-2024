@@ -101,7 +101,7 @@ def post_fn(sequences:torch.Tensor, labels, *others):
 # Data
 train_loader = get_dataloader(dataset='ipn', split='train', batch_size=batch_size, post_fn=post_fn, with_id=True)
 val_loader = get_dataloader(dataset='ipn', split='test', batch_size=batch_size, post_fn=post_fn, with_id=True)
-
+exit(0)
 # %%
 
 def evaluate_model(dataloader):

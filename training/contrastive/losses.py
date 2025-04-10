@@ -39,6 +39,20 @@ def info_nce_loss(features, temperature=0.1, device='cuda', n_views=2):
 
     return F.cross_entropy(logits, labels)
 
+# InfoNCE Helper Function
+def info_nce_loss_from_matrix(similarity_matrix, positive_mask, temperature):
+    """
+    Computes the InfoNCE loss given a similarity matrix and a positive mask.
+    """
+    n = similarity_matrix.shape[0]
+    logits = similarity_matrix / temperature
+    logits_max, _ = torch.max(logits, dim=1, keepdim=True)
+    logits = logits - logits_max.detach()
+    exp_logits = torch.exp(logits)
+    log_prob = logits - torch.log(exp_logits.sum(1, keepdim=True) - exp_logits.diag().unsqueeze(1))
+    mean_log_prob_pos = (positive_mask * log_prob).sum(1) / (positive_mask.sum(1) + 1e-8)
+    loss = -mean_log_prob_pos.mean()
+    return loss
 
 def supcon_loss(features, labels, temperature=0.07, device='cuda'):
     """
@@ -81,7 +95,6 @@ def supcon_loss(features, labels, temperature=0.07, device='cuda'):
     )
     mask = mask * logits_mask
 
-
     # compute log_prob
     exp_logits = torch.exp(logits) * logits_mask
     log_prob = logits - torch.log(exp_logits.sum(1, keepdim=True) + 1e-9)
@@ -104,4 +117,31 @@ def supcon_loss(features, labels, temperature=0.07, device='cuda'):
     # mean_log_prob_pos = (mask * log_prob).sum(1) / (mask.sum(1) + 1e-9)
     # loss = -mean_log_prob_pos.mean()
 
+    return loss
+
+def softcon_loss(features, soft_labels, mask, temperature=0.07, num_splits=2, device='cuda'):
+    """
+    Reference: https://arxiv.org/html/2405.20462v1
+
+    Args:
+        features: [B,L//W,D_lstm]
+        soft_labels: [B,L//W,C]
+        mask: [B,L//W]
+    """
+    # print(features.shape, soft_labels.shape, mask.shape)
+    B, L, D = features.shape
+    C = soft_labels.shape[-1]
+    assert B % num_splits == 0, f"Batch Size {B} must be divisible by num splits {num_splits}"
+    
+    features = F.normalize(features, dim=-1).view(B//num_splits,num_splits*L,D)
+    soft_labels = F.normalize(soft_labels, dim=-1).view(B//num_splits,num_splits*L,C)
+    mask = mask.view(B//num_splits,num_splits*L)
+    mask = mask.unsqueeze(2) & mask.unsqueeze(1)
+
+    X = sim_matrix_feats = torch.einsum("bik,bjk->bij", features, features)
+    Y = sim_matrix_labels = torch.einsum("bik,bjk->bij", soft_labels, soft_labels)
+    
+    loss_items = Y * F.logsigmoid(X) + (1-Y) * F.logsigmoid(-X)
+    loss = -torch.nanmean(loss_items)
+    
     return loss

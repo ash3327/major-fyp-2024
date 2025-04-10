@@ -256,7 +256,7 @@ if __name__ == '__main__':
     # model = HandEncoder_6DOF(embedding_size=embedding_dim).to(device)
     # model = HandEncoderGAT3dof(embedding_size=embedding_dim).to(device)
     # model = HandEncoderGAT6dof(embedding_size=embedding_dim, fn=pre_transform).to(device)
-    model = HandEncoderGAT3dof(embedding_size=embedding_dim, do_norm_after_input=False, fn=graph_transform_complex).to(device)
+    model = HandEncoderGAT6dof(embedding_size=embedding_dim, do_norm_after_input=False, fn=graph_transform_complex).to(device)
     # model = HandEncoderGCN6dof(embedding_size=embedding_dim, do_norm_after_input=False, fn=graph_transform_complex).to(device)
 
     # load model from file

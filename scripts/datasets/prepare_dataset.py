@@ -97,6 +97,14 @@ def get_info(dataset):
             )
             dyn = True
             is_video = True
+        case 'ipn2' | 'IPN_Hand2':
+            print('Fetching IPN Dataset')
+            dataset = 'IPN_Hand'
+            subfolders = dict(
+                vid="frames"
+            )
+            dyn = True
+            is_video = True
         case _:
             raise Exception("Such dataset is not defined within `prepare_dataset.py`.")
     return data_dir, dataset, subfolders, output_dir, dyn, is_video, others

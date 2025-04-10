@@ -43,7 +43,7 @@ class IPNGestureDataset(Dataset):
         with open(annot_file, 'r') as f:
             for line in tqdm(f):
                 video_name, gesture, gesture_id, start_frame, end_frame, duration = line.strip().split(',')
-                start_frame, end_frame = int(start_frame), int(end_frame)
+                start_frame, end_frame = int(start_frame)-1, int(end_frame)-1
                 if video_name not in self.source_files:
                     features_path = os.path.join(dataset_info['data_path'],f"{video_name}.npy")
                     if not os.path.exists(features_path):
@@ -52,6 +52,8 @@ class IPNGestureDataset(Dataset):
                     features = np.load(features_path, allow_pickle=True)
                     self.source_files[video_name] = (features, np.zeros(len(features)))
                     # features = features[start_frame:end_frame]
+                # if end_frame > len(self.source_files[video_name][0]):
+                #     print(f"NOT MATCH: {video_name} have {len(self.source_files[video_name][0])} frames but frame interval [{start_frame},{end_frame}) is queried (class {gesture})")
                 self.source_files[video_name][1][start_frame:end_frame] = self.class_to_idx[gesture]
         self.data, self.labels = list(zip(*list(self.source_files.values())))
         print(minstart,maxend)
@@ -70,7 +72,7 @@ class IPNGestureDataset(Dataset):
 
     def get_clip(self, video_name):
         return self.source_files[video_name][0]
-    
+
 # Nothing
 def nothing(*x):
     return x

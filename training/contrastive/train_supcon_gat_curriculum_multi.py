@@ -27,9 +27,9 @@ from training.contrastive.augments import augment as augment_hand, augment_pair 
 from training.contrastive.augments import generate_random_rotation_object, generate_random_scaling_vector, apply_transform, vectorized_apply_transform, normalize  # Make sure path is correct
 
 from training.contrastive.model import HandEncoder, HandEncoder_6DOF
-from training.contrastive.model_gat import HandEncoderGAT3dof, HandEncoderGAT6dof, graph_transform
+from training.contrastive.model_gat import HandEncoderGAT3dof, HandEncoderGAT6dof, graph_transform, graph_transform_complex
 from training.contrastive.model_gcn import HandEncoderGCN3dof, HandEncoderGCN6dof
-from training.contrastive.losses import info_nce_loss, supcon_loss
+from training.contrastive.losses import info_nce_loss, supcon_loss, info_nce_loss_from_matrix
 from training.contrastive.evals import extract_embeddings, evaluate_knn
 
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR, ReduceLROnPlateau
@@ -38,8 +38,11 @@ import math
 # train info
 #
 version_id = 1
+dump = False
+
 current_time = datetime.now().strftime('%Y%m%d%H%M%S')
-train_path_root = f'runs/hand_contrastive_learning_structured/v{version_id}/{current_time}'
+experiment_name = f'hand_contrastive_learning_structured' if not dump else 'hcls_dump'
+train_path_root = f'runs/{experiment_name}/v{version_id}/{current_time}'
 
 model_checkpoint_path = 'runs/hand_contrastive_learning/v4/20250401140023/checkpoints/best.pth'#None
 start_epoch = 0
@@ -97,18 +100,53 @@ num_it_per_epoch = num_samples_unsup = 80 * batch_size
 # curriculum
 do_sup = True
 do_unsup = True#False
-angle_warmup_epochs = 1000
-angle_sup_warmup_epochs = 10000
-angle_batch_schedule = lambda i: 2*np.pi * (1 if i > angle_warmup_epochs else i/angle_warmup_epochs) # 0 -> 1
-angle_aug_schedule = lambda i: np.pi/6 * (1 if i > angle_warmup_epochs else i/angle_warmup_epochs) # 0 -> 1
-angle_sup_aug_schedule = lambda i: 2*np.pi * (1 if i > angle_sup_warmup_epochs else i/angle_sup_warmup_epochs) # 0 -> 1
+fast_warmup_epochs = 1000
+slow_warmup_epochs = 10000
+proportion = lambda i,warmup: (1 if i > warmup else i/warmup)
+angle_batch_schedule = lambda i: 2*np.pi * (1 if i > fast_warmup_epochs else i/fast_warmup_epochs) # 0 -> 1
+angle_aug_schedule = lambda i: np.pi/6 * (1 if i > fast_warmup_epochs else i/fast_warmup_epochs) # 0 -> 1
+angle_sup_aug_schedule = lambda i: 2*np.pi * (1 if i > slow_warmup_epochs else i/slow_warmup_epochs) # 0 -> 1
+scale_range_schedule = lambda i: (1-proportion(i,slow_warmup_epochs),1+4*proportion(i,slow_warmup_epochs)) # 1,1 -> 0,5
 
 # unsup
 max_dataset_size = 80 * batch_size
 
+# 20250410
+do_full = True
+lexset_only = True
+
 # device configuration
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 epoch = 0
+
+def structured_collate_fn_sup(batch_list):
+    """Optimized collate function for supervised data."""
+    global epoch
+    # Extract joints and convert to tensor in one go
+    labels_batch, joints_batch = zip(*batch_list) # [B, 21, 3], [B,]
+    joints_batch = torch.stack(joints_batch)  
+    labels_batch = torch.tensor(labels_batch, dtype=torch.long)  # [B,]
+    
+    B = len(batch_list)
+    
+    # Pre-compute transformations
+    batch_rotation = generate_random_rotation_object(max_angle=angle_batch_schedule(epoch))
+    rotations = generate_random_rotation_object(batch_size=grid_size, max_angle=angle_aug_schedule(epoch))
+    rotations = [batch_rotation * r for r in rotations]
+    scalings = torch.from_numpy(generate_random_scaling_vector(batch_size=grid_size, scale_range=scale_range_schedule(epoch))) # [grid_size, 3]
+    
+    # Pre-allocate output tensor on device
+    output_batch = torch.zeros(B, grid_size, 21, 3, device=device) # B, G, 21, 3
+    labels_batch = labels_batch.reshape(-1,1).tile(1,grid_size)# B, G,
+    
+    # Apply transformations in parallel for each grid position
+    for j, (rotation_j, scaling_j) in enumerate(zip(rotations, scalings)):
+        output_batch[:, j] = vectorized_apply_transform(joints_batch, rotation_j, scaling_j)
+        
+    # shape: [B, grid_size, 21, 3]
+    output_batch = output_batch.view(-1, 21, 3)  # Flatten grid size [B*G,21,3]
+    labels_batch = labels_batch.view(-1) # [B*G]
+    return labels_batch, output_batch
 
 def structured_collate_fn(batch_list):
     """Optimized collate function for unsupervised data."""
@@ -139,27 +177,12 @@ def structured_collate_fn(batch_list):
     output_batch = output_batch.view(-1, 21, 3)  # Flatten grid size
     return output_batch
 
-# InfoNCE Helper Function
-def info_nce_loss_from_matrix(similarity_matrix, positive_mask, temperature):
-    """
-    Computes the InfoNCE loss given a similarity matrix and a positive mask.
-    """
-    n = similarity_matrix.shape[0]
-    logits = similarity_matrix / temperature
-    logits_max, _ = torch.max(logits, dim=1, keepdim=True)
-    logits = logits - logits_max.detach()
-    exp_logits = torch.exp(logits)
-    log_prob = logits - torch.log(exp_logits.sum(1, keepdim=True) - exp_logits.diag().unsqueeze(1))
-    mean_log_prob_pos = (positive_mask * log_prob).sum(1) / (positive_mask.sum(1) + 1e-8)
-    loss = -mean_log_prob_pos.mean()
-    return loss
-
 if __name__ == '__main__':
     large_angle = np.pi*2
     small_angle = np.pi/6
     large_angle = 0
     small_angle = 0
-    extra_text = "[With Lexset, Handshape and Senz3d] Augmentation with linear curriculum scheduling (sup: use sup_aug_schedule: 0..2pi (10k ep), unsup: 0..2pi, 0..pi/6 (1k ep); do_norm_after_output=True), No pool, 4->3 layers"
+    extra_text = f"[With Lexset, Handshape and Senz3d] {'<lexset only>' if lexset_only else '<all sup datasets>'} <more complex joints> Augmentation with linear curriculum scheduling (sup: use sup_aug_schedule: 0..2pi (10k ep), unsup: 0..2pi, 0..pi/6 (1k ep); do_norm_after_output=True), No pool, 4->3 layers"
     def aug_pair(*x):
         global epoch
         return augment_handpair(*x, maxangle=angle_batch_schedule(epoch))
@@ -172,16 +195,24 @@ if __name__ == '__main__':
 
     # initialize datasets and dataloaders
     # supervised dataset
-    dataset_sup = CombinedLabelledHandDataset(
-        dataset_names={
-            'lexset': 'train',
-            'handshape': 'train',
-            'senz3d': 'acquisitions'
-        },
-        augment=aug
+    if lexset_only:
+        dataset_sup = LabelledHandDataset(dataset_name='lexset', split='train', augment=aug)
+    else:
+        dataset_sup = CombinedLabelledHandDataset(
+            dataset_names={
+                'lexset': 'train',
+                'handshape': 'train',
+                'senz3d': 'acquisitions'
+            }
+        )
+    # 
+    dataloader_sup = DataLoader(
+        dataset_sup, 
+        batch_size=batch_size, 
+        shuffle=True, 
+        collate_fn=structured_collate_fn_sup,
+        drop_last=True
     )
-    dataloader_sup = DataLoader(dataset_sup, batch_size=batch_size, shuffle=True, 
-                                    drop_last=True)
 
     # unsupervised dataset with structured augmentation
     dataset_unsup = HandPoseContrastiveDataset(num_samples=num_samples_unsup, npy_file=f'data/kpts/fake/augmented_gesture_groups_{n_aug_pregenerated}.npy')
@@ -195,13 +226,16 @@ if __name__ == '__main__':
                                     drop_last=True)
 
     # test dataset
+    dataset_eval_sup = LabelledHandDataset(dataset_name='lexset', split='train')
+    dataloader_eval_sup = DataLoader(dataset_eval_sup, batch_size=batch_size, shuffle=False)
+
     dataset_test = LabelledHandDataset(dataset_name='lexset', split='test')
     dataloader_test = DataLoader(dataset_test, batch_size=batch_size, shuffle=False)
 
     # initialize model and optimizer
     # model = HandEncoder(embedding_size=embedding_dim).to(device)
-    # model = HandEncoderGAT3dof(embedding_size=embedding_dim, do_norm_after_input=True).to(device)
-    model = HandEncoderGCN6dof(embedding_size=embedding_dim, do_norm_after_input=True).to(device)
+    model = HandEncoderGAT6dof(embedding_size=embedding_dim, do_norm_after_input=False, fn=graph_transform_complex).to(device)
+    # model = HandEncoderGCN6dof(embedding_size=embedding_dim, do_norm_after_input=False, fn=graph_transform_complex).to(device)
 
     # load model from file
     if model_checkpoint_path:
@@ -259,7 +293,11 @@ if __name__ == '__main__':
             dataset_size = len(dataloader_sup)
         if do_unsup:
             dataset_size = max(dataset_size, len(dataloader_unsup))
-        dataset_size = min(dataset_size, max_dataset_size)
+        dataset_size = min(dataset_size, max_dataset_size//batch_size)
+        
+        # FULL
+        if do_full:
+            dataset_size = len(dataloader_sup)
         for i in tqdm(range(dataset_size),
                         desc=f"Epoch {epoch+1}/{num_epochs} - Training"):
             loss = 0.0
@@ -322,6 +360,8 @@ if __name__ == '__main__':
         writer.add_scalar('Curriculum/ang-batch', angle_batch_schedule(epoch), epoch)
         writer.add_scalar('Curriculum/ang-aug', angle_aug_schedule(epoch), epoch)
         writer.add_scalar('Curriculum/ang-sup-aug', angle_sup_aug_schedule(epoch), epoch)
+        writer.add_scalar('Curriculum/scale-aug-L', scale_range_schedule(epoch)[0], epoch)
+        writer.add_scalar('Curriculum/scale-aug-H', scale_range_schedule(epoch)[1], epoch)
 
         # save models
         if avg_train_loss < best_loss:
@@ -349,7 +389,7 @@ if __name__ == '__main__':
             print(f"Evaluating on test set at epoch {epoch+1} using k-NN (k={k_neighbors})")
 
             # extract embeddings
-            train_embeddings, train_labels = extract_embeddings(model, dataloader_sup, device)
+            train_embeddings, train_labels = extract_embeddings(model, dataloader_eval_sup, device)
             test_embeddings, test_labels = extract_embeddings(model, dataloader_test, device)
 
             # perform k-NN evaluation
