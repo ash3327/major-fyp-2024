@@ -218,7 +218,6 @@ def evaluate_model(centroids):
             if not mask.any():
                 continue
 
-            
             feats = F.normalize(outputs_flat[mask], dim=-1) # [N,D]
             labls = labels_flat[mask] # [N,C]
             # print(feats.shape, labls.shape)

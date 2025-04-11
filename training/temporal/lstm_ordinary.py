@@ -27,8 +27,10 @@ from training.temporal.model import LSTMGestureModel
 # %%
 # Log
 version_id = 1
+dump = False #True
+
 current_time = datetime.now().strftime('%Y%m%d_%H%M%S')
-experiment_name = f'ipn_classifiers'
+experiment_name = f'ipn_classifiers' if not dump else 'ipn_dump'
 run_name = f'v{version_id}/{current_time}'
 train_path_root = f'runs/{experiment_name}/{run_name}'
 log_dir = os.path.join(train_path_root, 'logs')
@@ -120,6 +122,7 @@ def evaluate_model():
 
                 _, predicted = torch.max(outputs_flat[mask], 1)
                 total_correct += (predicted == labels_flat[mask]).sum().item()
+                print(predicted, labels_flat[mask])
                 total_samples += num_valid_samples
                 true_labels.extend(labels_flat[mask].cpu().numpy())
                 predicted_labels.extend(predicted.cpu().numpy())
@@ -128,7 +131,8 @@ def evaluate_model():
 
     avg_loss = total_loss / len(val_loader.dataset) if len(val_loader.dataset) > 0 else 0.0
     avg_acc = (total_correct / total_samples) if total_samples > 0 else 0.0
-
+    print(total_correct, total_samples)
+    # exit(0)
     f1 = 0.0
     if true_labels:
         f1 = f1_score(true_labels, predicted_labels, average='weighted')

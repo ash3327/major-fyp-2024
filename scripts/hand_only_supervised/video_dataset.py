@@ -63,40 +63,41 @@ class IPNGestureDataset(Dataset):
                 raise Exception(f'Error in reading file {file_names_path}')
             features = np.load(data_path, allow_pickle=True)
             file_names = np.load(file_names_path, allow_pickle=True)[:,0]
-            self.source_file_features = dict()
+            source_file_features = dict()
             source_file_ids = dict()
-            self.source_file_labels = dict()
             # print(self.source_file_features.shape,file_names[:15])
             ### SPECIFIC TO IPN DATASET
             for f, l in tqdm(zip(features, file_names)):
                 # self.source_files[str(l)] = (f, np.zeros(len(f)))
                 file_name, frame_id = str(l).rsplit('/',1)
                 # self.source_file_features[vid_map[frame_id]]
-                if file_name not in self.source_file_features:
-                    self.source_file_features[file_name] = list()
+                if file_name not in source_file_features:
+                    source_file_features[file_name] = list()
                     source_file_ids[file_name] = list()
                 frame_id = int(frame_id.rsplit('_',1)[1].split('.')[0])
-                self.source_file_features[file_name].append(f)
+                source_file_features[file_name].append(f)
                 source_file_ids[file_name].append(frame_id-1) # starts from 1.
                 # print(file_name, frame_id, str(l))
                 # break
-            for file_name, features in self.source_file_features.items():
+            for file_name, features in source_file_features.items():
                 # a[b] = a.copy() reorders dataset by the index referred in b.
-                f = self.source_file_features[file_name] = np.array(self.source_file_features[file_name])
+                f = source_file_features[file_name] = np.array(source_file_features[file_name])
                 f[source_file_ids[file_name]] = f.copy()
-                self.source_file_labels[file_name] = np.zeros(len(f))
-
+        
         with open(annot_file, 'r') as f:
             for line in tqdm(f):
                 video_name, gesture, gesture_id, start_frame, end_frame, duration = line.strip().split(',')
                 start_frame, end_frame = int(start_frame)-1, int(end_frame)-1
                 
                 if video_name not in self.source_file_features:
-                    features_path = os.path.join(dataset_info['data_path'],f"{video_name}.npy")
-                    if not os.path.exists(features_path):
-                        print(f'Error in reading file {features_path}')
-                        err_count += 1
-                    features = np.load(features_path, allow_pickle=True)
+                    if self.aggregated:
+                        features = source_file_features[video_name]
+                    else:
+                        features_path = os.path.join(dataset_info['data_path'],f"{video_name}.npy")
+                        if not os.path.exists(features_path):
+                            print(f'Error in reading file {features_path}')
+                            err_count += 1
+                        features = np.load(features_path, allow_pickle=True)
                     self.source_file_features[video_name] = features
                     self.source_file_labels[video_name] = np.zeros(len(features))
                     # features = features[start_frame:end_frame]
@@ -105,6 +106,7 @@ class IPNGestureDataset(Dataset):
                 self.source_file_labels[video_name][start_frame:end_frame] = self.class_to_idx[gesture]
                 minstart = min(minstart,start_frame)
                 maxend = max(maxend,end_frame)
+
         self.data, self.labels = list(self.source_file_features.values()), list(self.source_file_labels.values())
         print(minstart,maxend)
         print(f"Loaded {len(self.data)} samples from {dataset_info['data_path']}")

@@ -78,6 +78,7 @@ scheduler = ReduceLROnPlateau(optimizer, patience=patience)
 # Checkpoint
 model_checkpoint_name = None
 model_checkpoint_name = 'v1/20250408_221008'
+# model_checkpoint_name = 'v1/20250412_011404'
 
 # load model from file
 def load_model(model_checkpoint_name):
@@ -164,6 +165,7 @@ def evaluate_model(dataloader):
 # %%
 # Evaluation
 epoch_val_loss, epoch_val_acc, epoch_val_f1, misclassified_videos = evaluate_model(val_loader)
+print(epoch_val_loss, epoch_val_acc, epoch_val_f1)
 # print(misclassified_video)
 for k, (seq, pred, lab) in misclassified_videos.items():
     visualize_video_with_labels(seq, pred, lab, val_loader.dataset)
