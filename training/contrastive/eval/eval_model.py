@@ -2,6 +2,8 @@ import os
 import sys
 sys.path.append('.')
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
@@ -82,8 +84,12 @@ def analyze_clusters(embeddings, labels, label_to_idx, output_dir):
     for label, idx in label_to_idx.items():
         mask = labels == idx
         cluster_embeddings = embeddings[mask]
+        cluster_embeddings = F.normalize(torch.from_numpy(cluster_embeddings),dim=-1).numpy()
         cluster_means[label] = np.mean(cluster_embeddings, axis=0)
-        distances = cdist([cluster_means[label]], cluster_embeddings)[0]
+        cluster_means[label] = F.normalize(torch.from_numpy(cluster_means[label]),dim=-1).numpy()
+        # distances = cdist([cluster_means[label]], cluster_embeddings)[0]
+        # [N_c, D]; [D,]
+        distances = np.dot(cluster_embeddings, cluster_means[label])
         if len(cluster_embeddings) == 0:
             cluster_sizes[label] = {
             'count': 0,
@@ -102,7 +108,9 @@ def analyze_clusters(embeddings, labels, label_to_idx, output_dir):
             }
     labels_list = sorted(label_to_idx.keys())
     means_matrix = np.array([cluster_means[label] for label in labels_list])
-    distances = cdist(means_matrix, means_matrix)
+    # distances = cdist(means_matrix, means_matrix)
+    means_matrix = F.normalize(torch.from_numpy(means_matrix),dim=-1).numpy()
+    distances = np.dot(means_matrix, means_matrix.T)
 
     # Save cluster analysis to a text file
     os.makedirs(output_dir, exist_ok=True)
@@ -212,17 +220,17 @@ if __name__ == '__main__':
     #         out = get_6dof(x)
     #         return out.reshape(out.shape[0], -1)
     # model = Do6DoF()
-    # ckpt_id = '6dof'
+    # ckpt_id = '6dof/cosinesim'
 
-    # class DoNothing:
-    #     def eval(self):
-    #         pass
-    #     def forward(self, x):
-    #         return x
-    #     def __call__(self, x):
-    #         return x.view(x.shape[0],-1)
-    # model = DoNothing()
-    # ckpt_id = 'none'
+    class DoNothing:
+        def eval(self):
+            pass
+        def forward(self, x):
+            return x
+        def __call__(self, x):
+            return x.view(x.shape[0],-1)
+    model = DoNothing()
+    ckpt_id = 'none/cosinesim'
     
     embeddings, labels = extract_embeddings(model, dataloader, device)
     embeddings = embeddings.cpu().numpy()

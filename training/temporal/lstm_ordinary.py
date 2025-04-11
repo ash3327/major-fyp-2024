@@ -76,8 +76,8 @@ def post_fn(sequences:torch.Tensor, labels, *others):
     return sequences.reshape(B,L,-1), labels, *others
 
 # Data
-train_loader = get_dataloader(dataset='ipn', split='train', batch_size=batch_size, post_fn=post_fn)
-val_loader = get_dataloader(dataset='ipn', split='test', batch_size=batch_size, post_fn=post_fn)
+train_loader = get_dataloader(dataset='ipn2', split='train', batch_size=batch_size, post_fn=post_fn)
+val_loader = get_dataloader(dataset='ipn2', split='test', batch_size=batch_size, post_fn=post_fn)
 
 # %%
 # initialize TensorBoard writer

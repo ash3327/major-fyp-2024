@@ -36,7 +36,7 @@ checkpoint_dir = os.path.join(train_path_root, 'checkpoints')
 
 eval_interval = 2
 patience = 100
-extra_text = "Bi-directional LSTM, direct classification"
+extra_text = "Bi-directional LSTM, direct classification; <IPN2 DATASET (CORRECTED VERSION)>"
 
 # Training setup
 batch_size = 32
@@ -98,8 +98,8 @@ def post_fn(sequences:torch.Tensor, labels, *others):
     return sequences.reshape(B,L,-1), labels, *others
 
 # Data
-train_loader = get_dataloader(dataset='ipn', split='train', batch_size=batch_size, post_fn=post_fn, aug=aug)
-val_loader = get_dataloader(dataset='ipn', split='test', batch_size=batch_size, post_fn=post_fn)
+train_loader = get_dataloader(dataset='ipn2', split='train', batch_size=batch_size, post_fn=post_fn, aug=aug)
+val_loader = get_dataloader(dataset='ipn2', split='test', batch_size=batch_size, post_fn=post_fn)
 
 # for sequences, labels in train_loader:
 #     print(sequences.shape, labels.shape)
