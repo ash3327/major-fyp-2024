@@ -20,6 +20,60 @@ class LSTMGestureModel(nn.Module):
         return out
         # return self.fc(x[:, -1, :])  # Take last time step output
 
+# Define LSTM model
+class LSTMGestureModel_Hierachical(nn.Module):
+    def __init__(self, body_dim=17, hand_dim=21, num_channels=3, hidden_dim=256, output_dim=128, num_layers=2, dropout=0.2, bidirectional=True, normalize=True):
+        super(LSTMGestureModel_Hierachical, self).__init__()
+        self.output_dim = output_dim
+        self.body_dim = body_dim
+        self.hand_dim = hand_dim
+        self.normalize = normalize
+        self.num_channels = num_channels
+        self.lstm_body = nn.LSTM(
+            body_dim*num_channels, hidden_dim, num_layers, 
+            batch_first=True,
+            dropout=dropout if num_layers > 1 else 0,
+            bidirectional=bidirectional
+        )
+        self.lstm_hand = nn.LSTM(
+            hand_dim*num_channels, hidden_dim, num_layers,
+            batch_first=True,
+            dropout=dropout if num_layers > 1 else 0,
+            bidirectional=bidirectional
+        )
+        self.lstm_final = nn.LSTM(
+            hidden_dim * (2 if bidirectional else 1) * 3, hidden_dim, num_layers,
+            batch_first=True,
+            dropout=dropout if num_layers > 1 else 0,
+            bidirectional=bidirectional
+        )
+        self.fc = nn.Linear(hidden_dim * (2 if bidirectional else 1), output_dim)
+
+    def forward(self, x):
+        # Assume input: [B,L,177]
+        # 177 = [17+21+21,3]
+        B,L,_ = x.shape
+        x = x.view(B,L,self.body_dim+self.hand_dim*2,self.num_channels)
+        x = x.clone()
+        x_body = x[...,:self.body_dim,:] # body
+        x_hand1 = x[...,self.body_dim:self.body_dim+self.hand_dim,:] # hand1
+        x_hand2 = x[...,self.body_dim+self.hand_dim:,:] # hand2
+
+        x_hand1[...,:,:3] -= x_hand1[...,0,torch.newaxis,:3]
+        x_hand2[...,:,:3] -= x_hand2[...,0,torch.newaxis,:3]
+
+        h_body, _ = self.lstm_body(x_body.view(B,L,-1)) # shape: [B,L,D_in] -> [B,L,D_lstm]
+        h_hand1, _ = self.lstm_hand(x_hand1.view(B,L,-1))
+        h_hand2, _ = self.lstm_hand(x_hand2.view(B,L,-1))
+
+        h_mid = torch.concatenate([h_body,h_hand1,h_hand2],dim=-1)
+
+        h_final, _ = self.lstm_final(h_mid)      
+
+        out = self.fc(h_final) # shape: -> [B,L,D_out]
+        return out
+        # return self.fc(x[:, -1, :])  # Take last time step output
+
 # Another LSTM model, but this time with temporal windowing
 class LSTMGestureModel_Windowed(nn.Module):
     def __init__(self, input_dim=63, hidden_dim=256, output_dim=128, num_layers=3, dropout=0.2, window_size=16, window_stride=None):

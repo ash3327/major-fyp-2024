@@ -22,30 +22,7 @@ from tqdm import tqdm
 from datetime import datetime
 
 from scripts.hand_only_supervised.video_dataset import get_dataloader, visualize_video_with_labels
-
-
-# %%
-# Define LSTM model
-class LSTMGestureModel(nn.Module):
-    def __init__(self, input_dim=63, hidden_dim=256, output_dim=128, num_layers=3, dropout=0.2):
-        super(LSTMGestureModel, self).__init__()
-        self.output_dim = output_dim
-        self.lstm = nn.LSTM(
-            input_dim, hidden_dim, num_layers, 
-            batch_first=True,
-            dropout=dropout if num_layers > 1 else 0,
-            bidirectional=True
-        )
-        self.fc = nn.Linear(hidden_dim * 2, output_dim)
-
-    def forward(self, x):
-        x, _ = self.lstm(x) # shape: [B,L,D_in] -> [B,L,D_lstm]
-        out = self.fc(x) # shape: -> [B,L,D_out]
-        return out
-        # return self.fc(x[:, -1, :])  # Take last time step output
-
-# %%
-
+from training.temporal.model import LSTMGestureModel, LSTMGestureModel_Hierachical
 
 # %%
 # Log
@@ -70,7 +47,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 # Model
-model = LSTMGestureModel(177, output_dim=21).to(device)
+# model = LSTMGestureModel(177, output_dim=21).to(device)
+model = LSTMGestureModel_Hierachical(body_dim=17, hand_dim=21, output_dim=21, bidirectional=False).to(device)
 optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
 criterion = nn.CrossEntropyLoss(ignore_index=-100) # Ignore padding index
 scheduler = ReduceLROnPlateau(optimizer, patience=patience)
@@ -79,6 +57,8 @@ scheduler = ReduceLROnPlateau(optimizer, patience=patience)
 model_checkpoint_name = None
 model_checkpoint_name = 'v1/20250408_221008'
 # model_checkpoint_name = 'v1/20250412_011404'
+model_checkpoint_name = 'v1/20250412_020955' # ^ bi-lstm models
+model_checkpoint_name = 'v1/20250412_212626' # uni-lstm hierachical
 
 # load model from file
 def load_model(model_checkpoint_name):
@@ -110,7 +90,9 @@ def evaluate_model(dataloader):
     model.eval() # Set model to evaluation mode
     total_loss = 0.0
     total_correct = 0
+    total_correct_ignore_zero = 0
     total_samples = 0 # Total non-padded frames
+    total_samples_ignore_zero = 0
     true_labels = []
     predicted_labels = []
     misclassified_videos = dict()
@@ -132,7 +114,9 @@ def evaluate_model(dataloader):
 
                 _, predicted = torch.max(outputs_flat[mask], 1)
                 total_correct += (predicted == labels_flat[mask]).sum().item()
+                total_correct_ignore_zero += (torch.logical_and(predicted == labels_flat[mask], labels_flat[mask] != 0)).sum().item()
                 total_samples += num_valid_samples
+                total_samples_ignore_zero += torch.count_nonzero(labels_flat[mask] != 0).item()
                 true_labels.extend(labels_flat[mask].cpu().numpy())
                 predicted_labels.extend(predicted.cpu().numpy())
             else:
@@ -155,19 +139,21 @@ def evaluate_model(dataloader):
 
     avg_loss = total_loss / len(dataloader.dataset) if len(dataloader.dataset) > 0 else 0.0
     avg_acc = (total_correct / total_samples) if total_samples > 0 else 0.0
+    avg_acc_no_zero = (total_correct_ignore_zero / total_samples_ignore_zero) if total_samples_ignore_zero > 0 else 0.0
 
     f1 = 0.0
     if true_labels:
         f1 = f1_score(true_labels, predicted_labels, average='weighted')
         
-    return avg_loss, avg_acc, f1, misclassified_videos
+    return avg_loss, avg_acc, avg_acc_no_zero, f1, misclassified_videos
 
 # %%
 # Evaluation
-epoch_val_loss, epoch_val_acc, epoch_val_f1, misclassified_videos = evaluate_model(val_loader)
-print(epoch_val_loss, epoch_val_acc, epoch_val_f1)
+loader = val_loader
+epoch_val_loss, epoch_val_acc, epoch_val_acc_no_zero, epoch_val_f1, misclassified_videos = evaluate_model(loader)
+print(epoch_val_loss, epoch_val_acc, epoch_val_acc_no_zero, epoch_val_f1)
 # print(misclassified_video)
 for k, (seq, pred, lab) in misclassified_videos.items():
-    visualize_video_with_labels(seq, pred, lab, val_loader.dataset)
+    visualize_video_with_labels(seq, pred, lab, loader.dataset)
     break
 

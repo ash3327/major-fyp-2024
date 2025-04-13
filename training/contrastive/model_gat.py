@@ -135,7 +135,7 @@ class HandEncoderGAT3dof(nn.Module):
             x1 = F.normalize(x[...,:3].reshape(-1,self.num_landmarks*3), dim=1).view(-1,self.num_landmarks,3)
             x[...,:3] = x1
         x = x.view(-1,self.node_in_channels) # Reshape to [B*G,N,3] -> [B*G*N, 3]
-        edge_index = torch.tensor(data.edge_index).to(x.device) 
+        edge_index = torch.tensor(np.array(data.edge_index)).to(x.device) 
         edge_index = edge_index.view(-1,2).T # [B*G,E,2] -> [B*G*E,2] -> [2, B*G*E]
         # print(data.x.shape,x.shape,len(edge_index),edge_index.shape)
         # Pass through GAT layers

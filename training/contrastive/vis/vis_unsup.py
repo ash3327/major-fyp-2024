@@ -8,7 +8,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from torch.utils.data import DataLoader
 
 from scripts.fake_data.contrastive_data_dataset import HandPoseContrastiveDataset
-from training.contrastive.train_supcon import structured_collate_fn
+# from training.contrastive.train_supcon import structured_collate_fn
 
 def plot_hand_skeleton(ax, joints, color='b', label=None):
     """Plot hand skeleton with connections between joints."""
@@ -108,7 +108,7 @@ if __name__ == '__main__':
         dataset,
         batch_size=grid_size,
         shuffle=True,
-        collate_fn=structured_collate_fn,
+        # collate_fn=structured_collate_fn,
         drop_last=True
     )
     

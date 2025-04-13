@@ -101,8 +101,8 @@ class IPNGestureDataset(Dataset):
                     self.source_file_features[video_name] = features
                     self.source_file_labels[video_name] = np.zeros(len(features))
                     # features = features[start_frame:end_frame]
-                # if end_frame > len(self.source_files[video_name][0]):
-                #     print(f"NOT MATCH: {video_name} have {len(self.source_files[video_name][0])} frames but frame interval [{start_frame},{end_frame}) is queried (class {gesture})")
+                if end_frame > len(self.source_file_features[video_name]):
+                    print(f"NOT MATCH: {video_name} have {len(self.source_files[video_name][0])} frames but frame interval [{start_frame},{end_frame}) is queried (class {gesture})")
                 self.source_file_labels[video_name][start_frame:end_frame] = self.class_to_idx[gesture]
                 minstart = min(minstart,start_frame)
                 maxend = max(maxend,end_frame)
@@ -222,7 +222,6 @@ def visualize_video_with_labels(features, predicted_labels, true_labels, dataset
     text_ax = fig.add_axes([0.1, 0.95, 0.8, 0.03]) # For displaying labels
     text_ax.axis('off')
     label_text = text_ax.text(0.01, 0.5, '', transform=text_ax.transAxes, fontsize=12)
-
     def update(frame_idx):
         nonlocal ax
         ax.clear()
@@ -240,7 +239,6 @@ def visualize_video_with_labels(features, predicted_labels, true_labels, dataset
         hands[...,0] -= 0.5
         hands[...,0] *= -1
         hands[zeros] = 0
-        # print(pose.shape, hands.shape)
 
         plot_pose(ax, pose)
         for i, hand in enumerate([hands[:21],hands[21:]]):
@@ -264,6 +262,11 @@ def visualize_video_with_labels(features, predicted_labels, true_labels, dataset
 
         label_text.set_text(f"Frame: {frame_idx} | Predicted: {predicted_label_name} | True: {true_label_name}")
         ax.set_title(f"Predicted Label: {predicted_label_name} vs True: {true_label_name}\n(Frame {frame_idx})")
+
+        # Add vertical line at the current frame index dynamically
+        for line in ax_labels.get_lines():
+            line.remove()  # Remove any existing vertical lines
+        ax_labels.axvline(x=frame_idx, color='red', linestyle='--', linewidth=1)
 
         fig.canvas.draw_idle()
 

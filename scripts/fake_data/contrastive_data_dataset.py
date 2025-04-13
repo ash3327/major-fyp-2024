@@ -70,6 +70,7 @@ class HandPoseContrastiveDataset(Dataset):
         # Retrieve the corresponding gesture group
         gesture_group = self.gesture_groups[idx] # Shape: [N_Augs, 21, 3]
         gesture_group = gesture_group[:,:,(2,1,0)].copy()
+        gesture_group *= 2
         gesture_group[:,:,0] *= np.random.uniform(-1, 1, size=(gesture_group.shape[0], 1))
 
         # Return as numpy array. Tensor conversion and augmentation happen in collate_fn.

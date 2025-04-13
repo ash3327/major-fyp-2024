@@ -102,18 +102,20 @@ do_sup = True
 do_unsup = True#False
 fast_warmup_epochs = 1000
 slow_warmup_epochs = 10000
+large_angle = 2*np.pi 
+small_angle = np.pi/6
 proportion = lambda i,warmup: (1 if i > warmup else i/warmup)
-angle_batch_schedule = lambda i: 2*np.pi * (1 if i > fast_warmup_epochs else i/fast_warmup_epochs) # 0 -> 1
-angle_aug_schedule = lambda i: np.pi/6 * (1 if i > fast_warmup_epochs else i/fast_warmup_epochs) # 0 -> 1
-angle_sup_aug_schedule = lambda i: 2*np.pi * (1 if i > slow_warmup_epochs else i/slow_warmup_epochs) # 0 -> 1
+angle_batch_schedule = lambda i: large_angle * (1 if i > fast_warmup_epochs else i/fast_warmup_epochs) # 0 -> 1
+angle_aug_schedule = lambda i: small_angle * (1 if i > fast_warmup_epochs else i/fast_warmup_epochs) # 0 -> 1
+angle_sup_aug_schedule = lambda i: large_angle * (1 if i > slow_warmup_epochs else i/slow_warmup_epochs) # 0 -> 1
 scale_range_schedule = lambda i: (1-proportion(i,slow_warmup_epochs),1+4*proportion(i,slow_warmup_epochs)) # 1,1 -> 0,5
 
 # unsup
-max_dataset_size = 80 * batch_size
+max_dataset_size = 100 * batch_size#80 * batch_size
 
 # 20250410
-do_full = True
-lexset_only = True
+do_full = False#True
+lexset_only = False#True
 
 # device configuration
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

@@ -27,7 +27,7 @@ from training.temporal.model import LSTMGestureModel
 # %%
 # Log
 version_id = 1
-dump = False #True
+dump = True
 
 current_time = datetime.now().strftime('%Y%m%d_%H%M%S')
 experiment_name = f'ipn_classifiers' if not dump else 'ipn_dump'
@@ -38,7 +38,7 @@ checkpoint_dir = os.path.join(train_path_root, 'checkpoints')
 
 eval_interval = 2
 patience = 100
-extra_text = "Bi-directional LSTM, direct classification"
+extra_text = "Bi-directional LSTM, direct classification (hands only)"
 
 # Training setup
 batch_size = 32
@@ -49,7 +49,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 # Model
-model = LSTMGestureModel(177, output_dim=21).to(device)
+model = LSTMGestureModel(21*3, output_dim=21).to(device)
 optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
 criterion = nn.CrossEntropyLoss(ignore_index=-100) # Ignore padding index
 scheduler = ReduceLROnPlateau(optimizer, patience=patience)
@@ -75,6 +75,8 @@ load_model(model_checkpoint_name)
 # Pre-processing
 def post_fn(sequences:torch.Tensor, labels, *others):
     B,L,_,_ = sequences.shape
+    sequences = sequences[...,17:17+21,:]
+    sequences[...,1:,:] -= sequences[...,0,torch.newaxis,:]
     return sequences.reshape(B,L,-1), labels, *others
 
 # Data

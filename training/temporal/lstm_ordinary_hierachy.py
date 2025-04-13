@@ -22,12 +22,14 @@ from tqdm import tqdm
 from datetime import datetime
 
 from scripts.hand_only_supervised.video_dataset import get_dataloader
-from training.temporal.model import LSTMGestureModel
+from training.temporal.model import LSTMGestureModel, LSTMGestureModel_Hierachical
 
 # %%
 # Log
 version_id = 1
-dump = False #True
+dump = False
+
+# torch.cuda.empty_cache()
 
 current_time = datetime.now().strftime('%Y%m%d_%H%M%S')
 experiment_name = f'ipn_classifiers' if not dump else 'ipn_dump'
@@ -38,10 +40,10 @@ checkpoint_dir = os.path.join(train_path_root, 'checkpoints')
 
 eval_interval = 2
 patience = 100
-extra_text = "Bi-directional LSTM, direct classification"
+extra_text = "Bi-directional LSTM, <batch size 16> direct classification; Hierachy"
 
 # Training setup
-batch_size = 32
+batch_size = 16#32
 num_epochs = 1000
 lr = 0.001
 weight_decay = 1e-4
@@ -49,7 +51,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 # Model
-model = LSTMGestureModel(177, output_dim=21).to(device)
+model = LSTMGestureModel_Hierachical(body_dim=17, hand_dim=21, output_dim=21, bidirectional=True, num_layers=2).to(device)
 optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
 criterion = nn.CrossEntropyLoss(ignore_index=-100) # Ignore padding index
 scheduler = ReduceLROnPlateau(optimizer, patience=patience)
