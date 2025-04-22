@@ -52,12 +52,37 @@
 
 ## Training
 
-### Folder Architecture
+### Architecture
+- Dataset related: `scripts/datasets/`, `scripts/fake_data/`, `scripts/hand_only_supervised/`
+- Models: `models/`
+  - Backbone: `models/backbone/`
+  - LSTM variants: `models/temporal/`
+  - Graph models: `models/graph/`
 
-- Dataset preparation: under `scripts/datasets`.
-- Dataset for hand-only contrastive training: under `scripts/fake_data` and `scripts/hand_only_supervised`.
-- Unsupervised contrastive training (InfoNCE loss) (v3): `python training/contrastive/train_contrastive_fake_data.py`.
+### Training Scripts (`training/`)
 
-Libraries:
-`git clone https://github.com/Thomas-yx/ResGCNv1.git`
-`pip install -r ResGCNv1/scripts/requirements.txt`
+#### Contrastive Learning (`contrastive/`)
+| Category | Script | Features |
+|----------|---------|-----------|
+| InfoNCE (Unsupervised) |
+| | `train_unsup_gat.py` | ✓ InfoNCE<br>✗ Curriculum<br>✓ GAT/GCN variants |
+| | `train_unsup_gat_curriculum_multi.py` | ✓ InfoNCE<br>✓ Curriculum |
+| Mixed (Direct Augmentation) |
+| | `train_supcon.py` | ✗ Curriculum |
+| | `train_supcon_gat.py` | ✗ Curriculum |
+| Mixed (Curriculum) |
+| | `train_supcon_gat_curriculum.py` | ✓ Curriculum |
+| | `train_supcon_gat_curriculum_multi.py` | ✓ Curriculum<br>✓ Multi-dataset support |
+
+#### Temporal Models (`temporal/`)
+| Category | Variant | Script | Key Features |
+|----------|---------|--------|--------------|
+| Ordinary LSTM | Base | `lstm_ordinary.py` | Simple sequence learning |
+| | Hand Only | `lstm_ordinary_hand_only.py` | Hand keypoints only |
+| | Hierarchy | `lstm_ordinary_hierarchy.py` | Hierarchical learning |
+| Contrastive LSTM | Base | `lstm_contrastive_compressed.py` | Contrastive learning with compression |
+| | Hierarchy | `lstm_contrastive_compressed_hierarchy.py` | Hierarchical contrastive learning |
+
+All scripts can be run using: `python training/<category>/<script_name>.py`
+Testing: Use `lstm_test.py` for all temporal models
+

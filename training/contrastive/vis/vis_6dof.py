@@ -14,6 +14,10 @@ from training.contrastive.preprocess import extract_orientations
 
 DEBUG_ORIENTATIONS = False  # Global debug flag
 
+# Size of angle
+
+p = .1
+
 # Define hand connections and important nodes
 fingers = np.array(
     [
@@ -42,6 +46,9 @@ def plot_rectangle(ax, center, normal, direction, width=0.2, height=0.4, color='
     right = direction / np.linalg.norm(direction)
     up = np.cross(right, normal)
     up = up / np.linalg.norm(up)
+
+    width *= p
+    height *= p
     
     # Calculate the four corners
     corners = np.array([
@@ -88,7 +95,7 @@ def verify_quaternion(ax, joint_pos, quat, scale=0.3):
     for i, (axis, color) in enumerate(zip(rotated_axes.T, colors)):
         ax.quiver(joint_pos[0], joint_pos[1], joint_pos[2],
                  axis[0], axis[1], axis[2],
-                 color=color, length=scale, normalize=True)
+                 color=color, length=scale*p, normalize=True)
 
 def plot_hand_with_normal(ax, joints, color='b', title=None, show_arrows=False):
     """Plot hand skeleton and its normal vector and return orientations."""
@@ -147,7 +154,7 @@ def plot_hand_with_normal(ax, joints, color='b', title=None, show_arrows=False):
     if show_arrows:
         ax.quiver(joints[0, 0], joints[0, 1], joints[0, 2],
                 wrist_normal[0], wrist_normal[1], wrist_normal[2],
-                color='r', length=0.5, normalize=True)
+                color='r', length=0.5*p, normalize=True)
 
     # Plot finger orientations
     for (prev_node, base_node), face_nodes in finger_faces.items():
@@ -169,7 +176,7 @@ def plot_hand_with_normal(ax, joints, color='b', title=None, show_arrows=False):
         if show_arrows:
             ax.quiver(joints[base_node, 0], joints[base_node, 1], joints[base_node, 2],
                     normal[0], normal[1], normal[2],
-                    color='g', length=0.5, normalize=True)
+                    color='g', length=0.5*p, normalize=True)
 
     # # Debug visualization of quaternions
     # if DEBUG_ORIENTATIONS:

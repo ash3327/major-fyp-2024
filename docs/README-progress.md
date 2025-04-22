@@ -257,13 +257,13 @@ Class f1: {0: 0.9473684210526315, 1: 0.9795918367346939, 2: 0.9795918367346939, 
 - `scripts/fake_data/prepare_fake_data_npy_3.py`, `training/contrastive/train_supcon.py`, `augments.py`, `contrastive_data_dataset.py`.
 
 - Checking unsupervised and supervised dataset hand formulation: python training/contrastive/test_contrastive_fake_data.py
-![alt text](imgs/image.png)
+![alt text](/imgs/image.png)
 
 
 ## MANO features
 
-![alt text](imgs/image-1.png)
-![alt text](imgs/image-2.png)
+![alt text](/imgs/image-1.png)
+![alt text](/imgs/image-2.png)
 ```
 assume z up, this z have nothing to do with the actual coords
 0-2: index finger node, rotate (xy) away from thumb, rotate (xz) left/right towards thumb, rotate front/back
@@ -365,4 +365,6 @@ Class f1: {0: 0.9894736842105263, 1: 0.9893617021276596, 2: 1.0, 3: 0.9575757575
   * ![alt text](image-27.png)
   * ![alt text](image-28.png)
   * ![alt text](image-29.png)
+
+20250407143602: 
 

@@ -23,7 +23,7 @@ from tqdm import tqdm
 from datetime import datetime
 
 from scripts.hand_only_supervised.video_dataset import get_dataloader
-from training.temporal.model import LSTMGestureModel, LSTMGestureModel_Windowed
+from training.temporal.model import LSTMGestureModel, LSTMGestureModel_Windowed, LSTMGestureModel_Hierachical_Windowed
 from training.contrastive.losses import softcon_loss
 from training.contrastive.losses import info_nce_loss, supcon_loss, info_nce_loss_from_matrix
 
@@ -41,11 +41,11 @@ checkpoint_dir = os.path.join(train_path_root, 'checkpoints')
 
 eval_interval = 2
 patience = 100
-extra_text = "Bi-directional LSTM, contrastive, fine-tune"
+extra_text = f"Bi-directional LSTM, contrastive hierachy, fine-tune [{__file__}]"
 
 # Training setup
 batch_size = 32
-num_epochs = 1000
+num_epochs = 10000
 lr = 0.001
 weight_decay = 1e-4
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -58,22 +58,22 @@ num_classes = 14
 num_splits = 2
 
 # LSTM component checkpoint
-mid_model = LSTMGestureModel(177, output_dim=21)
-mid_model_checkpoint_id = '20250408_221008'
-if mid_model_checkpoint_id:
-    mid_model_checkpoint_path = f'runs/ipn_classifiers/v1/{mid_model_checkpoint_id}/checkpoints/last.pth'
-    if os.path.exists(mid_model_checkpoint_path):
-        mid_model.load_state_dict(torch.load(mid_model_checkpoint_path, map_location=device))
-        print(f"Model loaded from {mid_model_checkpoint_path}")
-        # You might want to load optimizer state as well for resuming training
-        # optimizer.load_state_dict(torch.load(model_checkpoint_path.replace('best.pth', 'optimizer.pth')))
-    else:
-        print(f"Model file not found at {mid_model_checkpoint_path}")
+# mid_model = LSTMGestureModel(177, output_dim=21)
+# mid_model_checkpoint_id = '20250408_221008'
+# if mid_model_checkpoint_id:
+#     mid_model_checkpoint_path = f'runs/ipn_classifiers/v1/{mid_model_checkpoint_id}/checkpoints/last.pth'
+#     if os.path.exists(mid_model_checkpoint_path):
+#         mid_model.load_state_dict(torch.load(mid_model_checkpoint_path, map_location=device))
+#         print(f"Model loaded from {mid_model_checkpoint_path}")
+#         # You might want to load optimizer state as well for resuming training
+#         # optimizer.load_state_dict(torch.load(model_checkpoint_path.replace('best.pth', 'optimizer.pth')))
+#     else:
+#         print(f"Model file not found at {mid_model_checkpoint_path}")
 
 # Model
-model = LSTMGestureModel_Windowed(177, output_dim=feature_dim, window_size=16, window_stride=window_stride).to(device)
-if mid_model_checkpoint_id:
-    model.lstm = mid_model.lstm
+model = LSTMGestureModel_Hierachical_Windowed(output_dim=feature_dim, window_size=16, window_stride=window_stride).to(device)
+# if mid_model_checkpoint_id:
+#     model.lstm = mid_model.lstm
 model.to(device)
 
 optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
@@ -84,7 +84,7 @@ scheduler = ReduceLROnPlateau(optimizer, patience=patience)
 # Checkpoint
 model_checkpoint_name = None
 # model_checkpoint_name = 'v1/20250408_221008'
-model_checkpoint_name = 'v1/20250414_150209'
+# model_checkpoint_name = 'v1/20250414_150209'
 
 # load model from file
 def load_model(model_checkpoint_name):

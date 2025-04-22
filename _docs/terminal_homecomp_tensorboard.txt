@@ -1,0 +1,2 @@
+tensorboard --logdir runs/hand_contrastive_learning_structured/v1 --port 6012
+tensorboard --logdir runs/ipn_classifiers/v1 --port 6010 

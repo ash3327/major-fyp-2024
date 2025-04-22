@@ -14,13 +14,17 @@ class LSTMGestureModel(nn.Module):
         )
         self.fc = nn.Linear(hidden_dim * 2, output_dim)
 
+    def _lstm(self, x):
+        x, _ = self.lstm(x)
+        return x
+
     def forward(self, x):
-        x, _ = self.lstm(x) # shape: [B,L,D_in] -> [B,L,D_lstm]
+        x = self._lstm(x) # shape: [B,L,D_in] -> [B,L,D_lstm]
         out = self.fc(x) # shape: -> [B,L,D_out]
         return out
         # return self.fc(x[:, -1, :])  # Take last time step output
 
-# Define LSTM model
+# Hierachical
 class LSTMGestureModel_Hierachical(nn.Module):
     def __init__(self, body_dim=17, hand_dim=21, num_channels=3, hidden_dim=256, output_dim=128, num_layers=2, dropout=0.2, bidirectional=True, normalize=True):
         super(LSTMGestureModel_Hierachical, self).__init__()
@@ -29,6 +33,7 @@ class LSTMGestureModel_Hierachical(nn.Module):
         self.hand_dim = hand_dim
         self.normalize = normalize
         self.num_channels = num_channels
+        self.hidden_dim = hidden_dim
         self.lstm_body = nn.LSTM(
             body_dim*num_channels, hidden_dim, num_layers, 
             batch_first=True,
@@ -49,7 +54,7 @@ class LSTMGestureModel_Hierachical(nn.Module):
         )
         self.fc = nn.Linear(hidden_dim * (2 if bidirectional else 1), output_dim)
 
-    def forward(self, x):
+    def _lstm(self, x):
         # Assume input: [B,L,177]
         # 177 = [17+21+21,3]
         B,L,_ = x.shape
@@ -68,8 +73,11 @@ class LSTMGestureModel_Hierachical(nn.Module):
 
         h_mid = torch.concatenate([h_body,h_hand1,h_hand2],dim=-1)
 
-        h_final, _ = self.lstm_final(h_mid)      
+        h_final, _ = self.lstm_final(h_mid)
+        return h_final
 
+    def forward(self, x):
+        h_final = self._lstm(x)
         out = self.fc(h_final) # shape: -> [B,L,D_out]
         return out
         # return self.fc(x[:, -1, :])  # Take last time step output
@@ -96,8 +104,12 @@ class LSTMGestureModel_Windowed(nn.Module):
 
         self.fc = nn.Linear(hidden_dim * 2, output_dim)
 
+    def _lstm(self, x):
+        lstm_out, _ = self.lstm(x)
+        return lstm_out
+
     def forward(self, x):
-        lstm_out, _ = self.lstm(x) # shape: [B,L,D_in] -> [B,L,D_lstm]
+        lstm_out = self._lstm(x) # shape: [B,L,D_in] -> [B,L,D_lstm]
         lstm_out = lstm_out.permute(0,2,1) # [B,D_lstm,L] for windowing
         pooled_out = self.temporal_pool(lstm_out)
         pooled_out = pooled_out.permute(0,2,1) # [B,L//W,D_lstm]
@@ -108,3 +120,32 @@ class LSTMGestureModel_Windowed(nn.Module):
         return out
         # return self.fc(x[:, -1, :])  # Take last time step output
 
+# Another LSTM model, but this time with temporal windowing
+class LSTMGestureModel_Hierachical_Windowed(nn.Module):
+    def __init__(self, window_size=16, window_stride=None, **kwargs):
+        super(LSTMGestureModel_Hierachical_Windowed, self).__init__()
+        self.inner_model = LSTMGestureModel_Hierachical(**kwargs)
+        self.hidden_dim = self.inner_model.hidden_dim
+        self.output_dim = self.inner_model.output_dim
+
+        self.window_size = window_size
+        if window_stride is None:
+            window_stride = window_size
+        self.window_stride = window_stride
+
+        # For windowing
+        self.temporal_pool = nn.AvgPool1d(kernel_size=window_size, stride=window_stride)
+
+        self.fc = nn.Linear(self.hidden_dim * 2, self.output_dim)
+
+    def forward(self, x):
+        lstm_out = self.inner_model._lstm(x) # shape: [B,L,D_in] -> [B,L,D_lstm]
+        lstm_out = lstm_out.permute(0,2,1) # [B,D_lstm,L] for windowing
+        pooled_out = self.temporal_pool(lstm_out)
+        pooled_out = pooled_out.permute(0,2,1) # [B,L//W,D_lstm]
+        out = self.fc(pooled_out) # shape: -> [B,L,D_out]
+        # if torch.isnan(out).any():
+        #     print('\t#####',torch.isnan(x).any(),torch.isnan(pooled_out).any(),torch.isnan(lstm_out).any())
+        #     exit(0)
+        return out
+        # return self.fc(x[:, -1, :])  # Take last time step output

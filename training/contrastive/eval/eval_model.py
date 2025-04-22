@@ -20,6 +20,8 @@ from training.contrastive.model import HandEncoder, HandEncoder_6DOF
 from training.contrastive.model_gat import HandEncoderGAT3dof, HandEncoderGAT6dof, graph_transform
 from training.contrastive.model_gcn import HandEncoderGCN3dof, HandEncoderGCN6dof
 
+use_cosine = True
+
 def save_plot(fig, output_dir, filename):
     """Helper function to save a plot to a file."""
     os.makedirs(output_dir, exist_ok=True)
@@ -47,7 +49,6 @@ def _visualize_2d_embeddings(embeddings_2d, labels, label_to_idx, title, output_
         # Add text annotation for the cluster center
         ax.text(cluster_center[0], cluster_center[1], label, fontsize=12,
                 ha='center', va='center', bbox=dict(facecolor='white', alpha=0.6, edgecolor='none'))
-
     ax.set_title(title)
     ax.set_xlabel('Component 1')
     ax.set_ylabel('Component 2')
@@ -84,33 +85,47 @@ def analyze_clusters(embeddings, labels, label_to_idx, output_dir):
     for label, idx in label_to_idx.items():
         mask = labels == idx
         cluster_embeddings = embeddings[mask]
-        cluster_embeddings = F.normalize(torch.from_numpy(cluster_embeddings),dim=-1).numpy()
+        cluster_embeddings = F.normalize(torch.from_numpy(cluster_embeddings), dim=-1).numpy()
         cluster_means[label] = np.mean(cluster_embeddings, axis=0)
-        cluster_means[label] = F.normalize(torch.from_numpy(cluster_means[label]),dim=-1).numpy()
-        # distances = cdist([cluster_means[label]], cluster_embeddings)[0]
-        # [N_c, D]; [D,]
+        cluster_means[label] = F.normalize(torch.from_numpy(cluster_means[label]), dim=-1).numpy()
         distances = np.dot(cluster_embeddings, cluster_means[label])
         if len(cluster_embeddings) == 0:
             cluster_sizes[label] = {
-            'count': 0,
-            'avg_distance': np.nan,
-            'std_distance': np.nan,
-            'min_distance': np.nan,
-            'max_distance': np.nan
+                'count': 0,
+                'avg_distance': np.nan,
+                'std_distance': np.nan,
+                'min_distance': np.nan,
+                'max_distance': np.nan
             }
         else:
             cluster_sizes[label] = {
-            'count': len(cluster_embeddings),
-            'avg_distance': np.nanmean(distances),
-            'std_distance': np.nanstd(distances),
-            'min_distance': np.nanmin(distances),
-            'max_distance': np.nanmax(distances)
+                'count': len(cluster_embeddings),
+                'avg_distance': np.nanmean(distances),
+                'std_distance': np.nanstd(distances),
+                'min_distance': np.nanmin(distances),
+                'max_distance': np.nanmax(distances)
             }
     labels_list = sorted(label_to_idx.keys())
     means_matrix = np.array([cluster_means[label] for label in labels_list])
-    # distances = cdist(means_matrix, means_matrix)
-    means_matrix = F.normalize(torch.from_numpy(means_matrix),dim=-1).numpy()
+    means_matrix = F.normalize(torch.from_numpy(means_matrix), dim=-1).numpy()
     distances = np.dot(means_matrix, means_matrix.T)
+
+    # Calculate interclass and intraclass statistics
+    intraclass_distances = []
+    for label in labels_list:
+        intraclass_distances.append(cluster_sizes[label]['avg_distance'])
+    interclass_distances = []
+    for i in range(len(labels_list)):
+        for j in range(i + 1, len(labels_list)):
+            interclass_distances.append(distances[i, j])
+
+    intraclass_mean = np.nanmean(intraclass_distances)
+    intraclass_std = np.nanstd(intraclass_distances)
+    interclass_mean = np.nanmean(interclass_distances)
+    interclass_std = np.nanstd(interclass_distances)
+
+    print(f"Intraclass Mean: {intraclass_mean:.4f}, Intraclass Std: {intraclass_std:.4f}")
+    print(f"Interclass Mean: {interclass_mean:.4f}, Interclass Std: {interclass_std:.4f}")
 
     # Save cluster analysis to a text file
     os.makedirs(output_dir, exist_ok=True)
@@ -127,6 +142,8 @@ def analyze_clusters(embeddings, labels, label_to_idx, output_dir):
             for j, label2 in enumerate(labels_list):
                 f.write(f"Distance between {label1} and {label2}: {distances[i, j]:.4f}\n")
             f.write("\n")
+        f.write(f"Intraclass Mean: {intraclass_mean:.4f}, Intraclass Std: {intraclass_std:.4f}\n")
+        f.write(f"Interclass Mean: {interclass_mean:.4f}, Interclass Std: {interclass_std:.4f}\n")
     print(f"Cluster analysis saved to {analysis_filepath}")
 
     return cluster_sizes, distances, labels_list
@@ -136,7 +153,7 @@ def plot_distance_heatmap(distances, labels_list, cluster_sizes, output_dir, use
     fig, ax = plt.subplots(figsize=(12, 10))
     distances_with_diag = distances.copy()
     for i, label in enumerate(labels_list):
-        distances_with_diag[i, i] = cluster_sizes[label]['max_distance'] if use_max else cluster_sizes[label]['avg_distance']
+        distances_with_diag[i, i] = cluster_sizes[label]['min_distance' if use_cosine else 'max_distance'] if use_max else cluster_sizes[label]['avg_distance']
     cax = ax.imshow(distances_with_diag, cmap='viridis')
     fig.colorbar(cax, label='Distance')
     ax.set_xticks(range(len(labels_list)))
@@ -176,12 +193,48 @@ if __name__ == '__main__':
     # model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250405224236/checkpoints/best.pth' # supcon, no aug, HandEncoderGCN3dof model.
     # model = HandEncoderGCN3dof().to(device=device)
 
+    # model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250405224236/checkpoints/best.pth' # supcon, no aug, HandEncoderGCN3dof model.
+    # model = HandEncoderGCN3dof().to(device=device)
+
     # model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250406000135/checkpoints/best.pth' # supcon, no aug, HandEncoderGCN3dof model.
     # model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250406164630/checkpoints/best.pth' # sup+unsup, linear curriculum scheduling, HandEncoderGCN3dof model.
     # model = HandEncoderGCN6dof().to(device=device)
     
-    model_checkpoint_path = 'runs/hand_contrastive_learning_structured/best/20250408122338/checkpoints/last.pth' # unsup all, linear curriculum scheduling, HandEncoderGCN6dof model.
-    model = HandEncoderGCN6dof(do_norm_before_input=False).to(device=device)
+    # model_checkpoint_path = 'runs/hand_contrastive_learning_structured/best/20250408122338/checkpoints/last.pth' # unsup all, linear curriculum scheduling, HandEncoderGCN6dof model.
+    # model = HandEncoderGCN6dof(do_norm_before_input=False).to(device=device)
+    
+    # Load model
+    model = HandEncoder().to(device)
+
+    model_checkpoint_path = 'runs/hand_contrastive_learning/v4/20250401140023/checkpoints/best.pth'
+    model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250402210020/checkpoints/best.pth'
+    model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250403104741/checkpoints/best.pth'
+    model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250405195023/checkpoints/best.pth' # supcon, no aug, HandEncoder model.
+
+
+    embedding_dim = 128
+    # model = HandEncoderGAT6dof(embedding_size=embedding_dim, do_norm_after_input=False, fn=graph_transform_complex).to(device)
+    # model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250405195023/checkpoints/best.pth'
+
+    ## Base
+    # model = HandEncoderGAT6dof(embedding_size=embedding_dim, do_norm_after_input=False).to(device)
+    # model_checkpoint_path = 'runs/hand_contrastive_learning_structured_2/v1/20250405231456/checkpoints/best.pth'
+
+    # model = HandEncoderGCN6dof(embedding_size=embedding_dim, do_norm_after_input=False).to(device)
+    # model_checkpoint_path = 'runs/hand_contrastive_learning_structured/v1/20250406000135/checkpoints/best.pth'
+    # model_checkpoint_path = 'runs/stor/preliminary/20250406000135/checkpoints/best.pth' 
+
+    ## Curriculum
+    model = HandEncoderGAT6dof(embedding_size=embedding_dim, do_norm_after_input=True).to(device)
+    model_checkpoint_path = 'runs/stor/curriculum/20250410184054/checkpoints/best.pth' # pink
+    # model_checkpoint_path = 'runs/stor/curriculum/20250410184054/checkpoints/last.pth' # pink
+    # model_checkpoint_path = 'runs/stor/curriculum/20250406185135/checkpoints/best.pth' # grey
+    # model_checkpoint_path = 'runs/stor/curriculum/20250406185135/checkpoints/last.pth' # grey
+
+    # model = HandEncoderGCN6dof(embedding_size=embedding_dim, do_norm_after_input=True).to(device)
+    # model_checkpoint_path = 'runs/stor/curriculum/20250407201859/checkpoints/best.pth' # blue
+    # model_checkpoint_path = 'runs/stor/curriculum/20250407201859/checkpoints/last.pth' # blue
+
     
     if os.path.exists(model_checkpoint_path):
         model.load_state_dict(torch.load(model_checkpoint_path, map_location=device))
@@ -192,6 +245,8 @@ if __name__ == '__main__':
     # == extra info ==
     if model_checkpoint_path is not None:
         ckpt_id = model_checkpoint_path.rsplit("/checkpoints/", 1)[0].rsplit('/', 1)[1]
+        if 'last' in model_checkpoint_path:
+            ckpt_id += '_last'
     batch_size = 256
     dataset = LabelledHandDataset(dataset_name=dataset_name, split=split)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
@@ -222,21 +277,21 @@ if __name__ == '__main__':
     # model = Do6DoF()
     # ckpt_id = '6dof/cosinesim'
 
-    class DoNothing:
-        def eval(self):
-            pass
-        def forward(self, x):
-            return x
-        def __call__(self, x):
-            return x.view(x.shape[0],-1)
-    model = DoNothing()
-    ckpt_id = 'none/cosinesim'
+    # class DoNothing:
+    #     def eval(self):
+    #         pass
+    #     def forward(self, x):
+    #         return x
+    #     def __call__(self, x):
+    #         return x.view(x.shape[0],-1)
+    # model = DoNothing()
+    # ckpt_id = 'none/cosinesim/withlabel'
     
     embeddings, labels = extract_embeddings(model, dataloader, device)
     embeddings = embeddings.cpu().numpy()
     labels = labels.cpu().numpy()
 
-    output_dir = f"runs/eval/{ckpt_id}/{dataset.dataset_name}-{dataset.split}/"
+    output_dir = f"runs/eval_cos/{ckpt_id}/{dataset.dataset_name}-{dataset.split}/"
     visualize_labelled_pca(embeddings, labels, dataset.label_to_idx, output_dir)
     visualize_labelled_tsne(embeddings, labels, dataset.label_to_idx, output_dir)
     visualize_labelled_umap(embeddings, labels, dataset.label_to_idx, output_dir)

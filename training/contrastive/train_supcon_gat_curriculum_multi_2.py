@@ -102,8 +102,8 @@ do_sup = True
 do_unsup = True#False
 fast_warmup_epochs = 1000
 slow_warmup_epochs = 10000
-large_angle = 2*np.pi 
-small_angle = np.pi/6
+large_angle = np.pi#2*np.pi 
+small_angle = np.pi/12#np.pi/6
 proportion = lambda i,warmup: (1 if i > warmup else i/warmup)
 angle_batch_schedule = lambda i: large_angle * (1 if i > fast_warmup_epochs else i/fast_warmup_epochs) # 0 -> 1
 angle_aug_schedule = lambda i: small_angle * (1 if i > fast_warmup_epochs else i/fast_warmup_epochs) # 0 -> 1
@@ -114,7 +114,7 @@ scale_range_schedule = lambda i: (1-proportion(i,slow_warmup_epochs),1+4*proport
 max_dataset_size = 100 * batch_size#80 * batch_size
 
 # 20250410
-do_full = False#True
+do_full = True#True
 lexset_only = False#True
 
 # device configuration
@@ -184,7 +184,7 @@ if __name__ == '__main__':
     small_angle = np.pi/6
     large_angle = 0
     small_angle = 0
-    extra_text = f"({__file__}) [With Lexset, Handshape and Senz3d] {'<lexset only>' if lexset_only else '<all sup datasets>'} <more complex joints> Augmentation with linear curriculum scheduling (sup: use sup_aug_schedule: 0..2pi (10k ep), unsup: 0..2pi, 0..pi/6 (1k ep); do_norm_after_output=True), No pool, 4->3 layers"
+    extra_text = f"({__file__}) [With Lexset, Handshape and Senz3d] {'<lexset only>' if lexset_only else '<all sup datasets>'} <more complex joints> Augmentation with linear curriculum scheduling (sup: use sup_aug_schedule: 0..2pi (10k ep), unsup: 0..2pi, 0..pi/6 (1k ep); do_norm_before_input=True, do_norm_after_output=True), No pool, 4->3 layers"
     def aug_pair(*x):
         global epoch
         return augment_handpair(*x, maxangle=angle_batch_schedule(epoch))
@@ -236,7 +236,7 @@ if __name__ == '__main__':
 
     # initialize model and optimizer
     # model = HandEncoder(embedding_size=embedding_dim).to(device)
-    model = HandEncoderGAT6dof(embedding_size=embedding_dim, do_norm_after_input=False, fn=graph_transform_complex).to(device)
+    model = HandEncoderGAT6dof(embedding_size=embedding_dim, do_norm_after_input=True, fn=graph_transform_complex).to(device)
     # model = HandEncoderGCN6dof(embedding_size=embedding_dim, do_norm_after_input=False, fn=graph_transform_complex).to(device)
 
     # load model from file
