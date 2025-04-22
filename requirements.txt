@@ -61,3 +61,7 @@ umap-learn
 # PySide2
 plotly
 nbformat>=4.2.0
+
+# Flask
+flask
+flask_socketio
