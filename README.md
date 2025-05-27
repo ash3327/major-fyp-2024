@@ -1,22 +1,60 @@
 # KTL2401 General Hand Gesture Recognition
 
 ## Quick Links
-* **Resources:** [Datasets](/docs/README-datasets.md) | [Dataset Download Instructions](/docs/README-folders-datasets.md) | [Papers](docs/README-papers.md) 
-* **Drafts:** [Planning Document](https://1drv.ms/w/s!Ago9nLnz9h82gosJqjlnjoOBK9SS-Q?e=YuU6Wy) | [LaTeX Drafts](https://www.overleaf.com/6774289999vrsjksvmvfch#f96db3)
-* **Reports:** [Planning Report](/docs/KTL2401_1155175983_1155174636_planning_report.pdf) | 
-[First Term Report](/docs/KTL2401_1155175983_1155174636_final_report.pdf)
-* **Progress:** [Progress Document](/docs/README-progress.md)
 
 > [!NOTE]
-> Please read the [Progress Document](/docs/README-progress.md) to see the current progress.
+> Main Report: [Here](/docs/KTL2401_1155175983_1155174636_final_report_term2.pdf)
+> 
+> Other documents are drafts and should only treated as references only.
 
-## Goals
+<!-- [Datasets](/docs/README-datasets.md) |  -->
+* **Resources:** [Dataset Download Instructions](/docs/README-folders-datasets.md) | [Papers](docs/README-papers.md) 
+* **Reports:** [Planning Report](/docs/KTL2401_1155175983_1155174636_planning_report.pdf) | 
+[First Term Report](/docs/KTL2401_1155175983_1155174636_final_report_term1.pdf) | [Second Term Report (Individual)](/docs/KTL2401_1155175983_final_report_term2.pdf) | [Second Term Report (Final)](/docs/KTL2401_1155175983_1155174636_final_report_term2.pdf)
+<!-- * **Progress:** [Progress Document](/docs/README-progress.md) -->
 
-* **Adaptation.** Allowing for quick adaptation to new set of data without full-scale re-training.
+<!-- > [!NOTE]
+> Please read the [Progress Document](/docs/README-progress.md) to see the current progress. -->
 
-## Approach
+## Scope and Applications
 
-* **Contrastive Pre-training.** Utilizes contrastive learning to 
+> [!NOTE]
+> This section is a summary generated from the [report](/docs/KTL2401_1155175983_1155174636_final_report_term2.pdf) by Grok. The contents have been double-checked by the author. 
+> 
+> Only this section covers the main content of the report and the remaining sections are about the details of setting up the project and the purpose of specific scripts within the repository.
+
+This project aims to create a unified, semi-supervised contrastive-learning framework for hand gesture recognition. The framework is designed to adapt efficiently to various downstream tasks, such as human-computer interaction and sign language recognition, with minimal retraining or fine-tuning.
+
+### Key Areas Explored
+
+#### Static-Pose Representation Learning
+- **Objective**: Map hand landmark inputs (shape $21 \times 3$) into feature embeddings (size $128$).
+- **Approach**: Compared three encoder architectures:
+  - Multi-layer Perceptron (MLP)
+  - Graph Convolutional Network (GCN)
+  - Graph Attention Network (GAT)
+- **Hypotheses Tested**:
+  1. Graph-based models (GCN and GAT), which leverage edge information, outperform MLP in accuracy and convergence speed. This was evaluated using supervised contrastive loss on the Lexset dataset.
+  2. Incorporating a large unlabelled dataset (synthetic MANO data) with curriculum-based augmentations enhances model generalization.
+
+#### Extension to Dynamic Gesture Recognition
+- **Objective**: Extend the contrastive learning approach to recognize dynamic gestures.
+- **Approach**: Utilize sequential architectures like Recurrent Neural Networks (RNN) and Long Short-Term Memory (LSTM) units to model temporal dependencies in gesture sequences.
+
+### Results
+
+While not fully achieved the original goals, our key findings include:
+
+- **Static Gesture Recognition**:
+  - Graph-based networks (e.g., GCN, GAT) are more effective, leveraging hand skeletal connections for improved accuracy and faster convergence.
+  - Using large unlabelled datasets with curriculum learning enhances model generalization to new datasets and unseen gesture classes.
+- **Dynamic Gesture Recognition**:
+  - Hierarchical and part-wise architectures improve understanding of gesture structures.
+  - Contrastive learning showed limited improvement over existing methods, indicating a need for more complex approaches.
+
+### Future Work
+- Develop a general hand gesture encoder capturing rotation- and scale-invariant features for rapid adaptation to tasks like dynamic gesture recognition.
+- Investigate joint training of static and dynamic datasets using curriculum and contrastive learning to improve robustness.
 
 ## Setting Up
 
