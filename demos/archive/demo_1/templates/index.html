@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hand Gesture Classification</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script>
+        var socket = io();
+        var lastEmbedding = null;
+        var lastLabel = "";
+        var storedEmbeddings = [];
+        var storedLabels = [];
+        var colorPalette = {};
+
+        socket.on('update_embedding', function(data) {
+            var embedding = data.embedding;
+            var label = data.label;
+
+            if (data.stored_embeddings && data.stored_labels && storedEmbeddings.length === 0) {
+                storedEmbeddings = data.stored_embeddings;
+                storedLabels = data.stored_labels;
+                assignColorsToClasses();
+            }
+
+            if (embedding !== null) {
+                lastEmbedding = embedding;
+                lastLabel = label;
+            }
+
+            updateUMAPPlot();
+        });
+
+        function assignColorsToClasses() {
+            const uniqueLabels = [...new Set(storedLabels)];
+            uniqueLabels.forEach((label, index) => {
+                colorPalette[label] = `hsl(${index * 360 / uniqueLabels.length}, 100%, 50%)`;
+            });
+        }
+
+        function updateUMAPPlot() {
+            var realTimeTrace = {
+                x: lastEmbedding ? [lastEmbedding[0]] : [],
+                y: lastEmbedding ? [lastEmbedding[1]] : [],
+                mode: 'markers',
+                marker: {
+                    size: 12,
+                    color: 'black'
+                },
+                text: [lastLabel],
+                name: 'Real-time Data'
+            };
+
+            var storedTrace = {
+                x: storedEmbeddings.map(e => e[0]),
+                y: storedEmbeddings.map(e => e[1]),
+                mode: 'markers',
+                marker: {
+                    size: 8,
+                    color: storedLabels.map(l => colorPalette[l] || 'red'),
+                    opacity: 0.6
+                },
+                text: storedLabels,
+                name: 'Stored Data'
+            };
+
+            var layout = {
+                title: 'Real-time UMAP Visualization',
+                xaxis: { title: 'UMAP Dimension 1', range: [-25, 25] },
+                yaxis: { title: 'UMAP Dimension 2', range: [-25, 25] },
+                width: 500,
+                height: 500
+            };
+
+            Plotly.newPlot('umap-plot', [storedTrace, realTimeTrace], layout);
+        }
+
+        function fetchPrediction() {
+            fetch('/prediction')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('prediction').textContent = `Current Prediction: ${data.prediction}`;
+                })
+                .catch(error => console.error('Error fetching prediction:', error));
+        }
+
+        setInterval(fetchPrediction, 500);
+    </script>
+</head>
+<body>
+    <h1 style="text-align: center;">Hand Gesture Classification</h1>
+    <img src="{{ url_for('video_feed') }}" width="800">
+    <div id="prediction">Current Prediction: No Gesture Detected</div>
+    <div id="umap-plot"></div>
+</body>
+</html>

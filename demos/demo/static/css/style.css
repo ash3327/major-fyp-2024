@@ -1,0 +1,177 @@
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.container {
+    max-width: 1400px;
+    padding: 20px;
+}
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    background-color: white;
+    overflow: hidden;
+}
+.card-header {
+    background-color: #2c3e50;
+    color: white;
+    padding: 15px 20px;
+    font-weight: 500;
+    border: none;
+}
+.card-body {
+    padding: 20px;
+}
+.video-container {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #000;
+}
+.video-feed {
+    width: 100%;
+    display: block;
+}
+#prediction {
+    background-color: rgba(44, 62, 80, 0.9);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 6px;
+    margin: 15px 0;
+    text-align: center;
+    font-size: 1.2rem;
+}
+.btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+.btn-primary {
+    background-color: #3498db;
+    border-color: #3498db;
+}
+.btn-primary:hover {
+    background-color: #2980b9;
+    border-color: #2980b9;
+}
+.btn-danger {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+}
+.btn-danger:hover {
+    background-color: #c0392b;
+    border-color: #c0392b;
+}
+#pca-plot {
+    width: 100%;
+    height: 400px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.upload-container {
+    background-color: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+    margin-bottom: 15px;
+    display: none;
+}
+.controls-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+.controls-container .btn {
+    flex: 1;
+}
+#stored-gestures {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+.gesture-card {
+    background-color: white;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+}
+.gesture-card.new {
+    animation: fadeIn 0.5s ease-out;
+}
+.gesture-card.saving {
+    opacity: 0.7;
+    pointer-events: none;
+}
+.gesture-image {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+.gesture-name {
+    margin: 0;
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+}
+#save-indicator {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    border-radius: 5px;
+    display: none;
+    animation: fadeIn 0.3s ease-out;
+    z-index: 1000;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.prediction-bar-container {
+    margin-bottom: 8px;
+}
+
+.prediction-label {
+    display: inline-block;
+    width: 100px;
+    font-weight: bold;
+}
+
+.prediction-bar {
+    height: 20px;
+    background-color: #007bff;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.prediction-distance {
+    margin-left: 10px;
+    color: #666;
+}
+
+.alert-info {
+    background-color: #e3f2fd;
+    border-color: #bee5eb;
+    color: #0c5460;
+    margin-top: 20px;
+    text-align: center;
+    font-size: 1.1em;
+}
+
+.model-name {
+    text-transform: uppercase;
+    font-weight: bold;
+    color: #007bff;
+}
