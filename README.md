@@ -92,10 +92,7 @@ While not fully achieved the original goals, our key findings include:
 
 ### Architecture
 - Dataset related: `scripts/datasets/`, `scripts/fake_data/`, `scripts/hand_only_supervised/`
-- Models: `models/`
-  - Backbone: `models/backbone/`
-  - LSTM variants: `models/temporal/`
-  - Graph models: `models/graph/`
+- Models will be saved under the `runs` folder.
 
 ### Training Scripts (`training/`)
 
